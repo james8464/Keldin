@@ -60,7 +60,7 @@ hr { border: none; border-top: 1px solid var(--border); margin: 40px 0; }
 <div class="container">
 
 <h1>Past Paper Creation — Complete Call Flow &amp; Architecture Documentation</h1>
-<p class="subtitle">Generated from graphify knowledge graph: 14762 nodes, 43014 edges, 649 communities. Commit: e4f1a47</p>
+<p class="subtitle">Generated from graphify knowledge graph: 14762 nodes, 43014 edges, 651 communities. Commit: 0fdfb77</p>
 
 <div class="nav">
     <a href="#overview">Architecture Overview</a>
@@ -73,7 +73,7 @@ hr { border: none; border-top: 1px solid var(--border); margin: 40px 0; }
     <a href="#serve-api">Serving API</a>
     <a href="#security-global">Security &amp; Global Graph</a>
     <a href="#tests-fixtures">Tests &amp; Fixtures</a>
-    <a href="#keldintests">KeldinTests</a>
+    <a href="#aiprovider">AIProvider</a>
     <a href="#codingkeys">CodingKeys</a>
     <a href="#independent-solver-py">independent_solver.py</a>
     <a href="#qualityreviewview">QualityReviewView</a>
@@ -90,9 +90,9 @@ hr { border: none; border-top: 1px solid var(--border); margin: 40px 0; }
 flowchart LR
     EXTRACT_PIPELINE_5F350230("Extraction Pipeline<br/><small>59 nodes</small>")
     class EXTRACT_PIPELINE_5F350230 module;
-    BUILD_GRAPH_321CBB04("Graph Build<br/><small>1585 nodes</small>")
+    BUILD_GRAPH_321CBB04("Graph Build<br/><small>1581 nodes</small>")
     class BUILD_GRAPH_321CBB04 module;
-    ANALYSIS_CLUSTERING_C79796DA("Analysis &amp; Clustering<br/><small>783 nodes</small>")
+    ANALYSIS_CLUSTERING_C79796DA("Analysis &amp; Clustering<br/><small>788 nodes</small>")
     class ANALYSIS_CLUSTERING_C79796DA module;
     OUTPUTS_DOCS_ED82387C("Outputs &amp; Docs<br/><small>117 nodes</small>")
     class OUTPUTS_DOCS_ED82387C module;
@@ -104,10 +104,10 @@ flowchart LR
     class SERVE_API_35EC8E86 module;
     SECURITY_GLOBAL_5B9C6A04("Security &amp; Global Graph<br/><small>8 nodes</small>")
     class SECURITY_GLOBAL_5B9C6A04 module;
-    TESTS_FIXTURES_B84B1DCC("Tests &amp; Fixtures<br/><small>9743 nodes</small>")
+    TESTS_FIXTURES_B84B1DCC("Tests &amp; Fixtures<br/><small>9731 nodes</small>")
     class TESTS_FIXTURES_B84B1DCC module;
-    KELDINTESTS_25F9B50A("KeldinTests<br/><small>174 nodes</small>")
-    class KELDINTESTS_25F9B50A module;
+    AIPROVIDER_6EA2DAF4("AIProvider<br/><small>185 nodes</small>")
+    class AIPROVIDER_6EA2DAF4 module;
     CODINGKEYS_2CCF71B7("CodingKeys<br/><small>61 nodes</small>")
     class CODINGKEYS_2CCF71B7 module;
     INDEPENDENT_SOLVER_PY_157AA9CD("independent_solver.py<br/><small>52 nodes</small>")
@@ -118,17 +118,17 @@ flowchart LR
     class GRAPHS_PY_DAA01D5C module;
     OTHER_D0941E68("Other<br/><small>1658 nodes</small>")
     class OTHER_D0941E68 module;
-    ANALYSIS_CLUSTERING_C79796DA -->|calls x493| TESTS_FIXTURES_B84B1DCC
-    TESTS_FIXTURES_B84B1DCC -->|calls x448| ANALYSIS_CLUSTERING_C79796DA
-    BUILD_GRAPH_321CBB04 -->|calls x419| TESTS_FIXTURES_B84B1DCC
-    TESTS_FIXTURES_B84B1DCC -->|imports x406| BUILD_GRAPH_321CBB04
-    KELDINTESTS_25F9B50A -->|method x106| TESTS_FIXTURES_B84B1DCC
+    ANALYSIS_CLUSTERING_C79796DA -->|calls x498| TESTS_FIXTURES_B84B1DCC
+    TESTS_FIXTURES_B84B1DCC -->|references x446| ANALYSIS_CLUSTERING_C79796DA
+    BUILD_GRAPH_321CBB04 -->|calls x421| TESTS_FIXTURES_B84B1DCC
+    TESTS_FIXTURES_B84B1DCC -->|imports x402| BUILD_GRAPH_321CBB04
+    INGEST_CACHE_UPDATE_FF457338 -->|calls x104| TESTS_FIXTURES_B84B1DCC
     INDEPENDENT_SOLVER_PY_157AA9CD -->|imports x102| TESTS_FIXTURES_B84B1DCC
-    INGEST_CACHE_UPDATE_FF457338 -->|calls x102| TESTS_FIXTURES_B84B1DCC
-    TESTS_FIXTURES_B84B1DCC -->|calls x87| INGEST_CACHE_UPDATE_FF457338
-    TESTS_FIXTURES_B84B1DCC -->|imports x73| OTHER_D0941E68
+    AIPROVIDER_6EA2DAF4 -->|references x85| TESTS_FIXTURES_B84B1DCC
+    TESTS_FIXTURES_B84B1DCC -->|calls x75| INGEST_CACHE_UPDATE_FF457338
+    TESTS_FIXTURES_B84B1DCC -->|imports x74| OTHER_D0941E68
+    TESTS_FIXTURES_B84B1DCC -->|references x67| AIPROVIDER_6EA2DAF4
     OTHER_D0941E68 -->|calls x65| TESTS_FIXTURES_B84B1DCC
-    TESTS_FIXTURES_B84B1DCC -->|references x65| KELDINTESTS_25F9B50A
     SERVE_API_35EC8E86 -->|imports x44| TESTS_FIXTURES_B84B1DCC
     classDef entry fill:#422006,stroke:#fbbf24,color:#fde68a,stroke-width:1px;
     classDef api fill:#450a0a,stroke:#f87171,color:#fee2e2,stroke-width:1px;
@@ -146,7 +146,7 @@ flowchart LR
     <h4>Architecture Layers</h4>
     <table style="width:100%;font-size:0.85rem;">
       <tr><th>Layer</th><th>Nodes</th><th>Communities</th></tr>
-      <tr><td>Extraction Pipeline</td><td>59</td><td><code>299, 158, 408, 198, 203, 296, 419, 344, 464</code></td></tr><tr><td>Graph Build</td><td>1585</td><td><code>83, 148, 66, 25, 60, 10, 310, 40, 48, 127, 73, 98, 104, 93, 21, 101, 109, 178, 116, 77, 118, 319, 402, 604, 115, 78, 122, 136, 139, 142, 274, 491, 149, 593, 111, 154, 131, 161, 558, 166, 168, 175, 188, 468, 180, 141, 181, 182, 189, 217, 624, 652, 192, 194, 196, 572, 621, 266, 297, 347, 333, 455, 546, 280, 433, 212, 213, 218, 503, 505, 560, 605, 606, 614, 648, 435, 513</code></td></tr><tr><td>Analysis &amp; Clustering</td><td>783</td><td><code>119, 157, 20, 6, 16, 26, 13, 635, 68, 251, 367, 245, 71, 571, 268, 269, 270, 271, 272, 273, 540, 578, 493</code></td></tr><tr><td>Outputs &amp; Docs</td><td>117</td><td><code>153, 485, 183, 199, 354, 316, 437, 492, 504, 639, 448, 361, 642</code></td></tr><tr><td>CLI &amp; Skill Installers</td><td>54</td><td><code>79, 427, 226, 570</code></td></tr><tr><td>Ingestion &amp; Updates</td><td>276</td><td><code>49, 242, 377, 351, 434, 453</code></td></tr><tr><td>Serving API</td><td>129</td><td><code>23, 24, 263, 265, 463, 332, 405, 425, 277, 589, 623</code></td></tr><tr><td>Security &amp; Global Graph</td><td>8</td><td><code>258</code></td></tr><tr><td>Tests &amp; Fixtures</td><td>9743</td><td><code>0, 42, 76, 7, 14, 38, 1, 128, 80, 12, 3, 507, 106, 216, 61, 110, 438, 11, 33, 37, 29, 112, 132, 30, 4, 67, 337, 97, 2, 36, 129, 155, 167, 352, 55, 159, 19, 231, 28, 298, 156, 63, 43, 52, 72, 9, 82, 27, 393, 70, 176, 120, 219, 53, 8, 184, 64, 150, 349, 576, 123, 96, 146, 629, 65, 17, 18, 201, 311, 54, 81, 95, 57, 86, 46, 91, 41, 88, 288, 34, 5, 529, 31, 330, 550, 59, 89, 282, 62, 633, 85, 92, 228, 102, 293, 45, 496, 32, 412, 87, 100, 134, 519, 138, 171, 174, 473, 301, 360, 394, 610, 612, 103, 44, 56, 99, 113, 135, 369, 498, 58, 588, 517, 634, 39, 409, 418, 94, 260, 401, 143, 187, 208, 22, 366, 51, 125, 357, 488, 535, 124, 133, 15, 279, 383, 50, 74, 151, 340, 489, 644, 69, 117, 169, 190, 346, 35, 105, 440, 481, 278, 289, 348, 130, 137, 257, 363, 364, 185, 368, 286, 329, 375, 587, 627, 630, 144, 232, 292, 466, 500, 617, 632, 114, 107, 204, 327, 359, 382, 469, 162, 170, 400, 325, 471, 476, 509, 514, 533, 651, 356, 458, 516, 543, 467, 561, 565, 601, 75, 291, 410, 422, 173, 191, 416, 456, 459, 482, 515, 553, 638, 147, 426, 526, 525, 370, 487, 544, 564, 545, 568</code></td></tr><tr><td>KeldinTests</td><td>174</td><td><code>331</code></td></tr><tr><td>CodingKeys</td><td>61</td><td><code>126</code></td></tr><tr><td>independent_solver.py</td><td>52</td><td><code>388</code></td></tr><tr><td>QualityReviewView</td><td>34</td><td><code>179</code></td></tr><tr><td>graphs.py</td><td>29</td><td><code>90</code></td></tr><tr><td>Other</td><td>1658</td><td><code>84, 177, 250, 108, 152, 163, 229, 446, 160, 164, 371, 227, 315, 172, 214, 193, 195, 197, 205, 244, 256, 520, 215, 309, 350, 477, 220, 246, 247, 365, 373, 381, 407, 470, 290, 47, 495, 165, 252, 253, 254, 255, 392, 441, 443, 474, 585, 140, 200, 249, 259, 262, 294, 295, 300, 313, 328, 334, 384, 395, 403, 406, 439, 248, 261, 303, 304, 338, 339, 342, 379, 399, 413, 414, 430, 436, 444, 445, 462, 490, 548, 551, 615, 121, 145, 264, 275, 281, 287, 306, 307, 312, 317, 318, 320, 321, 326, 335, 353, 362, 380, 404, 411, 415, 420, 421, 450, 451, 452, 480, 486, 494, 499, 518, 547, 552, 555, 556, 575, 590, 592, 596, 598, 599, 611, 613, 616, 636, 186, 206, 267, 302, 305, 314, 322, 323, 341, 355, 376, 378, 385, 396, 423, 424, 431, 432, 478, 501, 502, 522, 523, 527, 528, 530, 536, 539, 549, 554, 559, 566, 569, 574, 586, 591, 594, 595, 597, 608, 628, 631, 637, 657, 661, 662, 207, 276, 374, 386, 387, 397, 398, 417, 428, 429, 447, 454, 457, 472, 475, 506, 521, 524, 531, 534, 537, 538, 541, 557, 573, 577, 581, 582, 609, 209, 210, 211, 343, 389, 442, 465, 508, 202, 224, 225, 283, 284, 285, 324, 336, 345, 358, 372, 390, 391, 449, 460, 461, 479, 483, 484, 497, 510, 511, 512, 532, 542, 562, 563, 567, 579, 580, 583, 584, 600, 602, 603, 607, 618, 619, 620, 622, 625, 626, 641, 221, 222, 223, 230, 233, 234, 235, 236, 237, 238, 239, 240, 241, 243, 308</code></td></tr>
+      <tr><td>Extraction Pipeline</td><td>59</td><td><code>299, 158, 408, 198, 203, 296, 419, 344, 464</code></td></tr><tr><td>Graph Build</td><td>1581</td><td><code>83, 148, 66, 25, 60, 310, 40, 22, 48, 127, 73, 104, 319, 93, 21, 98, 101, 109, 178, 116, 77, 118, 604, 402, 115, 78, 122, 136, 139, 142, 274, 491, 149, 593, 111, 154, 131, 161, 558, 166, 168, 175, 188, 468, 180, 141, 181, 182, 189, 217, 624, 652, 192, 194, 196, 572, 640, 266, 297, 347, 333, 455, 546, 280, 433, 212, 213, 218, 503, 505, 560, 605, 614, 643, 645, 435, 513</code></td></tr><tr><td>Analysis &amp; Clustering</td><td>788</td><td><code>119, 157, 20, 6, 16, 26, 13, 635, 68, 251, 367, 245, 71, 571, 268, 269, 270, 271, 272, 273, 540, 578, 493</code></td></tr><tr><td>Outputs &amp; Docs</td><td>117</td><td><code>153, 485, 183, 199, 354, 316, 437, 492, 504, 639, 448, 361, 642</code></td></tr><tr><td>CLI &amp; Skill Installers</td><td>54</td><td><code>79, 427, 226, 570</code></td></tr><tr><td>Ingestion &amp; Updates</td><td>276</td><td><code>49, 242, 377, 351, 434, 453</code></td></tr><tr><td>Serving API</td><td>129</td><td><code>23, 24, 263, 265, 463, 332, 405, 425, 277, 589, 623</code></td></tr><tr><td>Security &amp; Global Graph</td><td>8</td><td><code>258</code></td></tr><tr><td>Tests &amp; Fixtures</td><td>9731</td><td><code>0, 42, 12, 7, 76, 14, 38, 1, 128, 80, 216, 507, 3, 106, 61, 110, 11, 438, 33, 29, 10, 112, 132, 30, 4, 337, 67, 2, 36, 155, 352, 55, 159, 19, 231, 28, 156, 167, 63, 97, 43, 52, 9, 72, 37, 82, 27, 393, 70, 176, 120, 219, 184, 64, 8, 134, 150, 349, 576, 123, 96, 146, 629, 65, 17, 88, 18, 201, 311, 54, 81, 95, 57, 86, 46, 91, 41, 5, 288, 34, 529, 31, 330, 59, 89, 282, 550, 62, 633, 85, 92, 228, 102, 293, 45, 496, 32, 412, 87, 100, 35, 519, 138, 171, 174, 473, 301, 360, 394, 610, 612, 103, 44, 56, 99, 113, 135, 369, 498, 58, 588, 517, 634, 39, 409, 53, 418, 94, 260, 401, 107, 129, 143, 187, 208, 366, 51, 125, 357, 488, 535, 124, 133, 15, 279, 383, 50, 74, 151, 340, 489, 644, 69, 117, 169, 190, 298, 346, 105, 440, 481, 278, 289, 348, 130, 257, 363, 364, 514, 137, 185, 368, 286, 329, 375, 587, 627, 630, 144, 232, 292, 466, 500, 617, 632, 114, 204, 327, 359, 382, 469, 606, 162, 170, 400, 325, 471, 476, 509, 516, 533, 621, 651, 356, 458, 543, 467, 561, 565, 601, 75, 291, 410, 422, 173, 191, 416, 456, 459, 482, 515, 553, 638, 147, 426, 526, 525, 370, 487, 544, 564, 545, 568</code></td></tr><tr><td>AIProvider</td><td>185</td><td><code>331</code></td></tr><tr><td>CodingKeys</td><td>61</td><td><code>126</code></td></tr><tr><td>independent_solver.py</td><td>52</td><td><code>388</code></td></tr><tr><td>QualityReviewView</td><td>34</td><td><code>179</code></td></tr><tr><td>graphs.py</td><td>29</td><td><code>90</code></td></tr><tr><td>Other</td><td>1658</td><td><code>84, 177, 250, 108, 152, 163, 229, 446, 160, 164, 371, 227, 315, 172, 214, 193, 195, 197, 205, 244, 256, 520, 215, 309, 350, 477, 220, 246, 247, 365, 373, 381, 407, 470, 290, 47, 495, 165, 252, 253, 254, 255, 392, 441, 443, 474, 585, 140, 200, 249, 259, 262, 294, 295, 300, 313, 328, 334, 384, 395, 403, 406, 439, 248, 261, 303, 304, 338, 339, 342, 379, 399, 413, 414, 430, 436, 444, 445, 462, 490, 548, 551, 615, 121, 145, 264, 275, 281, 287, 306, 307, 312, 317, 318, 320, 321, 326, 335, 353, 362, 380, 404, 411, 415, 420, 421, 450, 451, 452, 480, 486, 494, 499, 518, 547, 552, 555, 556, 575, 590, 592, 596, 598, 599, 611, 613, 616, 636, 186, 206, 267, 302, 305, 314, 322, 323, 341, 355, 376, 378, 385, 396, 423, 424, 431, 432, 478, 501, 502, 522, 523, 527, 528, 530, 536, 539, 549, 554, 559, 566, 569, 574, 586, 591, 594, 595, 597, 608, 628, 631, 637, 657, 661, 662, 207, 276, 374, 386, 387, 397, 398, 417, 428, 429, 447, 454, 457, 472, 475, 506, 521, 524, 531, 534, 537, 538, 541, 557, 573, 577, 581, 582, 609, 209, 210, 211, 343, 389, 442, 465, 508, 202, 224, 225, 283, 284, 285, 324, 336, 345, 358, 372, 390, 391, 449, 460, 461, 479, 483, 484, 497, 510, 511, 512, 532, 542, 562, 563, 567, 579, 580, 583, 584, 600, 602, 603, 607, 618, 619, 620, 622, 625, 626, 641, 221, 222, 223, 230, 233, 234, 235, 236, 237, 238, 239, 240, 241, 243, 308</code></td></tr>
     </table>
   </div>
   <div class="card">
@@ -158,7 +158,7 @@ flowchart LR
   <div class="card">
     <h4>Graph Report Highlights</h4>
     <ul>
-      <li>14762 nodes · 43014 edges · 649 communities (571 shown, 78 thin omitted)</li>
+      <li>14762 nodes · 43014 edges · 651 communities (573 shown, 78 thin omitted)</li>
       <li>Extraction: 94% EXTRACTED · 6% INFERRED · 0% AMBIGUOUS · INFERRED: 2617 edges (avg confidence: 0.69)</li>
       <li>Token cost: 0 input · 0 output</li>
       <li>1. `NSIExercise` - 307 edges</li>
@@ -519,12 +519,12 @@ flowchart LR
 
 <!-- ====== 3. Graph Build ====== -->
 <h2 id="build-graph">3. Graph Build</h2>
-<p>Graph Build groups implementation around resources, reference, demand, profileschemajson, mostly in Resources/reference-demand-profile.schema.json, Resources/empirical-calibration.schema.json, Resources/generator-capability.schema.json. This section covers 1585 nodes and 2888 internal edges; the diagram shows only representative relationships to stay readable.</p>
+<p>Graph Build groups implementation around resources, reference, demand, profileschemajson, mostly in Resources/reference-demand-profile.schema.json, Resources/empirical-calibration.schema.json, Resources/generator-capability.schema.json. This section covers 1581 nodes and 2884 internal edges; the diagram shows only representative relationships to stay readable.</p>
 
 <div class="mermaid">
 %%{init: {"theme": "dark", "themeVariables": {"fontSize": "15.0px", "fontFamily": "Segoe UI, system-ui, sans-serif", "primaryColor": "#1e293b", "primaryTextColor": "#e2e8f0", "primaryBorderColor": "#38bdf8", "secondaryColor": "#0f172a", "tertiaryColor": "#334155", "lineColor": "#64748b", "textColor": "#e2e8f0"}, "flowchart": {"htmlLabels": true, "curve": "basis", "nodeSpacing": 48, "rankSpacing": 64, "padding": 14, "diagramPadding": 10, "useMaxWidth": true}}}%%
 flowchart LR
-    %% Section: Graph Build (1585 nodes, 2888 edges)
+    %% Section: Graph Build (1581 nodes, 2884 edges)
     subgraph build_graph_Backend_Core_candidate_paths_py_2085fb59["Backend/Core/candidate_paths.py"]
         backend_core_candidate_paths_audit_candidate_pat_84d53dee("audit_candidate_paths()<br/><small>Backend/Core/candidate_paths.py</small>")
         backend_core_candidate_paths_topology_from_bluep_628ba91e("topology_from_blueprint()<br/><small>Backend/Core/candidate_paths.py</small>")
@@ -561,7 +561,7 @@ flowchart LR
     backend_core_candidate_paths_pathsection_4e6051fe -->|calls| backend_core_candidate_paths_topology_from_bluep_628ba91e
     backend_core_candidate_paths_audit_candidate_pat_84d53dee -->|calls| backend_core_reference_demand_audit_form_demand_3426feb0
     backend_core_france_graph_tree_authoring_1c52f444 -->|imports| backend_core_france_graph_tree_binding_canonical_3269e732
-    %% Omitted for readability: 1567 nodes, 0 edges
+    %% Omitted for readability: 1563 nodes, 0 edges
     class backend_core_candidate_paths_audit_candidate_pat_84d53dee function;
     class backend_core_candidate_paths_topology_from_bluep_628ba91e function;
     class backend_core_candidate_paths_identity_a56de8ff function;
@@ -860,19 +860,19 @@ flowchart LR
   </div>
   <div class="card">
     <h4>Design Notes</h4>
-    <p>This section comes from graphify community clustering. Relationship summary: contains x1180, calls x739, extends x285, imports x250. The diagram prioritizes high-confidence calls or usage relationships; the table keeps the broader node inventory.</p>
+    <p>This section comes from graphify community clustering. Relationship summary: contains x1178, calls x739, extends x285, imports x250. The diagram prioritizes high-confidence calls or usage relationships; the table keeps the broader node inventory.</p>
   </div>
 </div>
 <hr>
 
 <!-- ====== 4. Analysis & Clustering ====== -->
 <h2 id="analysis-clustering">4. Analysis &amp; Clustering</h2>
-<p>Analysis &amp; Clustering groups implementation around generator, resources, render, pdfpy, mostly in generator/pastpapergen/render_pdf.py, generator/cspapergen/render_pdf.py, generator/pastpapergen/generator.py. This section covers 783 nodes and 2339 internal edges; the diagram shows only representative relationships to stay readable.</p>
+<p>Analysis &amp; Clustering groups implementation around generator, resources, render, pdfpy, mostly in generator/pastpapergen/render_pdf.py, generator/cspapergen/render_pdf.py, generator/pastpapergen/generator.py. This section covers 788 nodes and 2349 internal edges; the diagram shows only representative relationships to stay readable.</p>
 
 <div class="mermaid">
 %%{init: {"theme": "dark", "themeVariables": {"fontSize": "15.0px", "fontFamily": "Segoe UI, system-ui, sans-serif", "primaryColor": "#1e293b", "primaryTextColor": "#e2e8f0", "primaryBorderColor": "#38bdf8", "secondaryColor": "#0f172a", "tertiaryColor": "#334155", "lineColor": "#64748b", "textColor": "#e2e8f0"}, "flowchart": {"htmlLabels": true, "curve": "basis", "nodeSpacing": 48, "rankSpacing": 64, "padding": 14, "diagramPadding": 10, "useMaxWidth": true}}}%%
 flowchart LR
-    %% Section: Analysis &amp; Clustering (783 nodes, 2339 edges)
+    %% Section: Analysis &amp; Clustering (788 nodes, 2349 edges)
     subgraph analysis_clustering_Backend_Core_benchmark_py_ad20c69e["Backend/Core/benchmark.py"]
         backend_core_benchmark_handle_benchmark_303eb156("handle_benchmark()<br/><small>Backend/Core/benchmark.py</small>")
         backend_core_benchmark_cpu_load_percent_a21569b0("cpu_load_percent()<br/><small>Backend/Core/benchmark.py</small>")
@@ -908,7 +908,7 @@ flowchart LR
     backend_core_benchmark_handle_benchmark_303eb156 -->|calls| backend_core_benchmark_thermal_speed_limit_perce_0dc698c9
     backend_core_benchmark_emit_static_metrics_c43bbe70 -->|calls| backend_core_benchmark_apple_cpu_core_split_fcd9b541
     backend_core_benchmark_emit_static_metrics_c43bbe70 -->|calls| backend_core_benchmark_cpu_brand_ee3083b4
-    %% Omitted for readability: 765 nodes, 0 edges
+    %% Omitted for readability: 770 nodes, 0 edges
     class backend_core_benchmark_handle_benchmark_303eb156 function;
     class backend_core_benchmark_cpu_load_percent_a21569b0 function;
     class backend_core_benchmark_disk_probe_fbc55c85 function;
@@ -1207,7 +1207,7 @@ flowchart LR
   </div>
   <div class="card">
     <h4>Design Notes</h4>
-    <p>This section comes from graphify community clustering. Relationship summary: calls x842, contains x621, references x549, imports x72. The diagram prioritizes high-confidence calls or usage relationships; the table keeps the broader node inventory.</p>
+    <p>This section comes from graphify community clustering. Relationship summary: calls x844, contains x623, references x550, imports x74. The diagram prioritizes high-confidence calls or usage relationships; the table keeps the broader node inventory.</p>
   </div>
 </div>
 <hr>
@@ -1922,12 +1922,12 @@ flowchart LR
 
 <!-- ====== 7. Ingestion & Updates ====== -->
 <h2 id="ingest-cache-update">7. Ingestion &amp; Updates</h2>
-<p>Ingestion &amp; Updates groups implementation around macos, keldin, state, applicationcoordinatorswift, mostly in Keldin/State/ApplicationCoordinator.swift, Core/qualification/manifest.py, tests/test_qualification_manifest.py. This section covers 276 nodes and 699 internal edges; the diagram shows only representative relationships to stay readable.</p>
+<p>Ingestion &amp; Updates groups implementation around macos, keldin, state, applicationcoordinatorswift, mostly in Keldin/State/ApplicationCoordinator.swift, Core/qualification/manifest.py, tests/test_qualification_manifest.py. This section covers 276 nodes and 702 internal edges; the diagram shows only representative relationships to stay readable.</p>
 
 <div class="mermaid">
 %%{init: {"theme": "dark", "themeVariables": {"fontSize": "15.0px", "fontFamily": "Segoe UI, system-ui, sans-serif", "primaryColor": "#1e293b", "primaryTextColor": "#e2e8f0", "primaryBorderColor": "#38bdf8", "secondaryColor": "#0f172a", "tertiaryColor": "#334155", "lineColor": "#64748b", "textColor": "#e2e8f0"}, "flowchart": {"htmlLabels": true, "curve": "basis", "nodeSpacing": 48, "rankSpacing": 64, "padding": 14, "diagramPadding": 10, "useMaxWidth": true}}}%%
 flowchart LR
-    %% Section: Ingestion &amp; Updates (276 nodes, 699 edges)
+    %% Section: Ingestion &amp; Updates (276 nodes, 702 edges)
     subgraph ingest_cache_update_Core_qualification_manifest_3e3bea5d["Core/qualification/manifest.py"]
         backend_core_qualification_manifest_modelidentit_c90bb800("ModelIdentity<br/><small>Core/qualification/manifest.py</small>")
         backend_core_qualification_manifest_versionident_d142d785("VersionIdentity<br/><small>Core/qualification/manifest.py</small>")
@@ -2181,7 +2181,7 @@ flowchart LR
   <td><code>.resolve()</code><br><small style="color:var(--muted)">Keldin/Domain/InterfaceText.swift</small></td>
   <td><span class="tag tag-func">Function</span></td>
   <td>External entry / no inbound edge</td>
-  <td><code>.generationBlocker</code><br><small style="color:var(--muted)">Keldin/State/ApplicationCoordinator.swift</small><br><code>.mlxSetupExplanation</code><br><small style="color:var(--muted)">Keldin/State/ApplicationCoordinator.swift</small><br><code>acceptHostedAIConsent()</code><br><small style="color:var(--muted)">Keldin/State/ApplicationCoordinator.swift</small><br>+19 more</td>
+  <td><code>.generationBlocker</code><br><small style="color:var(--muted)">Keldin/State/ApplicationCoordinator.swift</small><br><code>.mlxSetupExplanation</code><br><small style="color:var(--muted)">Keldin/State/ApplicationCoordinator.swift</small><br><code>acceptHostedAIConsent()</code><br><small style="color:var(--muted)">Keldin/State/ApplicationCoordinator.swift</small><br>+17 more</td>
   <td>.resolve() node in Keldin/Domain/InterfaceText.swift.</td>
 </tr>
 <tr>
@@ -2194,6 +2194,14 @@ flowchart LR
 </tr>
 <tr>
   <td>24</td>
+  <td><code>.helperURL()</code><br><small style="color:var(--muted)">Keldin/Services/AppleIntelligenceAvailability.swift</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td><code>generate()</code><br><small style="color:var(--muted)">Keldin/State/ApplicationCoordinator.swift</small><br><code>refreshAppleIntelligenceAvailability()</code><br><small style="color:var(--muted)">Keldin/State/ApplicationCoordinator.swift</small><br><code>startFrenchLLMGeneration()</code><br><small style="color:var(--muted)">Keldin/State/ApplicationCoordinator.swift</small></td>
+  <td>.helperURL() node in Keldin/Services/AppleIntelligenceAvailability.swift.</td>
+</tr>
+<tr>
+  <td>25</td>
   <td><code>BackendRunning</code><br><small style="color:var(--muted)">Keldin/Services/BackendClient.swift</small></td>
   <td><span class="tag tag-class">Class</span></td>
   <td>External entry / no inbound edge</td>
@@ -2201,7 +2209,7 @@ flowchart LR
   <td>BackendRunning node in Keldin/Services/BackendClient.swift.</td>
 </tr>
 <tr>
-  <td>25</td>
+  <td>26</td>
   <td><code>.cancel()</code><br><small style="color:var(--muted)">Keldin/Services/BackendClient.swift</small></td>
   <td><span class="tag tag-func">Function</span></td>
   <td><code>BackendRunning</code><br><small style="color:var(--muted)">Keldin/Services/BackendClient.swift</small></td>
@@ -2209,7 +2217,7 @@ flowchart LR
   <td>.cancel() node in Keldin/Services/BackendClient.swift.</td>
 </tr>
 <tr>
-  <td>26</td>
+  <td>27</td>
   <td><code>ApplicationCoordinator.swift</code><br><small style="color:var(--muted)">Keldin/State/ApplicationCoordinator.swift</small></td>
   <td><span class="tag tag-class">Class</span></td>
   <td>External entry / no inbound edge</td>
@@ -2217,7 +2225,7 @@ flowchart LR
   <td>ApplicationCoordinator.swift node in Keldin/State/ApplicationCoordinator.swift.</td>
 </tr>
 <tr>
-  <td>27</td>
+  <td>28</td>
   <td><code>UserNotifications</code><br><small style="color:var(--muted)">Keldin/State/ApplicationCoordinator.swift</small></td>
   <td><span class="tag tag-class">Module</span></td>
   <td><code>ApplicationCoordinator.swift</code><br><small style="color:var(--muted)">Keldin/State/ApplicationCoordinator.swift</small></td>
@@ -2225,28 +2233,20 @@ flowchart LR
   <td>UserNotifications node in Keldin/State/ApplicationCoordinator.swift.</td>
 </tr>
 <tr>
-  <td>28</td>
+  <td>29</td>
   <td><code>ApplicationCoordinator</code><br><small style="color:var(--muted)">Keldin/State/ApplicationCoordinator.swift</small></td>
   <td><span class="tag tag-class">Class</span></td>
   <td><code>defaultOutputFolder()</code><br><small style="color:var(--muted)">Keldin/Application/AppConfiguration.swift</small><br><code>MLXRecoveryState</code><br><small style="color:var(--muted)">Keldin/Domain/AppModels.swift</small></td>
-  <td><code>.activeModelName</code><br><small style="color:var(--muted)">Keldin/State/ApplicationCoordinator.swift</small><br><code>.activeOperation</code><br><small style="color:var(--muted)">Keldin/State/ApplicationCoordinator.swift</small><br><code>.activeSecretAccount</code><br><small style="color:var(--muted)">Keldin/State/ApplicationCoordinator.swift</small><br>+127 more</td>
+  <td><code>.activeModelName</code><br><small style="color:var(--muted)">Keldin/State/ApplicationCoordinator.swift</small><br><code>.activeOperation</code><br><small style="color:var(--muted)">Keldin/State/ApplicationCoordinator.swift</small><br><code>.activeSecretAccount</code><br><small style="color:var(--muted)">Keldin/State/ApplicationCoordinator.swift</small><br>+128 more</td>
   <td>ApplicationCoordinator node in Keldin/State/ApplicationCoordinator.swift.</td>
 </tr>
 <tr>
-  <td>29</td>
+  <td>30</td>
   <td><code>BackendRun</code><br><small style="color:var(--muted)"></small></td>
   <td><span class="tag tag-class">Class</span></td>
   <td>External entry / no inbound edge</td>
   <td>No direct outbound edge</td>
   <td>BackendRun node in project.</td>
-</tr>
-<tr>
-  <td>30</td>
-  <td><code>Double</code><br><small style="color:var(--muted)"></small></td>
-  <td><span class="tag tag-class">Class</span></td>
-  <td>External entry / no inbound edge</td>
-  <td>No direct outbound edge</td>
-  <td>Double node in project.</td>
 </tr>
 </table>
 
@@ -2255,7 +2255,7 @@ flowchart LR
     <h4>Key Files</h4>
     <table style="width:100%;font-size:0.85rem;">
       <tr><th>File</th><th>Coverage</th></tr>
-      <tr><td><code>Keldin/State/ApplicationCoordinator.swift</code></td><td>152 nodes</td></tr>
+      <tr><td><code>Keldin/State/ApplicationCoordinator.swift</code></td><td>153 nodes</td></tr>
 <tr><td><code>Core/qualification/manifest.py</code></td><td>19 nodes</td></tr>
 <tr><td><code>tests/test_qualification_manifest.py</code></td><td>14 nodes</td></tr>
 <tr><td><code>Keldin/Application/AppConfiguration.swift</code></td><td>12 nodes</td></tr>
@@ -2267,7 +2267,7 @@ flowchart LR
   </div>
   <div class="card">
     <h4>Design Notes</h4>
-    <p>This section comes from graphify community clustering. Relationship summary: calls x215, references x201, method x153, contains x45. The diagram prioritizes high-confidence calls or usage relationships; the table keeps the broader node inventory.</p>
+    <p>This section comes from graphify community clustering. Relationship summary: calls x217, references x201, method x154, contains x45. The diagram prioritizes high-confidence calls or usage relationships; the table keeps the broader node inventory.</p>
   </div>
 </div>
 <hr>
@@ -2760,12 +2760,12 @@ flowchart LR
 
 <!-- ====== 10. Tests & Fixtures ====== -->
 <h2 id="tests-fixtures">10. Tests &amp; Fixtures</h2>
-<p>Tests &amp; Fixtures groups implementation around test, tests, backend, french, mostly in tests/test_nsi_pipeline.py, macOS/Tests/RunIsolationTests.swift, generator/aqaaccountgen/case_data.py. This section covers 9743 nodes and 31009 internal edges; the diagram shows only representative relationships to stay readable.</p>
+<p>Tests &amp; Fixtures groups implementation around test, tests, backend, french, mostly in tests/test_nsi_pipeline.py, macOS/Tests/RunIsolationTests.swift, Keldin/Domain/AppModels.swift. This section covers 9731 nodes and 30987 internal edges; the diagram shows only representative relationships to stay readable.</p>
 
 <div class="mermaid">
 %%{init: {"theme": "dark", "themeVariables": {"fontSize": "15.0px", "fontFamily": "Segoe UI, system-ui, sans-serif", "primaryColor": "#1e293b", "primaryTextColor": "#e2e8f0", "primaryBorderColor": "#38bdf8", "secondaryColor": "#0f172a", "tertiaryColor": "#334155", "lineColor": "#64748b", "textColor": "#e2e8f0"}, "flowchart": {"htmlLabels": true, "curve": "basis", "nodeSpacing": 48, "rankSpacing": 64, "padding": 14, "diagramPadding": 10, "useMaxWidth": true}}}%%
 flowchart LR
-    %% Section: Tests &amp; Fixtures (9743 nodes, 31009 edges)
+    %% Section: Tests &amp; Fixtures (9731 nodes, 30987 edges)
     subgraph tests_fixtures_Backend_Core_accounting_levels_py_55eb7cc8["Backend/Core/accounting_levels.py"]
         backend_core_accounting_levels_policies_04dad68d("_policies()<br/><small>Backend/Core/accounting_levels.py</small>")
         backend_core_accounting_levels_accounting_level_7c9f6bff("accounting_level_policy()<br/><small>Backend/Core/accounting_levels.py</small>")
@@ -2804,7 +2804,7 @@ flowchart LR
     backend_core_accounting_scheme_content_verify_ac_987e3bc5 -->|calls| backend_core_assessment_package_extract_items_d33c7ce2
     backend_core_assessment_package_extract_items_d33c7ce2 -->|calls| backend_core_assessment_package_validate_respons_d706a37c
     backend_core_assessment_package_validate_respons_d706a37c -->|calls| tests_test_accounting_marking_policy_test_groupe_938371d4
-    %% Omitted for readability: 9725 nodes, 0 edges
+    %% Omitted for readability: 9713 nodes, 0 edges
     class backend_core_accounting_levels_policies_04dad68d function;
     class backend_core_accounting_levels_accounting_level_7c9f6bff function;
     class backend_core_accounting_levels_validate_accounti_83eeabb9 function;
@@ -3093,79 +3093,81 @@ flowchart LR
       <tr><th>File</th><th>Coverage</th></tr>
       <tr><td><code>tests/test_nsi_pipeline.py</code></td><td>116 nodes</td></tr>
 <tr><td><code>macOS/Tests/RunIsolationTests.swift</code></td><td>108 nodes</td></tr>
+<tr><td><code>Keldin/Domain/AppModels.swift</code></td><td>97 nodes</td></tr>
 <tr><td><code>generator/aqaaccountgen/case_data.py</code></td><td>89 nodes</td></tr>
-<tr><td><code>Keldin/Domain/AppModels.swift</code></td><td>72 nodes</td></tr>
-<tr><td><code>macOS/Tests/CoordinatorTests.swift</code></td><td>70 nodes</td></tr>
 <tr><td><code>Features/Documents/DocumentPreviewView.swift</code></td><td>66 nodes</td></tr>
+<tr><td><code>macOS/Tests/CoordinatorTests.swift</code></td><td>66 nodes</td></tr>
 <tr><td><code>Core/france/llm_pipeline.py</code></td><td>63 nodes</td></tr>
 <tr><td><code>generator/tests/test_question_styles.py</code></td><td>62 nodes</td></tr>
     </table>
   </div>
   <div class="card">
     <h4>Design Notes</h4>
-    <p>This section comes from graphify community clustering. Relationship summary: calls x12221, contains x5959, references x4314, imports x3082. The diagram prioritizes high-confidence calls or usage relationships; the table keeps the broader node inventory.</p>
+    <p>This section comes from graphify community clustering. Relationship summary: calls x12214, contains x5950, references x4267, imports x3077. The diagram prioritizes high-confidence calls or usage relationships; the table keeps the broader node inventory.</p>
   </div>
 </div>
 <hr>
 
-<!-- ====== 11. KeldinTests ====== -->
-<h2 id="keldintests">11. KeldinTests</h2>
-<p>KeldinTests groups implementation around macos, keldin, domain, appmodelsswift, mostly in Keldin/Domain/AppModels.swift, macOS/Tests/AppTests.swift, Keldin/State/BenchmarkCoordinator.swift. This section covers 174 nodes and 313 internal edges; the diagram shows only representative relationships to stay readable.</p>
+<!-- ====== 11. AIProvider ====== -->
+<h2 id="aiprovider">11. AIProvider</h2>
+<p>AIProvider groups implementation around macos, keldin, domain, appmodelsswift, mostly in Keldin/Domain/AppModels.swift, Keldin/Navigation/SidebarView.swift, Keldin/State/CatalogStore.swift. This section covers 185 nodes and 354 internal edges; the diagram shows only representative relationships to stay readable.</p>
 
 <div class="mermaid">
 %%{init: {"theme": "dark", "themeVariables": {"fontSize": "15.0px", "fontFamily": "Segoe UI, system-ui, sans-serif", "primaryColor": "#1e293b", "primaryTextColor": "#e2e8f0", "primaryBorderColor": "#38bdf8", "secondaryColor": "#0f172a", "tertiaryColor": "#334155", "lineColor": "#64748b", "textColor": "#e2e8f0"}, "flowchart": {"htmlLabels": true, "curve": "basis", "nodeSpacing": 48, "rankSpacing": 64, "padding": 14, "diagramPadding": 10, "useMaxWidth": true}}}%%
 flowchart LR
-    %% Section: KeldinTests (174 nodes, 313 edges)
-    subgraph keldintests_Keldin_Domain_AppModels_swift_a97163a6["Keldin/Domain/AppModels.swift"]
-        macos_keldin_domain_appmodels_generationqualityp_372c5445("presentation()<br/><small>Keldin/Domain/AppModels.swift</small>")
-        macos_keldin_domain_appmodels_catalogloader_load_6e2357b8("load()<br/><small>Keldin/Domain/AppModels.swift</small>")
-        macos_keldin_domain_appmodels_generatedfile_7c95e64a("GeneratedFile<br/><small>Keldin/Domain/AppModels.swift</small>")
-        macos_keldin_domain_appmodels_benchmarksample_562c9679("BenchmarkSample<br/><small>Keldin/Domain/AppModels.swift</small>")
+    %% Section: AIProvider (185 nodes, 354 edges)
+    subgraph aiprovider_Keldin_Domain_AppModels_swift_ec23d732["Keldin/Domain/AppModels.swift"]
+        macos_keldin_domain_appmodels_examcatalog_board_260a336a("board()<br/><small>Keldin/Domain/AppModels.swift</small>")
+        macos_keldin_domain_appmodels_aiprovider_d4e33bdd("AIProvider<br/><small>Keldin/Domain/AppModels.swift</small>")
         macos_keldin_domain_appmodels_boardstatus_ebe5a531("BoardStatus<br/><small>Keldin/Domain/AppModels.swift</small>")
         macos_keldin_domain_appmodels_boardstatus_title_5b2e6688(".title<br/><small>Keldin/Domain/AppModels.swift</small>")
+        macos_keldin_domain_appmodels_assessmentkind_5aba17f8("AssessmentKind<br/><small>Keldin/Domain/AppModels.swift</small>")
+        macos_keldin_domain_appmodels_assessmentkind_tit_ffff3260(".title<br/><small>Keldin/Domain/AppModels.swift</small>")
+        macos_keldin_domain_appmodels_paperoption_09cf9fc1("PaperOption<br/><small>Keldin/Domain/AppModels.swift</small>")
+        macos_keldin_domain_appmodels_paperoption_init_5be6ed2d("init()<br/><small>Keldin/Domain/AppModels.swift</small>")
+        macos_keldin_domain_appmodels_qualificationreadi_fd924a1d("QualificationReadiness<br/><small>Keldin/Domain/AppModels.swift</small>")
+        macos_keldin_domain_appmodels_generatorpaperdocu_32b0f64b(".readiness<br/><small>Keldin/Domain/AppModels.swift</small>")
+        macos_keldin_domain_appmodels_qualificationreadi_a265bf28(".highestLevelTitle<br/><small>Keldin/Domain/AppModels.swift</small>")
         macos_keldin_domain_appmodels_generatorcontentmo_78185958("GeneratorContentMode<br/><small>Keldin/Domain/AppModels.swift</small>")
         macos_keldin_domain_appmodels_generatorcontentmo_07b7580b(".systemImage<br/><small>Keldin/Domain/AppModels.swift</small>")
-        macos_keldin_domain_appmodels_generatorcontentmo_edca4566(".title<br/><small>Keldin/Domain/AppModels.swift</small>")
-        macos_keldin_domain_appmodels_generatorcontentmo_37955db8(".usesAI<br/><small>Keldin/Domain/AppModels.swift</small>")
-        macos_keldin_domain_appmodels_catalogloader_eb7b101f("CatalogLoader<br/><small>Keldin/Domain/AppModels.swift</small>")
-        macos_keldin_domain_appmodels_catalogloader_impl_ebdac0d1("implementationKey()<br/><small>Keldin/Domain/AppModels.swift</small>")
-        macos_keldin_domain_appmodels_catalogloaderror_d_b3954dfc("duplicateBoard<br/><small>Keldin/Domain/AppModels.swift</small>")
-        macos_keldin_domain_appmodels_catalogloaderror_d_6511e5f3("duplicateImplementation<br/><small>Keldin/Domain/AppModels.swift</small>")
-        macos_keldin_domain_appmodels_catalogloaderror_e_9f71cc13("emptyImplementation<br/><small>Keldin/Domain/AppModels.swift</small>")
-        macos_keldin_domain_appmodels_catalogloaderror_i_6ff13988("implementationMissingFromCatalog<br/><small>Keldin/Domain/AppModels.swift</small>")
     end
-    macos_keldin_state_benchmarkcoordinator_benchmar_94b7de19("BenchmarkCoordinator<br/><small>Keldin/State/BenchmarkCoordinator.swift</small>")
-    macos_tests_apptests_keldintests_bedeb5ac("KeldinTests<br/><small>macOS/Tests/AppTests.swift</small>")
+    subgraph aiprovider_Keldin_Domain_GenerationEstimator_swi_b5b7b417["Keldin/Domain/GenerationEstimator.swift"]
+        macos_keldin_domain_generationestimator_generati_772765d8("initialEstimate()<br/><small>Keldin/Domain/GenerationEstimator.swift</small>")
+        macos_keldin_domain_generationestimator_generati_4821e804("GenerationEstimator<br/><small>Keldin/Domain/GenerationEstimator.swift</small>")
+    end
+    subgraph aiprovider_Keldin_State_CatalogStore_swift_096af2d9["Keldin/State/CatalogStore.swift"]
+        macos_keldin_state_catalogstore_catalogstore_0c3f2b3f("CatalogStore<br/><small>Keldin/State/CatalogStore.swift</small>")
+        macos_keldin_state_catalogstore_catalogstore_sel_d421c735(".selectedPaper<br/><small>Keldin/State/CatalogStore.swift</small>")
+    end
+    macos_tests_generationestimatortests_generatione_d1f47c25("GenerationEstimatorTests<br/><small>macOS/Tests/GenerationEstimatorTests.swift</small>")
     macos_keldin_domain_appmodels_boardstatus_ebe5a531 -->|method| macos_keldin_domain_appmodels_boardstatus_title_5b2e6688
+    macos_keldin_domain_appmodels_assessmentkind_5aba17f8 -->|method| macos_keldin_domain_appmodels_assessmentkind_tit_ffff3260
+    macos_keldin_domain_appmodels_paperoption_09cf9fc1 -->|method| macos_keldin_domain_appmodels_paperoption_init_5be6ed2d
+    macos_keldin_domain_appmodels_paperoption_09cf9fc1 -->|calls| macos_keldin_state_catalogstore_catalogstore_sel_d421c735
+    macos_keldin_domain_appmodels_qualificationreadi_fd924a1d -->|calls| macos_keldin_domain_appmodels_generatorpaperdocu_32b0f64b
+    macos_keldin_domain_appmodels_qualificationreadi_fd924a1d -->|method| macos_keldin_domain_appmodels_qualificationreadi_a265bf28
     macos_keldin_domain_appmodels_generatorcontentmo_78185958 -->|method| macos_keldin_domain_appmodels_generatorcontentmo_07b7580b
-    macos_keldin_domain_appmodels_generatorcontentmo_78185958 -->|method| macos_keldin_domain_appmodels_generatorcontentmo_edca4566
-    macos_keldin_domain_appmodels_generatorcontentmo_78185958 -->|method| macos_keldin_domain_appmodels_generatorcontentmo_37955db8
-    macos_keldin_domain_appmodels_catalogloader_eb7b101f -->|method| macos_keldin_domain_appmodels_catalogloader_impl_ebdac0d1
-    macos_keldin_domain_appmodels_catalogloader_eb7b101f -->|method| macos_keldin_domain_appmodels_catalogloader_load_6e2357b8
-    macos_keldin_domain_appmodels_catalogloader_load_6e2357b8 -->|calls| macos_keldin_domain_appmodels_catalogloader_impl_ebdac0d1
-    macos_keldin_domain_appmodels_catalogloader_load_6e2357b8 -->|calls| macos_keldin_domain_appmodels_catalogloaderror_d_b3954dfc
-    macos_keldin_domain_appmodels_catalogloader_load_6e2357b8 -->|calls| macos_keldin_domain_appmodels_catalogloaderror_d_6511e5f3
-    macos_keldin_domain_appmodels_catalogloader_load_6e2357b8 -->|calls| macos_keldin_domain_appmodels_catalogloaderror_e_9f71cc13
-    macos_keldin_domain_appmodels_catalogloader_load_6e2357b8 -->|calls| macos_keldin_domain_appmodels_catalogloaderror_i_6ff13988
-    %% Omitted for readability: 156 nodes, 0 edges
-    class macos_keldin_domain_appmodels_generationqualityp_372c5445 function;
-    class macos_keldin_domain_appmodels_catalogloader_load_6e2357b8 function;
-    class macos_keldin_domain_appmodels_generatedfile_7c95e64a klass;
-    class macos_keldin_domain_appmodels_benchmarksample_562c9679 klass;
+    macos_keldin_domain_generationestimator_generati_4821e804 -->|method| macos_keldin_domain_generationestimator_generati_772765d8
+    macos_keldin_state_catalogstore_catalogstore_0c3f2b3f -->|method| macos_keldin_state_catalogstore_catalogstore_sel_d421c735
+    %% Omitted for readability: 167 nodes, 0 edges
+    class macos_keldin_domain_appmodels_examcatalog_board_260a336a function;
+    class macos_keldin_domain_appmodels_aiprovider_d4e33bdd klass;
     class macos_keldin_domain_appmodels_boardstatus_ebe5a531 klass;
     class macos_keldin_domain_appmodels_boardstatus_title_5b2e6688 function;
+    class macos_keldin_domain_appmodels_assessmentkind_5aba17f8 async;
+    class macos_keldin_domain_appmodels_assessmentkind_tit_ffff3260 function;
+    class macos_keldin_domain_appmodels_paperoption_09cf9fc1 klass;
+    class macos_keldin_domain_appmodels_paperoption_init_5be6ed2d function;
+    class macos_keldin_domain_appmodels_qualificationreadi_fd924a1d klass;
+    class macos_keldin_domain_appmodels_generatorpaperdocu_32b0f64b function;
+    class macos_keldin_domain_appmodels_qualificationreadi_a265bf28 function;
     class macos_keldin_domain_appmodels_generatorcontentmo_78185958 klass;
     class macos_keldin_domain_appmodels_generatorcontentmo_07b7580b function;
-    class macos_keldin_domain_appmodels_generatorcontentmo_edca4566 function;
-    class macos_keldin_domain_appmodels_generatorcontentmo_37955db8 function;
-    class macos_keldin_domain_appmodels_catalogloader_eb7b101f klass;
-    class macos_keldin_domain_appmodels_catalogloader_impl_ebdac0d1 function;
-    class macos_keldin_domain_appmodels_catalogloaderror_d_b3954dfc function;
-    class macos_keldin_domain_appmodels_catalogloaderror_d_6511e5f3 function;
-    class macos_keldin_domain_appmodels_catalogloaderror_e_9f71cc13 function;
-    class macos_keldin_domain_appmodels_catalogloaderror_i_6ff13988 function;
-    class macos_keldin_state_benchmarkcoordinator_benchmar_94b7de19 klass;
-    class macos_tests_apptests_keldintests_bedeb5ac test;
+    class macos_keldin_domain_generationestimator_generati_772765d8 function;
+    class macos_keldin_domain_generationestimator_generati_4821e804 klass;
+    class macos_keldin_state_catalogstore_catalogstore_0c3f2b3f ui;
+    class macos_keldin_state_catalogstore_catalogstore_sel_d421c735 function;
+    class macos_tests_generationestimatortests_generatione_d1f47c25 test;
     classDef entry fill:#422006,stroke:#fbbf24,color:#fde68a,stroke-width:1px;
     classDef api fill:#450a0a,stroke:#f87171,color:#fee2e2,stroke-width:1px;
     classDef async fill:#2e1065,stroke:#a78bfa,color:#ede9fe,stroke-width:1px;
@@ -3189,11 +3191,11 @@ flowchart LR
 </tr>
 <tr>
   <td>1</td>
-  <td><code>Equatable</code><br><small style="color:var(--muted)"></small></td>
+  <td><code>Hashable</code><br><small style="color:var(--muted)"></small></td>
   <td><span class="tag tag-class">Class</span></td>
   <td>External entry / no inbound edge</td>
   <td>No direct outbound edge</td>
-  <td>Equatable node in project.</td>
+  <td>Caches analysis results or computes cache keys.</td>
 </tr>
 <tr>
   <td>2</td>
@@ -3237,6 +3239,70 @@ flowchart LR
 </tr>
 <tr>
   <td>7</td>
+  <td><code>AssessmentKind</code><br><small style="color:var(--muted)">Keldin/Domain/AppModels.swift</small></td>
+  <td><span class="tag tag-async">Async</span></td>
+  <td>External entry / no inbound edge</td>
+  <td><code>.title</code><br><small style="color:var(--muted)">Keldin/Domain/AppModels.swift</small></td>
+  <td>AssessmentKind node in Keldin/Domain/AppModels.swift.</td>
+</tr>
+<tr>
+  <td>8</td>
+  <td><code>fullPaper</code><br><small style="color:var(--muted)">Keldin/Domain/AppModels.swift</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>fullPaper node in Keldin/Domain/AppModels.swift.</td>
+</tr>
+<tr>
+  <td>9</td>
+  <td><code>questionBank</code><br><small style="color:var(--muted)">Keldin/Domain/AppModels.swift</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>questionBank node in Keldin/Domain/AppModels.swift.</td>
+</tr>
+<tr>
+  <td>10</td>
+  <td><code>.title</code><br><small style="color:var(--muted)">Keldin/Domain/AppModels.swift</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>AssessmentKind</code><br><small style="color:var(--muted)">Keldin/Domain/AppModels.swift</small></td>
+  <td>No direct outbound edge</td>
+  <td>.title node in Keldin/Domain/AppModels.swift.</td>
+</tr>
+<tr>
+  <td>11</td>
+  <td><code>PaperOption</code><br><small style="color:var(--muted)">Keldin/Domain/AppModels.swift</small></td>
+  <td><span class="tag tag-class">Class</span></td>
+  <td>External entry / no inbound edge</td>
+  <td><code>.selectedPaper</code><br><small style="color:var(--muted)">Keldin/State/CatalogStore.swift</small><br><code>init()</code><br><small style="color:var(--muted)">Keldin/Domain/AppModels.swift</small></td>
+  <td>PaperOption node in Keldin/Domain/AppModels.swift.</td>
+</tr>
+<tr>
+  <td>12</td>
+  <td><code>Identifiable</code><br><small style="color:var(--muted)"></small></td>
+  <td><span class="tag tag-class">Class</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Identifiable node in project.</td>
+</tr>
+<tr>
+  <td>13</td>
+  <td><code>.init()</code><br><small style="color:var(--muted)">Keldin/Domain/AppModels.swift</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>PaperOption</code><br><small style="color:var(--muted)">Keldin/Domain/AppModels.swift</small></td>
+  <td>No direct outbound edge</td>
+  <td>.init() node in Keldin/Domain/AppModels.swift.</td>
+</tr>
+<tr>
+  <td>14</td>
+  <td><code>QualificationReadiness</code><br><small style="color:var(--muted)">Keldin/Domain/AppModels.swift</small></td>
+  <td><span class="tag tag-class">Class</span></td>
+  <td>External entry / no inbound edge</td>
+  <td><code>.highestLevelTitle</code><br><small style="color:var(--muted)">Keldin/Domain/AppModels.swift</small><br><code>.readiness</code><br><small style="color:var(--muted)">Keldin/Domain/AppModels.swift</small><br><code>.selectedPaper</code><br><small style="color:var(--muted)">Keldin/State/CatalogStore.swift</small></td>
+  <td>QualificationReadiness node in Keldin/Domain/AppModels.swift.</td>
+</tr>
+<tr>
+  <td>15</td>
   <td><code>Bool</code><br><small style="color:var(--muted)"></small></td>
   <td><span class="tag tag-class">Class</span></td>
   <td>External entry / no inbound edge</td>
@@ -3244,7 +3310,15 @@ flowchart LR
   <td>Bool node in project.</td>
 </tr>
 <tr>
-  <td>8</td>
+  <td>16</td>
+  <td><code>.highestLevelTitle</code><br><small style="color:var(--muted)">Keldin/Domain/AppModels.swift</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>QualificationReadiness</code><br><small style="color:var(--muted)">Keldin/Domain/AppModels.swift</small></td>
+  <td>No direct outbound edge</td>
+  <td>.highestLevelTitle node in Keldin/Domain/AppModels.swift.</td>
+</tr>
+<tr>
+  <td>17</td>
   <td><code>GeneratorContentMode</code><br><small style="color:var(--muted)">Keldin/Domain/AppModels.swift</small></td>
   <td><span class="tag tag-class">Class</span></td>
   <td>External entry / no inbound edge</td>
@@ -3252,7 +3326,7 @@ flowchart LR
   <td>GeneratorContentMode node in Keldin/Domain/AppModels.swift.</td>
 </tr>
 <tr>
-  <td>9</td>
+  <td>18</td>
   <td><code>deterministic</code><br><small style="color:var(--muted)">Keldin/Domain/AppModels.swift</small></td>
   <td><span class="tag tag-func">Function</span></td>
   <td>External entry / no inbound edge</td>
@@ -3260,7 +3334,7 @@ flowchart LR
   <td>deterministic node in Keldin/Domain/AppModels.swift.</td>
 </tr>
 <tr>
-  <td>10</td>
+  <td>19</td>
   <td><code>aiAssisted</code><br><small style="color:var(--muted)">Keldin/Domain/AppModels.swift</small></td>
   <td><span class="tag tag-func">Function</span></td>
   <td>External entry / no inbound edge</td>
@@ -3268,7 +3342,7 @@ flowchart LR
   <td>aiAssisted node in Keldin/Domain/AppModels.swift.</td>
 </tr>
 <tr>
-  <td>11</td>
+  <td>20</td>
   <td><code>.usesAI</code><br><small style="color:var(--muted)">Keldin/Domain/AppModels.swift</small></td>
   <td><span class="tag tag-func">Function</span></td>
   <td><code>GeneratorContentMode</code><br><small style="color:var(--muted)">Keldin/Domain/AppModels.swift</small></td>
@@ -3276,7 +3350,7 @@ flowchart LR
   <td>.usesAI node in Keldin/Domain/AppModels.swift.</td>
 </tr>
 <tr>
-  <td>12</td>
+  <td>21</td>
   <td><code>.title</code><br><small style="color:var(--muted)">Keldin/Domain/AppModels.swift</small></td>
   <td><span class="tag tag-func">Function</span></td>
   <td><code>GeneratorContentMode</code><br><small style="color:var(--muted)">Keldin/Domain/AppModels.swift</small></td>
@@ -3284,7 +3358,7 @@ flowchart LR
   <td>.title node in Keldin/Domain/AppModels.swift.</td>
 </tr>
 <tr>
-  <td>13</td>
+  <td>22</td>
   <td><code>.systemImage</code><br><small style="color:var(--muted)">Keldin/Domain/AppModels.swift</small></td>
   <td><span class="tag tag-func">Function</span></td>
   <td><code>GeneratorContentMode</code><br><small style="color:var(--muted)">Keldin/Domain/AppModels.swift</small></td>
@@ -3292,140 +3366,68 @@ flowchart LR
   <td>.systemImage node in Keldin/Domain/AppModels.swift.</td>
 </tr>
 <tr>
-  <td>14</td>
+  <td>23</td>
+  <td><code>ExamBoardOption</code><br><small style="color:var(--muted)">Keldin/Domain/AppModels.swift</small></td>
+  <td><span class="tag tag-class">Class</span></td>
+  <td>External entry / no inbound edge</td>
+  <td><code>.defaultBoard</code><br><small style="color:var(--muted)">Keldin/Domain/AppModels.swift</small><br><code>.fullPapers</code><br><small style="color:var(--muted)">Keldin/Domain/AppModels.swift</small><br><code>.isReady</code><br><small style="color:var(--muted)">Keldin/Domain/AppModels.swift</small><br>+3 more</td>
+  <td>ExamBoardOption node in Keldin/Domain/AppModels.swift.</td>
+</tr>
+<tr>
+  <td>24</td>
+  <td><code>.isReady</code><br><small style="color:var(--muted)">Keldin/Domain/AppModels.swift</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>ExamBoardOption</code><br><small style="color:var(--muted)">Keldin/Domain/AppModels.swift</small></td>
+  <td>No direct outbound edge</td>
+  <td>.isReady node in Keldin/Domain/AppModels.swift.</td>
+</tr>
+<tr>
+  <td>25</td>
+  <td><code>.usesAI</code><br><small style="color:var(--muted)">Keldin/Domain/AppModels.swift</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>ExamBoardOption</code><br><small style="color:var(--muted)">Keldin/Domain/AppModels.swift</small></td>
+  <td>No direct outbound edge</td>
+  <td>.usesAI node in Keldin/Domain/AppModels.swift.</td>
+</tr>
+<tr>
+  <td>26</td>
+  <td><code>.fullPapers</code><br><small style="color:var(--muted)">Keldin/Domain/AppModels.swift</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>ExamBoardOption</code><br><small style="color:var(--muted)">Keldin/Domain/AppModels.swift</small></td>
+  <td>No direct outbound edge</td>
+  <td>.fullPapers node in Keldin/Domain/AppModels.swift.</td>
+</tr>
+<tr>
+  <td>27</td>
+  <td><code>.questionBanks</code><br><small style="color:var(--muted)">Keldin/Domain/AppModels.swift</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>ExamBoardOption</code><br><small style="color:var(--muted)">Keldin/Domain/AppModels.swift</small></td>
+  <td>No direct outbound edge</td>
+  <td>.questionBanks node in Keldin/Domain/AppModels.swift.</td>
+</tr>
+<tr>
+  <td>28</td>
+  <td><code>.supports()</code><br><small style="color:var(--muted)">Keldin/Domain/AppModels.swift</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>ExamBoardOption</code><br><small style="color:var(--muted)">Keldin/Domain/AppModels.swift</small></td>
+  <td>No direct outbound edge</td>
+  <td>.supports() node in Keldin/Domain/AppModels.swift.</td>
+</tr>
+<tr>
+  <td>29</td>
+  <td><code>CatalogSubject</code><br><small style="color:var(--muted)">Keldin/Domain/AppModels.swift</small></td>
+  <td><span class="tag tag-class">Class</span></td>
+  <td>External entry / no inbound edge</td>
+  <td><code>.filteredSubjects</code><br><small style="color:var(--muted)">Keldin/State/CatalogStore.swift</small></td>
+  <td>CatalogSubject node in Keldin/Domain/AppModels.swift.</td>
+</tr>
+<tr>
+  <td>30</td>
   <td><code>.readyBoards</code><br><small style="color:var(--muted)">Keldin/Domain/AppModels.swift</small></td>
   <td><span class="tag tag-func">Function</span></td>
   <td>External entry / no inbound edge</td>
   <td>No direct outbound edge</td>
   <td>.readyBoards node in Keldin/Domain/AppModels.swift.</td>
-</tr>
-<tr>
-  <td>15</td>
-  <td><code>CatalogLoader</code><br><small style="color:var(--muted)">Keldin/Domain/AppModels.swift</small></td>
-  <td><span class="tag tag-class">Class</span></td>
-  <td>External entry / no inbound edge</td>
-  <td><code>implementationKey()</code><br><small style="color:var(--muted)">Keldin/Domain/AppModels.swift</small><br><code>load()</code><br><small style="color:var(--muted)">Keldin/Domain/AppModels.swift</small></td>
-  <td>CatalogLoader node in Keldin/Domain/AppModels.swift.</td>
-</tr>
-<tr>
-  <td>16</td>
-  <td><code>.load()</code><br><small style="color:var(--muted)">Keldin/Domain/AppModels.swift</small></td>
-  <td><span class="tag tag-func">Function</span></td>
-  <td><code>CatalogLoader</code><br><small style="color:var(--muted)">Keldin/Domain/AppModels.swift</small></td>
-  <td><code>duplicateBoard</code><br><small style="color:var(--muted)">Keldin/Domain/AppModels.swift</small><br><code>duplicateImplementation</code><br><small style="color:var(--muted)">Keldin/Domain/AppModels.swift</small><br><code>emptyImplementation</code><br><small style="color:var(--muted)">Keldin/Domain/AppModels.swift</small><br>+8 more</td>
-  <td>.load() node in Keldin/Domain/AppModels.swift.</td>
-</tr>
-<tr>
-  <td>17</td>
-  <td><code>Bundle</code><br><small style="color:var(--muted)"></small></td>
-  <td><span class="tag tag-class">Class</span></td>
-  <td>External entry / no inbound edge</td>
-  <td>No direct outbound edge</td>
-  <td>Bundle node in project.</td>
-</tr>
-<tr>
-  <td>18</td>
-  <td><code>Data</code><br><small style="color:var(--muted)"></small></td>
-  <td><span class="tag tag-class">Class</span></td>
-  <td>External entry / no inbound edge</td>
-  <td>No direct outbound edge</td>
-  <td>Data node in project.</td>
-</tr>
-<tr>
-  <td>19</td>
-  <td><code>.implementationKey()</code><br><small style="color:var(--muted)">Keldin/Domain/AppModels.swift</small></td>
-  <td><span class="tag tag-func">Function</span></td>
-  <td><code>CatalogLoader</code><br><small style="color:var(--muted)">Keldin/Domain/AppModels.swift</small><br><code>load()</code><br><small style="color:var(--muted)">Keldin/Domain/AppModels.swift</small></td>
-  <td>No direct outbound edge</td>
-  <td>.implementationKey() node in Keldin/Domain/AppModels.swift.</td>
-</tr>
-<tr>
-  <td>20</td>
-  <td><code>CatalogDocument</code><br><small style="color:var(--muted)">Keldin/Domain/AppModels.swift</small></td>
-  <td><span class="tag tag-class">Class</span></td>
-  <td>External entry / no inbound edge</td>
-  <td>No direct outbound edge</td>
-  <td>CatalogDocument node in Keldin/Domain/AppModels.swift.</td>
-</tr>
-<tr>
-  <td>21</td>
-  <td><code>Decodable</code><br><small style="color:var(--muted)"></small></td>
-  <td><span class="tag tag-class">Class</span></td>
-  <td>External entry / no inbound edge</td>
-  <td>No direct outbound edge</td>
-  <td>Decodable node in project.</td>
-</tr>
-<tr>
-  <td>22</td>
-  <td><code>CatalogSubjectDocument</code><br><small style="color:var(--muted)">Keldin/Domain/AppModels.swift</small></td>
-  <td><span class="tag tag-class">Class</span></td>
-  <td>External entry / no inbound edge</td>
-  <td>No direct outbound edge</td>
-  <td>CatalogSubjectDocument node in Keldin/Domain/AppModels.swift.</td>
-</tr>
-<tr>
-  <td>23</td>
-  <td><code>CatalogBoardDocument</code><br><small style="color:var(--muted)">Keldin/Domain/AppModels.swift</small></td>
-  <td><span class="tag tag-class">Class</span></td>
-  <td>External entry / no inbound edge</td>
-  <td>No direct outbound edge</td>
-  <td>CatalogBoardDocument node in Keldin/Domain/AppModels.swift.</td>
-</tr>
-<tr>
-  <td>24</td>
-  <td><code>GeneratorRegistryDocument</code><br><small style="color:var(--muted)">Keldin/Domain/AppModels.swift</small></td>
-  <td><span class="tag tag-class">Class</span></td>
-  <td>External entry / no inbound edge</td>
-  <td>No direct outbound edge</td>
-  <td>GeneratorRegistryDocument node in Keldin/Domain/AppModels.swift.</td>
-</tr>
-<tr>
-  <td>25</td>
-  <td><code>GeneratorFamilyDocument</code><br><small style="color:var(--muted)">Keldin/Domain/AppModels.swift</small></td>
-  <td><span class="tag tag-class">Class</span></td>
-  <td>External entry / no inbound edge</td>
-  <td>No direct outbound edge</td>
-  <td>GeneratorFamilyDocument node in Keldin/Domain/AppModels.swift.</td>
-</tr>
-<tr>
-  <td>26</td>
-  <td><code>GeneratorPaperDocument</code><br><small style="color:var(--muted)">Keldin/Domain/AppModels.swift</small></td>
-  <td><span class="tag tag-class">Class</span></td>
-  <td>External entry / no inbound edge</td>
-  <td><code>.readiness</code><br><small style="color:var(--muted)">Keldin/Domain/AppModels.swift</small><br><code>init()</code><br><small style="color:var(--muted)">Keldin/Domain/AppModels.swift</small></td>
-  <td>GeneratorPaperDocument node in Keldin/Domain/AppModels.swift.</td>
-</tr>
-<tr>
-  <td>27</td>
-  <td><code>.readiness</code><br><small style="color:var(--muted)">Keldin/Domain/AppModels.swift</small></td>
-  <td><span class="tag tag-func">Function</span></td>
-  <td><code>GeneratorPaperDocument</code><br><small style="color:var(--muted)">Keldin/Domain/AppModels.swift</small></td>
-  <td><code>qualification</code><br><small style="color:var(--muted)">Keldin/Domain/AppModels.swift</small></td>
-  <td>.readiness node in Keldin/Domain/AppModels.swift.</td>
-</tr>
-<tr>
-  <td>28</td>
-  <td><code>qualification</code><br><small style="color:var(--muted)">Keldin/Domain/AppModels.swift</small></td>
-  <td><span class="tag tag-func">Function</span></td>
-  <td><code>.readiness</code><br><small style="color:var(--muted)">Keldin/Domain/AppModels.swift</small></td>
-  <td><code>load()</code><br><small style="color:var(--muted)">Keldin/Domain/AppModels.swift</small></td>
-  <td>qualification node in Keldin/Domain/AppModels.swift.</td>
-</tr>
-<tr>
-  <td>29</td>
-  <td><code>.init()</code><br><small style="color:var(--muted)">Keldin/Domain/AppModels.swift</small></td>
-  <td><span class="tag tag-func">Function</span></td>
-  <td><code>GeneratorPaperDocument</code><br><small style="color:var(--muted)">Keldin/Domain/AppModels.swift</small></td>
-  <td>No direct outbound edge</td>
-  <td>.init() node in Keldin/Domain/AppModels.swift.</td>
-</tr>
-<tr>
-  <td>30</td>
-  <td><code>Decoder</code><br><small style="color:var(--muted)"></small></td>
-  <td><span class="tag tag-class">Class</span></td>
-  <td>External entry / no inbound edge</td>
-  <td>No direct outbound edge</td>
-  <td>Decoder node in project.</td>
 </tr>
 </table>
 
@@ -3434,18 +3436,19 @@ flowchart LR
     <h4>Key Files</h4>
     <table style="width:100%;font-size:0.85rem;">
       <tr><th>File</th><th>Coverage</th></tr>
-      <tr><td><code>Keldin/Domain/AppModels.swift</code></td><td>93 nodes</td></tr>
-<tr><td><code>macOS/Tests/AppTests.swift</code></td><td>37 nodes</td></tr>
-<tr><td><code>Keldin/State/BenchmarkCoordinator.swift</code></td><td>7 nodes</td></tr>
+      <tr><td><code>Keldin/Domain/AppModels.swift</code></td><td>68 nodes</td></tr>
+<tr><td><code>Keldin/Navigation/SidebarView.swift</code></td><td>16 nodes</td></tr>
+<tr><td><code>Keldin/State/CatalogStore.swift</code></td><td>13 nodes</td></tr>
+<tr><td><code>Keldin/Domain/GenerationEstimator.swift</code></td><td>12 nodes</td></tr>
+<tr><td><code>macOS/Tests/GenerationEstimatorTests.swift</code></td><td>10 nodes</td></tr>
+<tr><td><code>macOS/Tests/AppTests.swift</code></td><td>7 nodes</td></tr>
 <tr><td><code>Keldin/Domain/FrenchLLMAssessmentRequest.swift</code></td><td>6 nodes</td></tr>
-<tr><td><code>Features/Benchmark/BenchmarkView.swift</code></td><td>3 nodes</td></tr>
-<tr><td><code>Keldin/State/ApplicationCoordinator.swift</code></td><td>2 nodes</td></tr>
-<tr><td><code>macOS/Tests/FrenchLLMAssessmentTests.swift</code></td><td>1 nodes</td></tr>
+<tr><td><code>Keldin/Domain/HostedModelCandidate.swift</code></td><td>4 nodes</td></tr>
     </table>
   </div>
   <div class="card">
     <h4>Design Notes</h4>
-    <p>This section comes from graphify community clustering. Relationship summary: references x82, method x70, calls x48, case of x36. The diagram prioritizes high-confidence calls or usage relationships; the table keeps the broader node inventory.</p>
+    <p>This section comes from graphify community clustering. Relationship summary: references x131, method x71, calls x54, contains x30. The diagram prioritizes high-confidence calls or usage relationships; the table keeps the broader node inventory.</p>
   </div>
 </div>
 <hr>
@@ -5182,7 +5185,7 @@ flowchart LR
       <tr><td>Nodes</td><td>14762</td></tr>
       <tr><td>Edges</td><td>43014</td></tr>
       <tr><td>Hyperedges</td><td>0</td></tr>
-      <tr><td>Communities</td><td>649</td></tr>
+      <tr><td>Communities</td><td>651</td></tr>
       <tr><td>Documented Sections</td><td>15</td></tr>
     </table>
   </div>
@@ -5198,7 +5201,7 @@ flowchart LR
 
 <div style="text-align:center; padding:40px 0; color: var(--muted); font-size:0.9rem;">
   <p>Past Paper Creation — Architecture Documentation</p>
-  <p>Generated: 2026-11-10 22:45 UTC · graphify callflow-html</p>
+  <p>Generated: 2026-11-10 23:42 UTC · graphify callflow-html</p>
 </div>
 
 </div><!-- .container -->

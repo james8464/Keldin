@@ -1120,11 +1120,8 @@
     {
       "path": "Backend/Core/france/llm_runtime.py",
       "classification": "maintained-source",
-      "status": "reviewed",
-      "reason": "Preserves prior source-bound composite review plus complete independently reviewed import/final-cleanup delta and scoped publication/error callers. No new complete-file V36-runtime read or terminal-delivery guarantee. Prior evidence docs/quality/local-model-memory-admission-review.md at cf69a54da1b965e288139aea670bd2e5ad124e0d8353cb885c3188c51992263d; prior source f91c4282ccd09475c056f7cd0c0cbe1ebf37246ad83816960a0fffd8d66a9631.",
-      "source_sha256": "2bb19b2567a84e82c00dc34a994c745bf5b247e3ffd741c7ec58504a3131dfbe",
-      "review_evidence": "docs/quality/french-publication-cleanup-review.md",
-      "review_evidence_sha256": "0c05290fe6b24bba59e95b15a8343915c22b50c3277820f6bed25f94773a8637"
+      "status": "pending",
+      "reason": "No file-level semantic implementation review recorded in this ledger."
     },
     {
       "path": "Backend/Core/france/loan_case.py",
@@ -8155,11 +8152,8 @@
     {
       "path": "tests/test_french_postrename_cleanup.py",
       "classification": "test",
-      "status": "reviewed",
-      "reason": "Complete current 311-line test EOF independently reviewed, including the retained 254-line prefix and appended direct helper controls. Fake publication lifecycle checks are not live model/native acceptance.",
-      "source_sha256": "ad264c35e1ca8a47502b827f6bfe1750ce3bdaf634717630db304e47e3ce28b2",
-      "review_evidence": "docs/quality/french-publication-cleanup-review.md",
-      "review_evidence_sha256": "0c05290fe6b24bba59e95b15a8343915c22b50c3277820f6bed25f94773a8637"
+      "status": "pending",
+      "reason": "No file-level semantic implementation review recorded in this ledger."
     },
     {
       "path": "tests/test_french_preauthoring_marks.py",

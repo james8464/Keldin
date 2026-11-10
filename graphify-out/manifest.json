@@ -4020,8 +4020,8 @@
     "semantic_hash": ""
   },
   "Resources/implementation-audit-coverage.json": {
-    "mtime": 1794350699.354699,
-    "ast_hash": "cfe27dd6a5b67f4f21aba3115a75c0b0",
+    "mtime": 1794354137.6163595,
+    "ast_hash": "7b9fa297b450e35f48cadc6d14ee980f",
     "semantic_hash": ""
   },
   "macOS/Keldin/Services/PDFDocumentAccess.swift": {
@@ -4760,8 +4760,8 @@
     "semantic_hash": ""
   },
   "Backend/Core/france/llm_runtime.py": {
-    "mtime": 1794344517.648045,
-    "ast_hash": "a514ec90fe0d5e224caa91890bfa34f0",
+    "mtime": 1794354123.4391527,
+    "ast_hash": "98e9b4db6e83dd44c2aef4914d0c6e89",
     "semantic_hash": ""
   },
   "macOS/Keldin/Domain/FrenchDraftQualityReport.swift": {
@@ -6235,8 +6235,8 @@
     "semantic_hash": ""
   },
   "tests/test_french_postrename_cleanup.py": {
-    "mtime": 1794344517.6982946,
-    "ast_hash": "b157ded3579b476116e3092c581cc5e3",
+    "mtime": 1794354123.43949,
+    "ast_hash": "284137d935c6239153d09f3c19777f82",
     "semantic_hash": ""
   },
   "docs/quality/cs1-on-screen-source-flow-review-2026-11-07.md": {
