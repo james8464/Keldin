@@ -85,8 +85,11 @@
     {
       "path": ".github/ISSUE_TEMPLATE/config.yml",
       "classification": "configuration-or-runtime-data",
-      "status": "pending",
-      "reason": "No file-level semantic implementation review recorded in this ledger."
+      "status": "reviewed",
+      "reason": "All five lines, including the renamed repository's responsible-disclosure URL. This checks configuration, not whether GitHub has enabled every destination feature.",
+      "source_sha256": "30255f1accb0a3fcad92a086914858e5f1959bc2ff0c397642258cdee713bc4a",
+      "review_evidence": "docs/quality/implementation-audit-reconciliation-2026-11-10.md",
+      "review_evidence_sha256": "799d0c38f8fce9352aa3b7697bae3e7e9bd9ccf480cafc45c12e94e6d1582c10"
     },
     {
       "path": ".github/ISSUE_TEMPLATE/improvement.yml",
@@ -1099,8 +1102,11 @@
     {
       "path": "Backend/Core/france/llm_pdf.py",
       "classification": "maintained-source",
-      "status": "pending",
-      "reason": "No file-level semantic implementation review recorded in this ledger."
+      "status": "reviewed",
+      "reason": "Fresh complete 325-line review of expected prose, figure scoping, code indentation, material-table integration and ordered whole-document comparison. Earlier scoped reads were not treated as complete baseline evidence. This does not qualify model answers or every possible generated PDF.",
+      "source_sha256": "57a22ca2d89f00ea1a68dc1cc13edadfaf5fa4df35c03c87b6a02a3ef9f4c964",
+      "review_evidence": "docs/quality/implementation-audit-reconciliation-2026-11-10.md",
+      "review_evidence_sha256": "799d0c38f8fce9352aa3b7697bae3e7e9bd9ccf480cafc45c12e94e6d1582c10"
     },
     {
       "path": "Backend/Core/france/llm_pipeline.py",
@@ -1279,8 +1285,11 @@
     {
       "path": "Backend/Core/france/pipeline.py",
       "classification": "maintained-source",
-      "status": "pending",
-      "reason": "No file-level semantic implementation review recorded in this ledger."
+      "status": "reviewed",
+      "reason": "Complete 4,379-line review of the shared/versioned pipeline. This does not substitute for a full current model-authored paper test.",
+      "source_sha256": "cf0ea7a4dd6f99e35d6dc938e6fd6052752e1c5d43343d957e147aacffa29a45",
+      "review_evidence": "docs/quality/implementation-audit-reconciliation-2026-11-10.md",
+      "review_evidence_sha256": "799d0c38f8fce9352aa3b7697bae3e7e9bd9ccf480cafc45c12e94e6d1582c10"
     },
     {
       "path": "Backend/Core/france/postfix_exercise.py",
@@ -1423,14 +1432,20 @@
     {
       "path": "Backend/Core/france/table_pdf.py",
       "classification": "maintained-source",
-      "status": "pending",
-      "reason": "No file-level semantic implementation review recorded in this ledger."
+      "status": "reviewed",
+      "reason": "Complete 300-line review, including ruled cells, glyph bounds, repeated headers and narrowly scoped material regions.",
+      "source_sha256": "88b99c34d28709fc240ce5093997690be9f0f208508300ea47f5cc04d725803d",
+      "review_evidence": "docs/quality/implementation-audit-reconciliation-2026-11-10.md",
+      "review_evidence_sha256": "799d0c38f8fce9352aa3b7697bae3e7e9bd9ccf480cafc45c12e94e6d1582c10"
     },
     {
       "path": "Backend/Core/france/teacher_review.py",
       "classification": "maintained-source",
-      "status": "pending",
-      "reason": "No file-level semantic implementation review recorded in this ledger."
+      "status": "reviewed",
+      "reason": "Earlier complete 152-line review plus the full idempotency/symlink delta, covering the current 164 lines. Composite review, not a fresh 164-line read.",
+      "source_sha256": "ea2b6caa72e9c0bcad1062ac3e910dff6c59a0d98f7f0ef9a25f19e841090734",
+      "review_evidence": "docs/quality/implementation-audit-reconciliation-2026-11-10.md",
+      "review_evidence_sha256": "799d0c38f8fce9352aa3b7697bae3e7e9bd9ccf480cafc45c12e94e6d1582c10"
     },
     {
       "path": "Backend/Core/france/tree_case_authoring.py",
@@ -1468,8 +1483,11 @@
     {
       "path": "Backend/Core/france/whole_case_pdf.py",
       "classification": "maintained-source",
-      "status": "pending",
-      "reason": "No file-level semantic implementation review recorded in this ledger."
+      "status": "reviewed",
+      "reason": "Complete 273-line review of the whole-case PDF validator and its printed-content comparison gates.",
+      "source_sha256": "23ad9dc9e98997428092e281537f2c4d5b5d3d414d657c9ea5780f137e835e3e",
+      "review_evidence": "docs/quality/implementation-audit-reconciliation-2026-11-10.md",
+      "review_evidence_sha256": "799d0c38f8fce9352aa3b7697bae3e7e9bd9ccf480cafc45c12e94e6d1582c10"
     },
     {
       "path": "Backend/Core/generation.py",
@@ -2335,8 +2353,11 @@
     {
       "path": "Resources/catalog.json",
       "classification": "configuration-or-runtime-data",
-      "status": "pending",
-      "reason": "No file-level semantic implementation review recorded in this ledger."
+      "status": "reviewed",
+      "reason": "All 102 lines. Native family and paper identities were compared with the complete registry records and actual loading paths.",
+      "source_sha256": "0c30943ff971a0b05567bb8e9318a8d298939781e6fcd1753b7b257b37f1b756",
+      "review_evidence": "docs/quality/implementation-audit-reconciliation-2026-11-10.md",
+      "review_evidence_sha256": "799d0c38f8fce9352aa3b7697bae3e7e9bd9ccf480cafc45c12e94e6d1582c10"
     },
     {
       "path": "Resources/computer-science/aqa/generator/cspapergen/__init__.py",
@@ -2368,8 +2389,11 @@
     {
       "path": "Resources/computer-science/aqa/generator/cspapergen/cli.py",
       "classification": "maintained-source",
-      "status": "pending",
-      "reason": "No file-level semantic implementation review recorded in this ledger."
+      "status": "reviewed",
+      "reason": "All 205 lines. Rule selection, family-adapter hooks, artifact order, Paper 1 supporting files, progress forwarding and command arguments were inspected. Runtime bootstrap, syllabus defaults and notes caching were read within the relevant boundaries. No new defect was established for the current caller contracts.",
+      "source_sha256": "08edd4d5b1c06f11354e3787a3a1b17e8e2b718053496ed37d75b5f6f6b44799",
+      "review_evidence": "docs/quality/implementation-audit-reconciliation-2026-11-10.md",
+      "review_evidence_sha256": "799d0c38f8fce9352aa3b7697bae3e7e9bd9ccf480cafc45c12e94e6d1582c10"
     },
     {
       "path": "Resources/computer-science/aqa/generator/cspapergen/exam_dates.py",
@@ -2446,8 +2470,11 @@
     {
       "path": "Resources/computer-science/aqa/generator/cspapergen/render_pdf.py",
       "classification": "maintained-source",
-      "status": "pending",
-      "reason": "No file-level semantic implementation review recorded in this ledger."
+      "status": "reviewed",
+      "reason": "Earlier complete 2,266-line review plus the complete source-flow/resource and declared-marking deltas. Composite coverage of the current 1,995 lines, not a fresh whole-file read.",
+      "source_sha256": "33156cc03706b553adb41406fc7751835fbed8945a6bcebd228499d1bc07fc52",
+      "review_evidence": "docs/quality/implementation-audit-reconciliation-2026-11-10.md",
+      "review_evidence_sha256": "799d0c38f8fce9352aa3b7697bae3e7e9bd9ccf480cafc45c12e94e6d1582c10"
     },
     {
       "path": "Resources/computer-science/aqa/generator/cspapergen/syllabus.py",
@@ -2461,8 +2488,11 @@
     {
       "path": "Resources/computer-science/aqa/generator/cspapergen/topic_bank.py",
       "classification": "maintained-source",
-      "status": "pending",
-      "reason": "No file-level semantic implementation review recorded in this ledger."
+      "status": "reviewed",
+      "reason": "All 573 lines. The three advertised bank routes, topic membership, instance data, answer ownership and mark construction were inspected. Models, objective calibration and syllabus modules were also read; generator, validation, SQL construction and existing tests were scoped rather than universally reread. No concrete valid-input defect was established.",
+      "source_sha256": "ca34e41de156cd76cec6da1185d6245e3692ff47ff4c9e61d7282e70b2a225ba",
+      "review_evidence": "docs/quality/implementation-audit-reconciliation-2026-11-10.md",
+      "review_evidence_sha256": "799d0c38f8fce9352aa3b7697bae3e7e9bd9ccf480cafc45c12e94e6d1582c10"
     },
     {
       "path": "Resources/computer-science/aqa/generator/cspapergen/validation.py",
@@ -3016,8 +3046,11 @@
     {
       "path": "Resources/economics/edexcel-a/generator/pastpapergen/credit_contracts.py",
       "classification": "maintained-source",
-      "status": "pending",
-      "reason": "No file-level semantic implementation review recorded in this ledger."
+      "status": "reviewed",
+      "reason": "Complete 704-line baseline plus the complete 16-line repair delta, covering the current 708 lines. The earlier bounded review missed an actual eight-mark trade-barrier knowledge mismatch. The later witness and repair supersede that no-finding conclusion. Other tariffs and source-owned routes have explicit compatibility controls; no universal economic or model-answer proof is claimed.",
+      "source_sha256": "0163063c78e0e5f012720f1faf62fe791ddb21dc23ab241b47898096796c74c8",
+      "review_evidence": "docs/quality/implementation-audit-reconciliation-2026-11-10.md",
+      "review_evidence_sha256": "799d0c38f8fce9352aa3b7697bae3e7e9bd9ccf480cafc45c12e94e6d1582c10"
     },
     {
       "path": "Resources/economics/edexcel-a/generator/pastpapergen/exam_dates.py",
@@ -3031,14 +3064,20 @@
     {
       "path": "Resources/economics/edexcel-a/generator/pastpapergen/extended_scenarios.py",
       "classification": "maintained-source",
-      "status": "pending",
-      "reason": "No file-level semantic implementation review recorded in this ledger."
+      "status": "reviewed",
+      "reason": "All 591 lines. Scenario concepts, public facts, detail selection and fallback binding were inspected. This review established the actual seed-0 eight-mark mismatch in the downstream credit selector. The scenario facts themselves remain unchanged.",
+      "source_sha256": "010800bfb766073079eb44982e5dcab0a58683a4f32b0c9c250ab934162c1850",
+      "review_evidence": "docs/quality/implementation-audit-reconciliation-2026-11-10.md",
+      "review_evidence_sha256": "799d0c38f8fce9352aa3b7697bae3e7e9bd9ccf480cafc45c12e94e6d1582c10"
     },
     {
       "path": "Resources/economics/edexcel-a/generator/pastpapergen/generator.py",
       "classification": "maintained-source",
-      "status": "pending",
-      "reason": "No file-level semantic implementation review recorded in this ledger."
+      "status": "reviewed",
+      "reason": "All 3,376 lines. Seed, section, source and canonical binding paths were inspected. Three tiny in-memory built-in-paper probes had valid 100-mark candidate paths. Those structural checks did not independently validate downstream credit semantics, where the separate trade-barrier defect was found. No complete paper-quality claim follows.",
+      "source_sha256": "430fc254810f02694dd3946c53e1484fb01c60cf17c28f51f282d31806b868e2",
+      "review_evidence": "docs/quality/implementation-audit-reconciliation-2026-11-10.md",
+      "review_evidence_sha256": "799d0c38f8fce9352aa3b7697bae3e7e9bd9ccf480cafc45c12e94e6d1582c10"
     },
     {
       "path": "Resources/economics/edexcel-a/generator/pastpapergen/models.py",
@@ -3097,8 +3136,11 @@
     {
       "path": "Resources/economics/edexcel-a/generator/pastpapergen/source_cases.py",
       "classification": "maintained-source",
-      "status": "pending",
-      "reason": "No file-level semantic implementation review recorded in this ledger."
+      "status": "reviewed",
+      "reason": "All 299 lines, through consecutive scoped reads. Case selection, wraparound, fallback construction and the complete retained text tables were examined. The latent source-vintage issue below remains recorded. Real-company statements were not all independently fact-checked.",
+      "source_sha256": "34b70b8a0c0fde7e04e6118d9c45b76cae63405e9e11f2c7b99737712eca9a2f",
+      "review_evidence": "docs/quality/implementation-audit-reconciliation-2026-11-10.md",
+      "review_evidence_sha256": "799d0c38f8fce9352aa3b7697bae3e7e9bd9ccf480cafc45c12e94e6d1582c10"
     },
     {
       "path": "Resources/economics/edexcel-a/generator/pastpapergen/source_credit.py",
@@ -3406,8 +3448,11 @@
     {
       "path": "Resources/generator-registry.json",
       "classification": "configuration-or-runtime-data",
-      "status": "pending",
-      "reason": "No file-level semantic implementation review recorded in this ledger."
+      "status": "reviewed",
+      "reason": "Semantic review of all ten families and 32 paper records, every observed key set, and every distinct qualification/check record. This is not a claim of a separate literal 1,349-line read. Seven advertised families expose 21 routes: 18 full papers and three topic banks. Identifiers, provider mapping, output roles, entry functions and all seven declared syllabuses align with the inspected native/backend callers.",
+      "source_sha256": "b86b7171a4ee25658ffa9c70d8920221f27ddd8694b542bb81143f64567b1355",
+      "review_evidence": "docs/quality/implementation-audit-reconciliation-2026-11-10.md",
+      "review_evidence_sha256": "799d0c38f8fce9352aa3b7697bae3e7e9bd9ccf480cafc45c12e94e6d1582c10"
     },
     {
       "path": "Resources/implementation-audit-coverage.json",
@@ -3442,8 +3487,11 @@
     {
       "path": "Resources/ollama-model-recommendations.json",
       "classification": "configuration-or-runtime-data",
-      "status": "pending",
-      "reason": "No file-level semantic implementation review recorded in this ledger."
+      "status": "reviewed",
+      "reason": "All 40 lines. Memory tiers are contiguous and explicitly unqualified for the full paper matrix. The warning distinguishes memory fit from accuracy. This was not a new model-availability or inference test.",
+      "source_sha256": "4ebce807196c10c2b73396b7f849d2bbb32dcd6738e8cc2b3746952425344b3e",
+      "review_evidence": "docs/quality/implementation-audit-reconciliation-2026-11-10.md",
+      "review_evidence_sha256": "799d0c38f8fce9352aa3b7697bae3e7e9bd9ccf480cafc45c12e94e6d1582c10"
     },
     {
       "path": "Resources/print-profiles.json",
@@ -3956,6 +4004,12 @@
       "reason": "Retained diagnostic/review evidence, not maintained executable implementation; exclusion does not certify its claims."
     },
     {
+      "path": "docs/quality/edexcel-trade-barrier-credit-review-2026-11-10.md",
+      "classification": "historical-evidence",
+      "status": "excluded",
+      "reason": "Retained diagnostic/review evidence, not maintained executable implementation; exclusion does not certify its claims."
+    },
+    {
       "path": "docs/quality/entrypoint-topic-evidence-review.md",
       "classification": "historical-evidence",
       "status": "excluded",
@@ -4455,6 +4509,12 @@
     },
     {
       "path": "docs/quality/implementation-audit-file-review-2026-10-28.md",
+      "classification": "historical-evidence",
+      "status": "excluded",
+      "reason": "Retained diagnostic/review evidence, not maintained executable implementation; exclusion does not certify its claims."
+    },
+    {
+      "path": "docs/quality/implementation-audit-reconciliation-2026-11-10.md",
       "classification": "historical-evidence",
       "status": "excluded",
       "reason": "Retained diagnostic/review evidence, not maintained executable implementation; exclusion does not certify its claims."
@@ -5650,8 +5710,11 @@
     {
       "path": "macOS/Keldin/Application/AppConfiguration.swift",
       "classification": "maintained-source",
-      "status": "pending",
-      "reason": "No file-level semantic implementation review recorded in this ledger."
+      "status": "reviewed",
+      "reason": "All 141 lines. Defaults, storage names, home-path abbreviation, output-folder choices and application links were inspected with bounded startup and bookmark callers. No concrete defect was established. Permission, disk and every-user behaviour are not certified.",
+      "source_sha256": "75e53a74d0870ac0e69cfaf20bad0706a421c3e832135845437c06bfeee31859",
+      "review_evidence": "docs/quality/implementation-audit-reconciliation-2026-11-10.md",
+      "review_evidence_sha256": "799d0c38f8fce9352aa3b7697bae3e7e9bd9ccf480cafc45c12e94e6d1582c10"
     },
     {
       "path": "macOS/Keldin/Application/KeldinApp.swift",
@@ -7108,8 +7171,11 @@
     {
       "path": "tests/test_cs_declared_marking_policy.py",
       "classification": "test",
-      "status": "pending",
-      "reason": "No file-level semantic implementation review recorded in this ledger."
+      "status": "reviewed",
+      "reason": "Complete 105-line review. Explicit source-owned levels and point-only schemes have separate preservation controls.",
+      "source_sha256": "4ea873be3a3f6b60b341adeb38bba73dc74f0b675f727d5f3d23f0a34e3665aa",
+      "review_evidence": "docs/quality/implementation-audit-reconciliation-2026-11-10.md",
+      "review_evidence_sha256": "799d0c38f8fce9352aa3b7697bae3e7e9bd9ccf480cafc45c12e94e6d1582c10"
     },
     {
       "path": "tests/test_cs_delivery_chrome.py",
@@ -7278,6 +7344,15 @@
       "classification": "test",
       "status": "pending",
       "reason": "No file-level semantic implementation review recorded in this ledger."
+    },
+    {
+      "path": "tests/test_edexcel_trade_barrier_credit.py",
+      "classification": "test",
+      "status": "reviewed",
+      "reason": "All 137 lines. The actual Paper 2 seed-0 witness, source/input preservation, existing tariff snapshots, authored routes and helper-only negative control were read. The latter is not represented as a currently seeded currency question.",
+      "source_sha256": "cd6a1a4bdf8f5dc6951a922289fbcce39272a0caa41fec63a96757179098f7f6",
+      "review_evidence": "docs/quality/implementation-audit-reconciliation-2026-11-10.md",
+      "review_evidence_sha256": "799d0c38f8fce9352aa3b7697bae3e7e9bd9ccf480cafc45c12e94e6d1582c10"
     },
     {
       "path": "tests/test_education_context.py",
@@ -8137,8 +8212,11 @@
     {
       "path": "tests/test_french_review.py",
       "classification": "test",
-      "status": "pending",
-      "reason": "No file-level semantic implementation review recorded in this ledger."
+      "status": "reviewed",
+      "reason": "Earlier complete 135-line test review plus all 152 appended lines. Composite coverage of the current 287 lines.",
+      "source_sha256": "633e17bf3894626032b413bdd7393542f2f3b369b6f227be82a450da160b6c7a",
+      "review_evidence": "docs/quality/implementation-audit-reconciliation-2026-11-10.md",
+      "review_evidence_sha256": "799d0c38f8fce9352aa3b7697bae3e7e9bd9ccf480cafc45c12e94e6d1582c10"
     },
     {
       "path": "tests/test_french_reviewed_redraft.py",
@@ -8227,8 +8305,11 @@
     {
       "path": "tests/test_french_table_cell_integrity.py",
       "classification": "test",
-      "status": "pending",
-      "reason": "No file-level semantic implementation review recorded in this ledger."
+      "status": "reviewed",
+      "reason": "Complete 270-line review. Physical-PDF negative cases are distinguished from in-memory drawing/glyph mutations.",
+      "source_sha256": "0dd6646f454f1ab0cff56e3ddc353167f58be53f6e6f96dc398a2a5529ceae32",
+      "review_evidence": "docs/quality/implementation-audit-reconciliation-2026-11-10.md",
+      "review_evidence_sha256": "799d0c38f8fce9352aa3b7697bae3e7e9bd9ccf480cafc45c12e94e6d1582c10"
     },
     {
       "path": "tests/test_french_timeline_marking_revision.py",

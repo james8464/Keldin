@@ -489,7 +489,12 @@ KNOWLEDGE_FACTS = {
 }
 
 
-def _knowledge_pair(topic_id):
+def _knowledge_pair(topic_id, *, prompt=""):
+    if topic_id == "4.1" and "trade barriers" in prompt:
+        return (
+            "A trade barrier restricts cross-border exchange, unlike a domestic transaction cost.",
+            "A tariff is a tax on imports; reducing it lowers the tax-inclusive import price, other things equal.",
+        )
     return KNOWLEDGE_FACTS[topic_id]
 
 
@@ -560,10 +565,9 @@ def extended_credit(
                 "Apply the extract's mortgage or business-loan exposure to the affected households or firms.",
                 "Higher debt-servicing costs reduce interest-sensitive consumption or investment; weaker aggregate demand reduces demand-pull inflation. One developed transmission route is sufficient.",
             ]
-        knowledge_name, knowledge_meaning = _knowledge_pair(question.topic_id)
-        if question.topic_id == "4.1" and "trade barriers" in question.prompt:
-            knowledge_name = "A trade barrier restricts cross-border exchange, unlike a domestic transaction cost."
-            knowledge_meaning = "A tariff is a tax on imports; reducing it lowers the tax-inclusive import price, other things equal."
+        knowledge_name, knowledge_meaning = _knowledge_pair(
+            question.topic_id, prompt=question.prompt
+        )
         scheme = [
             f"AO1 (1 mark): {knowledge_name}",
             f"AO1 (1 mark): {knowledge_meaning}",
@@ -581,7 +585,7 @@ def extended_credit(
                 for indexes in ([0, 4], [1, 5], [2, 6], [3, 7])
             )
         elif len(points) == 7:
-            knowledge = list(_knowledge_pair(question.topic_id))
+            knowledge = list(_knowledge_pair(question.topic_id, prompt=question.prompt))
             application, analysis, limits = points[1:3], points[3:5], points[5:7]
         else:
             raise ValueError(
