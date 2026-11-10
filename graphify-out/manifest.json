@@ -210,8 +210,8 @@
     "semantic_hash": ""
   },
   "Backend/Core/france/teacher_review.py": {
-    "mtime": 1793543563.2877676,
-    "ast_hash": "e1b0f0cf88dae8c7fa124a73b6ec1598",
+    "mtime": 1794337994.720312,
+    "ast_hash": "aebe8f78c0556f7e0989e2fb653474aa",
     "semantic_hash": ""
   },
   "Backend/Core/france/verification.py": {
@@ -685,8 +685,8 @@
     "semantic_hash": ""
   },
   "Resources/computer-science/aqa/generator/cspapergen/render_pdf.py": {
-    "mtime": 1794036554.7434368,
-    "ast_hash": "71170ab5927e552c2ba8e818c9e24869",
+    "mtime": 1794338036.7478597,
+    "ast_hash": "15653d9561d240f8282ff8eedd4730fd",
     "semantic_hash": ""
   },
   "Resources/computer-science/aqa/generator/cspapergen/syllabus.py": {
@@ -1245,7 +1245,7 @@
     "semantic_hash": "9089fa356046b0e497da7729dfba8605"
   },
   "Resources/repository-inventory.json": {
-    "mtime": 1794036696.0478153,
+    "mtime": 1794038752.3958976,
     "ast_hash": "93cee72356e3edb78157b13461449412",
     "semantic_hash": ""
   },
@@ -1270,8 +1270,8 @@
     "semantic_hash": ""
   },
   "macOS/Tests/AppTests.swift": {
-    "mtime": 1794006419.058845,
-    "ast_hash": "db36a5b6a1fb8711c7447d46132ff71b",
+    "mtime": 1794336898.2858286,
+    "ast_hash": "063642cf6162f1a5ad19de500da192a9",
     "semantic_hash": ""
   },
   "macOS/Tests/CoordinatorTests.swift": {
@@ -1500,8 +1500,8 @@
     "semantic_hash": ""
   },
   "tests/test_french_review.py": {
-    "mtime": 1793543563.4711492,
-    "ast_hash": "b43e40bad62dc7dc005a18e338b83cfc",
+    "mtime": 1794338036.8897972,
+    "ast_hash": "279ff153a49e48bea5278359769ce563",
     "semantic_hash": ""
   },
   "tests/test_french_runtime.py": {
@@ -1895,8 +1895,8 @@
     "semantic_hash": ""
   },
   ".github/ISSUE_TEMPLATE/config.yml": {
-    "mtime": 1793543563.245301,
-    "ast_hash": "3a499e43b197ffe90e431a6022f9cea8",
+    "mtime": 1794336898.2832732,
+    "ast_hash": "fc4f36d01720164269e16c81fa625919",
     "semantic_hash": ""
   },
   ".github/ISSUE_TEMPLATE/improvement.yml": {
@@ -1950,8 +1950,8 @@
     "semantic_hash": ""
   },
   "README.md": {
-    "mtime": 1793558954.7735047,
-    "ast_hash": "f05902de414df0c016e9f5818971b1ff",
+    "mtime": 1794336898.284109,
+    "ast_hash": "77a38fdf08999e08948301d51e328894",
     "semantic_hash": ""
   },
   "Resources/economics/edexcel-a/generator/data/notes/text/1.1. Nature of Economics.txt": {
@@ -2105,8 +2105,8 @@
     "semantic_hash": ""
   },
   "docs/occitanie-project.md": {
-    "mtime": 1793543563.3513927,
-    "ast_hash": "c3563f30a59ad598c4ef0b8d83afbf75",
+    "mtime": 1794336898.2844477,
+    "ast_hash": "c22656e288b38ed6164969395db01bbe",
     "semantic_hash": ""
   },
   "docs/project-analysis/IMPLEMENTATION_AND_FIDELITY_REPORT.md": {
@@ -2155,8 +2155,8 @@
     "semantic_hash": ""
   },
   "docs/quality/french-nsi-prototype-verification-2026-09-28.md": {
-    "mtime": 1793543563.3583443,
-    "ast_hash": "9170c1535aabd24c08cdeeaa59ccda24",
+    "mtime": 1794336898.2849803,
+    "ast_hash": "996e2fe5b6e2772c767ea3e0f50daec1",
     "semantic_hash": ""
   },
   "docs/quality/ocr-question-chrome-2026-09-28.md": {
@@ -3435,8 +3435,8 @@
     "semantic_hash": ""
   },
   "macOS/Keldin/Application/AppConfiguration.swift": {
-    "mtime": 1793626051.1940544,
-    "ast_hash": "9cd1194a896f5074985841ae6b92d598",
+    "mtime": 1794336898.2853043,
+    "ast_hash": "e8b3df562cde0afaf0f3556da87a7305",
     "semantic_hash": ""
   },
   "macOS/Keldin/Application/KeldinApp.swift": {
@@ -4020,8 +4020,8 @@
     "semantic_hash": ""
   },
   "Resources/implementation-audit-coverage.json": {
-    "mtime": 1794036684.1873212,
-    "ast_hash": "cf3e3badadfba7c981d3b6f6b3262a80",
+    "mtime": 1794339160.8651097,
+    "ast_hash": "179a8c14009444458b9c52a977a1c0ea",
     "semantic_hash": ""
   },
   "macOS/Keldin/Services/PDFDocumentAccess.swift": {
@@ -4750,8 +4750,8 @@
     "semantic_hash": ""
   },
   "Backend/Core/france/llm_pdf.py": {
-    "mtime": 1794036059.5417824,
-    "ast_hash": "02617bd138dba35def5d2442d2bea4ff",
+    "mtime": 1794338998.9010527,
+    "ast_hash": "5238184d1e75b5a1024f15023f0b12d2",
     "semantic_hash": ""
   },
   "Backend/Core/france/llm_pipeline.py": {
@@ -6252,6 +6252,41 @@
   "docs/quality/french-publication-cleanup-review.md": {
     "mtime": 1794036059.5431569,
     "ast_hash": "ba0b67dfa821efe6da4bca92c1ec8c27",
+    "semantic_hash": ""
+  },
+  "Backend/Core/france/table_pdf.py": {
+    "mtime": 1794338942.7743328,
+    "ast_hash": "ff26bce0f700773177a708a13d0c3221",
+    "semantic_hash": ""
+  },
+  "tests/test_cs_declared_marking_policy.py": {
+    "mtime": 1794338036.832162,
+    "ast_hash": "54696dbe05f94762f53569bda07b343b",
+    "semantic_hash": ""
+  },
+  "tests/test_french_table_cell_integrity.py": {
+    "mtime": 1794338973.783332,
+    "ast_hash": "d38673795dab11b7548a750a3a7bf549",
+    "semantic_hash": ""
+  },
+  "docs/quality/cs-declared-marking-policy-review-2026-11-10.md": {
+    "mtime": 1794338174.045509,
+    "ast_hash": "4771907dc74fbfba2a6df5abad9b4724",
+    "semantic_hash": ""
+  },
+  "docs/quality/french-material-table-cell-review-2026-11-10.md": {
+    "mtime": 1794339156.0751987,
+    "ast_hash": "c3c61b53b93326e8032b02ca476bd0d8",
+    "semantic_hash": ""
+  },
+  "docs/quality/french-review-idempotency-2026-11-10.md": {
+    "mtime": 1794338161.9746246,
+    "ast_hash": "f638092a3f25c900ca9517181dac7208",
+    "semantic_hash": ""
+  },
+  "docs/quality/repository-rename-follow-up-2026-11-10.md": {
+    "mtime": 1794339214.7087147,
+    "ast_hash": "4eb4b07d058d3c8bf494a9ef50e8bda4",
     "semantic_hash": ""
   }
 }
