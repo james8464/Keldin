@@ -488,8 +488,6 @@ def _mark_scheme_artifact_height(question: Question, part: QuestionPart) -> floa
         return 192
     if question.style_id == "finite_state_machine" and part.label == "1":
         return 124
-    if part.marking.ao == "AO3" and part.marks >= 7:
-        return 23 + (4 * 49 if part.marks >= 12 else 3 * 55) + 22
     return 0
 
 
@@ -1579,11 +1577,20 @@ def _mark_scheme_levels(
     _ms_header(pdf, page, blueprint)
     y = 754
     pdf.setFont(FONT_BOLD, 13)
-    pdf.drawString(55, y, "Level of response marking instructions")
+    has_levels = any(
+        part.marking.levels for q in blueprint.questions for part in q.parts
+    )
+    pdf.drawString(
+        55,
+        y,
+        "Level of response marking instructions"
+        if has_levels
+        else "Point-based marking instructions",
+    )
     y -= 26
     pdf.setFont(FONT, 10)
     paragraphs = [
-        "Level-of-response questions are assessed holistically. Each level describes the quality of knowledge, technical accuracy, analysis, application and judgement normally expected within that band.",
+        "Apply holistic instructions only to parts with explicitly declared levels. For every other part, use its stated creditworthy points and allocations up to the printed maximum.",
         "Begin with the lowest descriptor and work upwards. Select the highest level for which the response meets the descriptor as a whole; a response does not need to satisfy every phrase perfectly.",
         "Read the complete response before assigning a level. Isolated strengths or weaknesses should not outweigh the overall quality and consistency of the answer.",
         "A response may contain characteristics from adjacent levels. Use best fit: decide which descriptor most closely represents the answer, then use the mark within that level to reflect how securely it is met.",
@@ -1597,6 +1604,12 @@ def _mark_scheme_levels(
         "When a response is on a boundary, consider precision, depth, relevance to the scenario and the extent to which its reasoning remains coherent from start to finish.",
         "If no part of a response is creditworthy, award zero. A blank response should be recorded as not attempted rather than as an attempted response worth zero.",
     ]
+    if not has_levels:
+        paragraphs = [
+            "Award marks using the creditworthy points and allocations stated for each part, up to its printed maximum.",
+            "Do not infer a level or mark band from a question's tariff or assessment objective.",
+            "Credit technically correct equivalent solutions that meet the stated requirements. Do not award the same mark twice for equivalent wording.",
+        ]
     for paragraph in paragraphs:
         for line in _wrap(paragraph, 94):
             pdf.drawString(55, y, line)
@@ -1755,8 +1768,6 @@ def _draw_mark_scheme_answer_artifact(
         return _draw_recursive_trace_answer(pdf, y - 5)
     if question.style_id == "finite_state_machine" and part.label == "1":
         return _draw_transition_table_answer(pdf, y - 5)
-    if part.marking.ao == "AO3" and part.marks >= 7:
-        return _draw_programming_mark_grid(pdf, part.marks, y - 6)
     return y
 
 
@@ -1890,67 +1901,6 @@ def _draw_transition_table_answer(pdf: canvas.Canvas, y: float) -> float:
             pdf.setFont(FONT_BOLD if row_index == 0 else FONT, 8.5)
             pdf.drawString(x0 + 4, y0 + 8, value)
     return y - row_height * 4 - 12
-
-
-def _draw_programming_mark_grid(
-    pdf: canvas.Canvas,
-    marks: int,
-    y: float,
-) -> float:
-    bands = 4 if marks >= 12 else 3
-    descriptors = [
-        "Complete, logically structured solution; all required behaviour is correct and robust.",
-        "Substantial working solution; most requirements and important design decisions are correct.",
-        "Partial solution with some appropriate constructs; important omissions or errors remain.",
-        "Limited relevant attempt showing isolated programming or design features.",
-    ][:bands]
-    base = marks // bands
-    remainder = marks % bands
-    ranges: list[tuple[int, int]] = []
-    lower = 1
-    for index in range(bands):
-        width = base + (1 if index >= bands - remainder else 0)
-        upper = lower + width - 1
-        ranges.append((lower, upper))
-        lower = upper + 1
-    ranges.reverse()
-    row_height = 49 if bands == 4 else 55
-    widths = [40, 275, 60]
-    x = 120
-    headers = ["Level", "Description", "Mark range"]
-    for column, value in enumerate(headers):
-        x0 = x + sum(widths[:column])
-        pdf.setFillColor(colors.HexColor("#d9d9d9"))
-        pdf.rect(x0, y - 23, widths[column], 23, stroke=1, fill=1)
-        pdf.setFillColor(colors.black)
-        pdf.setFont(FONT_BOLD, 8.5)
-        pdf.drawCentredString(x0 + widths[column] / 2, y - 15, value)
-    cursor = y - 23
-    for index, descriptor in enumerate(descriptors):
-        for column, width in enumerate(widths):
-            x0 = x + sum(widths[:column])
-            pdf.rect(
-                x0,
-                cursor - row_height,
-                width,
-                row_height,
-                stroke=1,
-                fill=0,
-            )
-        pdf.setFont(FONT, 8.5)
-        pdf.drawCentredString(x + widths[0] / 2, cursor - 18, str(bands - index))
-        text_y = cursor - 14
-        for line in _wrap(descriptor, 58):
-            pdf.drawString(x + widths[0] + 5, text_y, line)
-            text_y -= 11
-        low, high = ranges[index]
-        pdf.drawCentredString(
-            x + widths[0] + widths[1] + widths[2] / 2,
-            cursor - 18,
-            f"{low}\u2013{high}",
-        )
-        cursor -= row_height
-    return cursor - 10
 
 
 def _ms_header(pdf: canvas.Canvas, page: int, blueprint: PaperBlueprint) -> None:
