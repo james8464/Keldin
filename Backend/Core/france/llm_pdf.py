@@ -24,12 +24,25 @@ from Backend.Core.france.print_policy import (
     V36_READABLE_PRINT_POLICIES,
 )
 from Backend.Core.france.sql_sources import sql_caption
+from Backend.Core.france.table_pdf import check_material_tables
+from Backend.Core.france.table_pdf import page_lines as table_page_lines
 from Backend.Core.france.whole_case_pdf import (
     _compact,
     _expected_preface,
     _heading,
     _prose,
 )
+
+
+def _table_label(exercise, material):
+    label = material.title
+    if (
+        exercise.id == "2"
+        and material.id not in {"case_states", "tree_nodes", "tree_states"}
+        and not material.id.startswith("recon_")
+    ):
+        label += f" — {material.id}"
+    return label
 
 
 def _expected_exercise(
@@ -59,13 +72,7 @@ def _expected_exercise(
                 ]
             )
         elif isinstance(material, NSITableMaterial):
-            label = material.title
-            if (
-                exercise.id == "2"
-                and material.id not in {"case_states", "tree_nodes", "tree_states"}
-                and not material.id.startswith("recon_")
-            ):
-                label += f" — {material.id}"
+            label = _table_label(exercise, material)
             parts.extend([label, sql_caption(material), *material.columns])
             for row in material.rows:
                 parts.extend(row)
@@ -179,7 +186,7 @@ def _check_graphs(
 def _check_code_lines(
     pages, exercises, *, correction: bool, print_policy=PRINT_POLICY
 ) -> None:
-    expected = []
+    expected: list[str] = []
     for exercise in exercises:
         texts = [exercise.context]
         for question in exercise.questions:
@@ -264,6 +271,30 @@ def validate_llm_pdf(
                 if heading in page_text:
                     starts.append((headings.index(heading), number - 1))
             lines.extend(body_lines)
+        if [index for index, _ in starts] != [0, 1, 2]:
+            raise ValueError("Début des exercices ambigu")
+        omitted_headers, _table_provenance = check_material_tables(
+            pages,
+            exercises,
+            [page for _, page in starts],
+            [
+                [
+                    (_table_label(exercise, material), material)
+                    for material in exercise.materials
+                    if isinstance(material, NSITableMaterial)
+                ]
+                for exercise in exercises
+            ],
+        )
+        if omitted_headers:
+            lines = [
+                line.strip()
+                for number, page in enumerate(pages)
+                for line in table_page_lines(page, omitted_headers.get(number, ()))
+                if line.strip()
+                and line.strip() != V34_FOOTER
+                and not re.fullmatch(r"Page\s*:\s*\d+\s*/\s*\d+", line.strip())
+            ]
         text = _compact("\n".join(lines))
         if any(text.count(heading) != 1 for heading in headings):
             raise ValueError("Exercice absent ou dupliqué dans le PDF")

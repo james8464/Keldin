@@ -101,11 +101,23 @@ def review_status(manifest: Path, record: dict) -> str:
 def _write_record(manifest: Path, record: dict) -> Path:
     destination = manifest.parent / f"teacher-review-{record['record_id'][:12]}.json"
     rendered = json.dumps(record, ensure_ascii=False, indent=2) + "\n"
-    if destination.exists():
-        if (
-            destination.is_symlink()
-            or destination.read_text(encoding="utf-8") != rendered
-        ):
+    if destination.exists() or destination.is_symlink():
+        if destination.is_symlink():
+            raise ValueError("Un enregistrement différent utilise déjà cet identifiant")
+        existing = json.loads(destination.read_text(encoding="utf-8"))
+        if not isinstance(existing, dict) or existing.keys() != record.keys():
+            raise ValueError("Un enregistrement différent utilise déjà cet identifiant")
+        # A retry preserves the first timestamp and every original byte. Compare
+        # JSON, not Python equality: true/1 and 3.0/3 are different records.
+        comparable = [
+            json.dumps(
+                {key: value for key, value in candidate.items() if key != "created_at"},
+                ensure_ascii=False,
+                sort_keys=True,
+            )
+            for candidate in (existing, record)
+        ]
+        if comparable[0] != comparable[1]:
             raise ValueError("Un enregistrement différent utilise déjà cet identifiant")
         return destination
     descriptor, temporary_name = tempfile.mkstemp(

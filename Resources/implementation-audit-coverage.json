@@ -85,11 +85,8 @@
     {
       "path": ".github/ISSUE_TEMPLATE/config.yml",
       "classification": "configuration-or-runtime-data",
-      "status": "reviewed",
-      "reason": "Complete-file semantic review within the documented scope, with exact-byte evidence; remaining release gates and broader project audit are separate.",
-      "source_sha256": "abc40854e7671a899bf3396ef0b65bfadf28e28c55b0dcc6ac68cbf51ed33594",
-      "review_evidence": "docs/quality/release-configuration-file-review-2026-10-29.md",
-      "review_evidence_sha256": "d53bef3a6c3b434af79ffc3308e1f44741395ce155c087bc98f1108083734521"
+      "status": "pending",
+      "reason": "No file-level semantic implementation review recorded in this ledger."
     },
     {
       "path": ".github/ISSUE_TEMPLATE/improvement.yml",
@@ -1102,11 +1099,8 @@
     {
       "path": "Backend/Core/france/llm_pdf.py",
       "classification": "maintained-source",
-      "status": "reviewed",
-      "reason": "Preserves existing complete source-bound review plus complete independently reviewed explicit v4/v5 policy-membership delta and graph-validator callers. Not a fresh current whole-file EOF read. Prior evidence docs/quality/french-graph-label-clearance-review.md at 09820e237db145c7842f187fde270b7eb3736a1d70f062bba5778be4a332a380; prior source edf7422259d7850b88cf3a48a3ebed24e9a9147b5b7abc70315b34e68067c58c.",
-      "source_sha256": "e4a75c8bcf5cdee7c58f51caa8a26489c3349b770e6fad3736f9cfaf17e723c4",
-      "review_evidence": "docs/quality/french-generic-table-policy-review.md",
-      "review_evidence_sha256": "954b235c85ed5cac715c21d49672e42bc05ccfb690e82e90d595e7cbe8a3a831"
+      "status": "pending",
+      "reason": "No file-level semantic implementation review recorded in this ledger."
     },
     {
       "path": "Backend/Core/france/llm_pipeline.py",
@@ -1422,6 +1416,12 @@
     },
     {
       "path": "Backend/Core/france/system_case_prose.py",
+      "classification": "maintained-source",
+      "status": "pending",
+      "reason": "No file-level semantic implementation review recorded in this ledger."
+    },
+    {
+      "path": "Backend/Core/france/table_pdf.py",
       "classification": "maintained-source",
       "status": "pending",
       "reason": "No file-level semantic implementation review recorded in this ledger."
@@ -2446,11 +2446,8 @@
     {
       "path": "Resources/computer-science/aqa/generator/cspapergen/render_pdf.py",
       "classification": "maintained-source",
-      "status": "reviewed",
-      "reason": "Composite review: prior complete 2266-line EOF baseline SHAcbcf23e8b35458822dded5f6999812fa94af0a5d7fa2814884d0c7618be1a1eb plus complete independently reviewed flow/helper-removal delta and final on-screen owner reservation. Current2045 lines; not a fresh full-current-file read. Reduced pages do not establish difficulty/duration/official equivalence. Prior evidence docs/quality/renderer-eof-audit-and-release-follow-ups.md at bb98a3b38c4795e8b83ad544940570d72884305e0cb6edbe836c7081490fe8f6; prior source cbcf23e8b35458822dded5f6999812fa94af0a5d7fa2814884d0c7618be1a1eb. Evidence-note amendment records actual old-head frozen public HOLD and narrow resource follow-up; original scope/limits remain. Host regression is not repaired frozen-path qualification.",
-      "source_sha256": "a0b6b80d246537c5ffeb4ac2a73408c20658066159cb25f0687f093fa508bbe6",
-      "review_evidence": "docs/quality/cs1-on-screen-source-flow-review-2026-11-07.md",
-      "review_evidence_sha256": "f94a21c18976dbf3d0de8485886413e405512a674d6ffd21c3109e3a265a5636"
+      "status": "pending",
+      "reason": "No file-level semantic implementation review recorded in this ledger."
     },
     {
       "path": "Resources/computer-science/aqa/generator/cspapergen/syllabus.py",
@@ -3845,6 +3842,12 @@
       "reason": "Retained diagnostic/review evidence, not maintained executable implementation; exclusion does not certify its claims."
     },
     {
+      "path": "docs/quality/cs-declared-marking-policy-review-2026-11-10.md",
+      "classification": "historical-evidence",
+      "status": "excluded",
+      "reason": "Retained diagnostic/review evidence, not maintained executable implementation; exclusion does not certify its claims."
+    },
+    {
       "path": "docs/quality/cs-floating-exactness-review.md",
       "classification": "historical-evidence",
       "status": "excluded",
@@ -4032,6 +4035,12 @@
     },
     {
       "path": "docs/quality/french-isolated-vertex-review-2026-11-03.md",
+      "classification": "historical-evidence",
+      "status": "excluded",
+      "reason": "Retained diagnostic/review evidence, not maintained executable implementation; exclusion does not certify its claims."
+    },
+    {
+      "path": "docs/quality/french-material-table-cell-review-2026-11-10.md",
       "classification": "historical-evidence",
       "status": "excluded",
       "reason": "Retained diagnostic/review evidence, not maintained executable implementation; exclusion does not certify its claims."
@@ -4338,6 +4347,12 @@
     },
     {
       "path": "docs/quality/french-repeat-practice-policy-review-2026-10-29.md",
+      "classification": "historical-evidence",
+      "status": "excluded",
+      "reason": "Retained diagnostic/review evidence, not maintained executable implementation; exclusion does not certify its claims."
+    },
+    {
+      "path": "docs/quality/french-review-idempotency-2026-11-10.md",
       "classification": "historical-evidence",
       "status": "excluded",
       "reason": "Retained diagnostic/review evidence, not maintained executable implementation; exclusion does not certify its claims."
@@ -4956,6 +4971,12 @@
     },
     {
       "path": "docs/quality/renderer-eof-audit-and-release-follow-ups.md",
+      "classification": "historical-evidence",
+      "status": "excluded",
+      "reason": "Retained diagnostic/review evidence, not maintained executable implementation; exclusion does not certify its claims."
+    },
+    {
+      "path": "docs/quality/repository-rename-follow-up-2026-11-10.md",
       "classification": "historical-evidence",
       "status": "excluded",
       "reason": "Retained diagnostic/review evidence, not maintained executable implementation; exclusion does not certify its claims."
@@ -5629,11 +5650,8 @@
     {
       "path": "macOS/Keldin/Application/AppConfiguration.swift",
       "classification": "maintained-source",
-      "status": "reviewed",
-      "reason": "quality_status_review: EOF; root: EOF and final comment-only correction. Exact source identity verified at e4649b83; selective dependencies and broader runtime/qualification limits are documented separately.",
-      "source_sha256": "5bc4d204ce39f310a44396340f96966a08e6fdd8217eaa900328fa9bdf40420e",
-      "review_evidence": "docs/quality/remaining-native-backend-boundaries-review-2026-11-02.md",
-      "review_evidence_sha256": "af676cdb6e47d3d6e61361f2722f7b605c0ef7b3db9afeefcfd5562776c7787d"
+      "status": "pending",
+      "reason": "No file-level semantic implementation review recorded in this ledger."
     },
     {
       "path": "macOS/Keldin/Application/KeldinApp.swift",
@@ -7088,6 +7106,12 @@
       "review_evidence_sha256": "f0b04dbaed30b6132fcb755c4ac8b4c036fa3e5dae491c7ee6fcc88c815a102d"
     },
     {
+      "path": "tests/test_cs_declared_marking_policy.py",
+      "classification": "test",
+      "status": "pending",
+      "reason": "No file-level semantic implementation review recorded in this ledger."
+    },
+    {
       "path": "tests/test_cs_delivery_chrome.py",
       "classification": "test",
       "status": "pending",
@@ -8196,6 +8220,12 @@
     },
     {
       "path": "tests/test_french_system_case_prose.py",
+      "classification": "test",
+      "status": "pending",
+      "reason": "No file-level semantic implementation review recorded in this ledger."
+    },
+    {
+      "path": "tests/test_french_table_cell_integrity.py",
       "classification": "test",
       "status": "pending",
       "reason": "No file-level semantic implementation review recorded in this ledger."
