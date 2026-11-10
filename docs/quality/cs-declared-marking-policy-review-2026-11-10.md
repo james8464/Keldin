@@ -55,3 +55,14 @@ not a new full-file EOF claim. Fresh integrated full/build/frozen-public/native
 gates remain required; no source-diagnostic result is promoted to release proof.
 No full suite, build, model/provider, GUI, metadata update, commit or push ran
 within this repair.
+
+## Integrated regression follow-up
+
+The first combined frozen suite passed 8,464 tests and failed two parametrised
+cases in the existing question-specific artifact test. Both failures required
+“Mark range” text for a seed whose parts declare no levels. That expectation
+contradicts the repaired point-based marking policy. The test now first confirms
+the point-only fixture, rejects invented bands and requires every canonical
+printed credit point. All existing matrix, trace and solution-layout assertions
+remain. Separate mixed-policy controls still require explicitly declared levels.
+The failed full-run evidence is retained; it is not a passing release gate.

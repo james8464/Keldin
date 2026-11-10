@@ -5,6 +5,7 @@ from cspapergen.syllabus import load_syllabus
 from cspapergen.validation import validate_blueprint
 
 from Backend.Core.generation_date import GENERATION_DATE_ENV
+from Backend.Core.open_credit import printed_credit_points
 from Backend.Core.pdf_text import extract_pdf_text
 
 
@@ -162,6 +163,7 @@ def test_paper_1_mark_scheme_renders_question_specific_answer_artifacts(
     import pymupdf as fitz
 
     blueprint, _context = build_paper1_blueprint(load_syllabus(), seed=42)
+    assert all(not part.marking.levels for q in blueprint.questions for part in q.parts)
     if legacy_matrix:
         part = blueprint.questions[2].parts[2]
         part.response_slots = []
@@ -177,7 +179,16 @@ def test_paper_1_mark_scheme_renders_question_specific_answer_artifacts(
         assert ("Alternative lower-triangle representation" in text) is legacy_matrix
         assert "Completed adjacency matrix" in text
         assert "Call" in text
-        assert "Mark range" in text
+        # Explicit levels remain covered by test_cs_declared_marking_policy.py.
+        assert "Mark range" not in text
+        assert "Point-based marking instructions" in text
+        normalised_text = " ".join(text.split())
+        for question in blueprint.questions:
+            for part in question.parts:
+                for point in printed_credit_points(
+                    part.marking.model_dump(mode="json")
+                ):
+                    assert " ".join(point.split()) in normalised_text
         assert "Expected: requirement satisfied" not in text
         solution_heading = next(
             page.search_for("Question 04: Example Python 3 solution")[0]
