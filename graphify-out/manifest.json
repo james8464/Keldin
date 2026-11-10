@@ -650,8 +650,8 @@
     "semantic_hash": ""
   },
   "Resources/computer-science/aqa/generator/cspapergen/generator.py": {
-    "mtime": 1793543731.6062558,
-    "ast_hash": "443162013fcc859aa6d71bf159b607f0",
+    "mtime": 1794350495.2036736,
+    "ast_hash": "e639c9c2638484a9feac4d4df5f30f24",
     "semantic_hash": ""
   },
   "Resources/computer-science/aqa/generator/cspapergen/models.py": {
@@ -715,8 +715,8 @@
     "semantic_hash": ""
   },
   "Resources/computer-science/aqa/generator/tests/test_blueprint.py": {
-    "mtime": 1793543731.6076958,
-    "ast_hash": "9d93eb12e2057851bac3f1558fce7c27",
+    "mtime": 1794350583.7677157,
+    "ast_hash": "b721fcb86f9318a70f62e402c78df026",
     "semantic_hash": ""
   },
   "Resources/computer-science/aqa/generator/tests/test_cli_pdf.py": {
@@ -1245,8 +1245,8 @@
     "semantic_hash": "9089fa356046b0e497da7729dfba8605"
   },
   "Resources/repository-inventory.json": {
-    "mtime": 1794345790.3381631,
-    "ast_hash": "3d906deb56e62d4a6ed73e62c2be7f8b",
+    "mtime": 1794350699.5168266,
+    "ast_hash": "f708a9a91cc2ba48d7256eb2d5a9089a",
     "semantic_hash": ""
   },
   "bridge.py": {
@@ -4020,8 +4020,8 @@
     "semantic_hash": ""
   },
   "Resources/implementation-audit-coverage.json": {
-    "mtime": 1794347053.8675785,
-    "ast_hash": "5f9f2b4aec601f38ffcbe1a66d1b21e8",
+    "mtime": 1794350699.354699,
+    "ast_hash": "cfe27dd6a5b67f4f21aba3115a75c0b0",
     "semantic_hash": ""
   },
   "macOS/Keldin/Services/PDFDocumentAccess.swift": {
@@ -6295,13 +6295,18 @@
     "semantic_hash": ""
   },
   "docs/quality/edexcel-trade-barrier-credit-review-2026-11-10.md": {
-    "mtime": 1794346820.106149,
-    "ast_hash": "e497b89ba0068e3e853abcf6942e70eb",
+    "mtime": 1794347187.0638242,
+    "ast_hash": "000fd5d93cd638c562e718af6e1db62e",
     "semantic_hash": ""
   },
   "docs/quality/implementation-audit-reconciliation-2026-11-10.md": {
     "mtime": 1794347024.9839962,
     "ast_hash": "642d3419e866615a23aba97dc47b98b7",
+    "semantic_hash": ""
+  },
+  "docs/quality/cs1-report-instructions-review-2026-11-10.md": {
+    "mtime": 1794350683.1719759,
+    "ast_hash": "18c278920e39fcd029ee1f527a84513b",
     "semantic_hash": ""
   }
 }
