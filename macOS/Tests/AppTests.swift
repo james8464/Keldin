@@ -1025,7 +1025,7 @@ final class KeldinTests: XCTestCase {
         XCTAssertTrue(AppLinks.privacyPolicy.absoluteString.contains("#privacy"))
         XCTAssertEqual(
             AppLinks.projectHelp.absoluteString,
-            "https://github.com/james8464/Past-paper-generation"
+            "https://github.com/james8464/Keldin"
         )
     }
 

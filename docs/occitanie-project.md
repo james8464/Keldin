@@ -4,7 +4,7 @@ Last updated: 2026-10-28. This is an evidence/status record, not a claim of
 educational approval. No teacher, school, Région, examiner or Ministry endorsement
 has been obtained. No prize application has been submitted.
 
-Implementation tracking: [issue #16](https://github.com/james8464/Past-paper-generation/issues/16).
+Implementation tracking: [issue #16](https://github.com/james8464/Keldin/issues/16).
 See the [engineering verification record](quality/french-nsi-prototype-verification-2026-09-28.md)
 and [competition submission pack](competition/occitanie-2026/README.md). The formal
 application currently renders as two A4 pages, within the three-page limit, but

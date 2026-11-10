@@ -1,7 +1,7 @@
 # French NSI prototype verification — 2026-09-28
 
 **PROTOTYPE, not educational qualification.** Tracks
-[issue #16](https://github.com/james8464/Past-paper-generation/issues/16).
+[issue #16](https://github.com/james8464/Keldin/issues/16).
 The approved plan remains incomplete. No French live inference, teacher review,
 learner pilot or App Store approval is represented by this record.
 

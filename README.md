@@ -36,7 +36,7 @@ Build and automated checks do not establish identical appearance, originality
 across every generated paper, or empirically matched difficulty. Preview papers
 are not live AI qualification evidence. See the
 [teacher-feedback review](docs/quality/teacher-feedback-review-2026-09-27.md) and
-[open release gates](https://github.com/james8464/Past-paper-generation/issues/8).
+[open release gates](https://github.com/james8464/Keldin/issues/8).
 
 ## Run
 
