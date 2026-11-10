@@ -1,16 +1,18 @@
 # Internal file-review reconciliation
 
 Baseline: protected PR #197, commit `ab2d8f0246086d22cd5319f54f2a789ea884d914`.
-This record reconciles completed reviews with the file inventory. It changes no
-runtime source, model prompts, validation thresholds, generated answers or
-installed application. A reviewed file is not a certificate of zero bugs.
+This record reconciles completed reviews with the file inventory. The same
+change set also contains the separately tested trade-barrier credit repair linked
+below. That repair changes host-owned marking guidance, not model prompts,
+source facts, validation thresholds or mark totals. A reviewed file is not a
+certificate of zero bugs.
 
 ## Current active-path reviews
 
-The following files were read completely or, for structured data, examined as a
-complete set of records and distinct field values. Callers and tests were read
-only within the stated boundaries. No new model, build or full-suite run was
-needed to perform these read-only reviews.
+The following entries cover complete file reads, complete structured-data
+reviews or an explicitly described full-baseline-plus-delta composite. Callers
+and tests were read only within the stated boundaries. Read-only inspection
+does not replace the separate execution and release gates for the repair.
 
 | File | Scope and disposition |
 | --- | --- |
@@ -22,8 +24,11 @@ needed to perform these read-only reviews.
 | `Resources/ollama-model-recommendations.json` | All 40 lines. Memory tiers are contiguous and explicitly unqualified for the full paper matrix. The warning distinguishes memory fit from accuracy. This was not a new model-availability or inference test. |
 | `Resources/computer-science/aqa/generator/cspapergen/cli.py` | All 205 lines. Rule selection, family-adapter hooks, artifact order, Paper 1 supporting files, progress forwarding and command arguments were inspected. Runtime bootstrap, syllabus defaults and notes caching were read within the relevant boundaries. No new defect was established for the current caller contracts. |
 | `Resources/computer-science/aqa/generator/cspapergen/topic_bank.py` | All 573 lines. The three advertised bank routes, topic membership, instance data, answer ownership and mark construction were inspected. Models, objective calibration and syllabus modules were also read; generator, validation, SQL construction and existing tests were scoped rather than universally reread. No concrete valid-input defect was established. |
-| `Resources/economics/edexcel-a/generator/pastpapergen/credit_contracts.py` | All 704 lines. Task-specific drawing and short-answer credits, five/eight-mark budgets and 10/12/15/25-mark bands were compared with bounded actual binding and source-credit callers. Examples remain nonadditive and source-linked. No new supported-input contradiction was substantiated. This does not verify every economic interpretation or model response. |
+| `Resources/economics/edexcel-a/generator/pastpapergen/credit_contracts.py` | Complete 704-line baseline plus the complete 16-line repair delta, covering the current 708 lines. The earlier bounded review missed an actual eight-mark trade-barrier knowledge mismatch. The later witness and repair supersede that no-finding conclusion. Other tariffs and source-owned routes have explicit compatibility controls; no universal economic or model-answer proof is claimed. |
 | `Resources/economics/edexcel-a/generator/pastpapergen/source_cases.py` | All 299 lines, through consecutive scoped reads. Case selection, wraparound, fallback construction and the complete retained text tables were examined. The latent source-vintage issue below remains recorded. Real-company statements were not all independently fact-checked. |
+| `Resources/economics/edexcel-a/generator/pastpapergen/generator.py` | All 3,376 lines. Seed, section, source and canonical binding paths were inspected. Three tiny in-memory built-in-paper probes had valid 100-mark candidate paths. Those structural checks did not independently validate downstream credit semantics, where the separate trade-barrier defect was found. No complete paper-quality claim follows. |
+| `Resources/economics/edexcel-a/generator/pastpapergen/extended_scenarios.py` | All 591 lines. Scenario concepts, public facts, detail selection and fallback binding were inspected. This review established the actual seed-0 eight-mark mismatch in the downstream credit selector. The scenario facts themselves remain unchanged. |
+| `tests/test_edexcel_trade_barrier_credit.py` | All 137 lines. The actual Paper 2 seed-0 witness, source/input preservation, existing tariff snapshots, authored routes and helper-only negative control were read. The latter is not represented as a currently seeded currency question. |
 
 The installed PR #197 bundle was inspected read-only for the catalogue comparison.
 Its native catalogue, native/backend registry copies and all seven exact backend
@@ -79,6 +84,7 @@ Supporting tracked records:
 - [Declared CS marking policy](cs-declared-marking-policy-review-2026-11-10.md)
 - [CS source-flow review](cs1-on-screen-source-flow-review-2026-11-07.md)
 - [Repository-link follow-up](repository-rename-follow-up-2026-11-10.md)
+- [Trade-barrier credit repair](edexcel-trade-barrier-credit-review-2026-11-10.md)
 
 ## Source pins
 
@@ -94,8 +100,11 @@ hash. These pins are checked again before publishing the reconciliation.
 | `Resources/ollama-model-recommendations.json` | `4ebce807196c10c2b73396b7f849d2bbb32dcd6738e8cc2b3746952425344b3e` |
 | `Resources/computer-science/aqa/generator/cspapergen/cli.py` | `08edd4d5b1c06f11354e3787a3a1b17e8e2b718053496ed37d75b5f6f6b44799` |
 | `Resources/computer-science/aqa/generator/cspapergen/topic_bank.py` | `ca34e41de156cd76cec6da1185d6245e3692ff47ff4c9e61d7282e70b2a225ba` |
-| `Resources/economics/edexcel-a/generator/pastpapergen/credit_contracts.py` | `6f4a5da2d86a981f1771801ea66aa3e65e6397a3bf1ed822d1ac3c2fca297176` |
+| `Resources/economics/edexcel-a/generator/pastpapergen/credit_contracts.py` | `0163063c78e0e5f012720f1faf62fe791ddb21dc23ab241b47898096796c74c8` |
 | `Resources/economics/edexcel-a/generator/pastpapergen/source_cases.py` | `34b70b8a0c0fde7e04e6118d9c45b76cae63405e9e11f2c7b99737712eca9a2f` |
+| `Resources/economics/edexcel-a/generator/pastpapergen/generator.py` | `430fc254810f02694dd3946c53e1484fb01c60cf17c28f51f282d31806b868e2` |
+| `Resources/economics/edexcel-a/generator/pastpapergen/extended_scenarios.py` | `010800bfb766073079eb44982e5dcab0a58683a4f32b0c9c250ab934162c1850` |
+| `tests/test_edexcel_trade_barrier_credit.py` | `cd6a1a4bdf8f5dc6951a922289fbcce39272a0caa41fec63a96757179098f7f6` |
 | `Backend/Core/france/pipeline.py` | `cf0ea7a4dd6f99e35d6dc938e6fd6052752e1c5d43343d957e147aacffa29a45` |
 | `Backend/Core/france/whole_case_pdf.py` | `23ad9dc9e98997428092e281537f2c4d5b5d3d414d657c9ea5780f137e835e3e` |
 | `Backend/Core/france/teacher_review.py` | `ea2b6caa72e9c0bcad1062ac3e910dff6c59a0d98f7f0ef9a25f19e841090734` |

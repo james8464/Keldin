@@ -61,3 +61,20 @@ No full suite, release build, installed-app action or new model call was run
 for this repair. Related existing tests may render owned temporary PDFs;
 there is no new manual PDF or visual acceptance claim here. Integration,
 audit-metadata refresh and fresh release gates remain separate work.
+
+## Public-preview follow-up
+
+The root reviewer then generated baseline and repaired offline previews through
+the actual public bridge, using Economics Paper 2, seed 0. Each set contains
+36 question-paper pages, four source-booklet pages and 26 mark-scheme pages.
+All pages are A4 and contain text. At 100 dpi, 65 of the 66 page rasters are
+identical; only mark-scheme page 16 changes. Text scoped from question 6(b) to
+6(c) confirms that the unrelated currency definition is replaced by the
+trade-barrier and tariff definitions in the actual printed task.
+
+The complete old and new page 16 images were visually inspected at 100 dpi.
+No new clipping, overlap or table-alignment problem was observed. The remaining
+pages were compared automatically, not freshly inspected for all content.
+This is a bounded change review of offline previews, not live-model, official
+paper, physical-print or final frozen-CLI qualification. The original failed
+scheme and all comparison artifacts remain retained.
