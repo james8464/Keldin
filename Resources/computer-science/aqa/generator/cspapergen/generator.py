@@ -1603,7 +1603,10 @@ def _align_paper1_structure(
             _paper1_part(
                 "1",
                 11,
-                "Complete print_report so that categories are displayed in descending adjusted-total order, ties are resolved alphabetically and record.identifier is shown for the best record in each category. You may define suitable helper functions.",
+                "Complete print_report. Use one pass through records to calculate the adjusted totals and find the best record in each category. "
+                "Display each category and its adjusted total in descending adjusted-total order, breaking ties alphabetically. "
+                "For each non-empty category, also show record.identifier for the record with the greatest adjusted value. "
+                "Include categories with no records and leave the list and its records unchanged. You may define helper functions.",
                 [
                     "1 mark: traverses every current record exactly once when accumulating report data;",
                     "1 mark: calls adjusted_value, or implements the same threshold rule, instead of adding each raw value;",

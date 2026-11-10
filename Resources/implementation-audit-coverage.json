@@ -2408,10 +2408,10 @@
       "path": "Resources/computer-science/aqa/generator/cspapergen/generator.py",
       "classification": "maintained-source",
       "status": "reviewed",
-      "reason": "Complete unchanged file read through EOF with exact source pin. Bounded static review, not executed model/paper qualification.",
-      "source_sha256": "ff87cf798a8fe066fe085c47ff15d690acdca166401d51138f66935e29e2c391",
-      "review_evidence": "docs/quality/renderer-eof-audit-and-release-follow-ups.md",
-      "review_evidence_sha256": "bb98a3b38c4795e8b83ad544940570d72884305e0cb6edbe836c7081490fe8f6"
+      "reason": "Exact complete baseline review plus the complete Q12.1 instruction delta. Scoped offline content and print checks, not model qualification.",
+      "source_sha256": "2472085411552446e00fc685a26e502ac3f8f4b8f8df36ff06952e3c4a97bc8d",
+      "review_evidence": "docs/quality/cs1-report-instructions-review-2026-11-10.md",
+      "review_evidence_sha256": "562d9c6e5d9f9b1cdbe4dbbf40846a98603b3a571919f3b4adf98220d3bcc947"
     },
     {
       "path": "Resources/computer-science/aqa/generator/cspapergen/models.py",
@@ -3933,6 +3933,12 @@
     },
     {
       "path": "docs/quality/cs1-on-screen-source-flow-review-2026-11-07.md",
+      "classification": "historical-evidence",
+      "status": "excluded",
+      "reason": "Retained diagnostic/review evidence, not maintained executable implementation; exclusion does not certify its claims."
+    },
+    {
+      "path": "docs/quality/cs1-report-instructions-review-2026-11-10.md",
       "classification": "historical-evidence",
       "status": "excluded",
       "reason": "Retained diagnostic/review evidence, not maintained executable implementation; exclusion does not certify its claims."

@@ -716,13 +716,19 @@ def test_paper_one_safe_value_function_matches_displayed_code() -> None:
     assert any("None is returned" in point for point in part.marking.points)
 
 
-def test_paper_one_report_task_has_objective_partial_credit() -> None:
-    blueprint, context = build_paper1_blueprint(load_syllabus(), seed=26080115)
+@pytest.mark.parametrize("seed", [0, 1, 2, 5])
+def test_paper_one_report_task_has_objective_partial_credit(seed: int) -> None:
+    blueprint, context = build_paper1_blueprint(load_syllabus(), seed=seed)
     question = blueprint.questions[11]
     implementation, tie_test, _explanation = question.parts
 
     assert "descending adjusted-total order" in context.skeleton_program
     assert "descending adjusted-total order" in implementation.prompt
+    assert "one pass through records" in implementation.prompt
+    assert "each category and its adjusted total" in implementation.prompt
+    assert "Include categories with no records" in implementation.prompt
+    assert "leave the list and its records unchanged" in implementation.prompt
+    assert implementation.task_operation == "program"
     assert implementation.marks == len(implementation.marking.points) == 11
     assert all(point.startswith("1 mark:") for point in implementation.marking.points)
     assert not any("readable" in point for point in implementation.marking.points)
