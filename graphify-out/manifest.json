@@ -180,8 +180,8 @@
     "semantic_hash": ""
   },
   "Backend/Core/france/nsi.py": {
-    "mtime": 1794000570.7245958,
-    "ast_hash": "bc32e651623f2756e9d55b898b11fec7",
+    "mtime": 1794385119.2306943,
+    "ast_hash": "bf39b52fb925d9e3a5cf801c58e8880c",
     "semantic_hash": ""
   },
   "Backend/Core/france/pipeline.py": {
@@ -4020,7 +4020,7 @@
     "semantic_hash": ""
   },
   "Resources/implementation-audit-coverage.json": {
-    "mtime": 1794381587.5139432,
+    "mtime": 1794383142.9131794,
     "ast_hash": "79f43534b82ba9f18b10ce8fbd2fbe75",
     "semantic_hash": ""
   },
@@ -4750,7 +4750,7 @@
     "semantic_hash": ""
   },
   "Backend/Core/france/llm_pdf.py": {
-    "mtime": 1794381582.2949657,
+    "mtime": 1794383142.911881,
     "ast_hash": "14fb5a6eff4cb03dbba157474d5891f5",
     "semantic_hash": ""
   },
@@ -4800,7 +4800,7 @@
     "semantic_hash": ""
   },
   "tests/test_french_llm_pdf.py": {
-    "mtime": 1794381582.3215332,
+    "mtime": 1794383142.9134393,
     "ast_hash": "2ff63d2f2489944f942d4a9875d4332a",
     "semantic_hash": ""
   },
@@ -5045,8 +5045,8 @@
     "semantic_hash": ""
   },
   "Backend/Core/france/sql_sources.py": {
-    "mtime": 1793543731.5888102,
-    "ast_hash": "ac3b28396d95e3d6967dd2324c96bb6e",
+    "mtime": 1794385074.9991932,
+    "ast_hash": "ca3ff51aa6adbfda045346beeaeff109",
     "semantic_hash": ""
   },
   "macOS/Keldin/Assets.xcassets/AccentColor.colorset/Contents.json": {
@@ -5075,8 +5075,8 @@
     "semantic_hash": ""
   },
   "tests/test_french_sql_source_binding.py": {
-    "mtime": 1793543731.7165976,
-    "ast_hash": "15a33c927804f863df00d3fe31aab754",
+    "mtime": 1794385156.1305187,
+    "ast_hash": "013ea06426e8308b7e10272b4009cc8c",
     "semantic_hash": ""
   },
   "tests/test_french_structural_feedback.py": {
@@ -6255,7 +6255,7 @@
     "semantic_hash": ""
   },
   "Backend/Core/france/table_pdf.py": {
-    "mtime": 1794381582.2951744,
+    "mtime": 1794383142.9122105,
     "ast_hash": "7848cd8dc204d674bb7e5ea45b86ba50",
     "semantic_hash": ""
   },
@@ -6265,7 +6265,7 @@
     "semantic_hash": ""
   },
   "tests/test_french_table_cell_integrity.py": {
-    "mtime": 1794381582.321732,
+    "mtime": 1794383142.913683,
     "ast_hash": "3be9e27a1391926cba62620225dbb48e",
     "semantic_hash": ""
   },

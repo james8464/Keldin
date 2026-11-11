@@ -179,6 +179,12 @@ class NSISQLDescriptor(BaseModel):
         min_length=2, max_length=8
     )
     nullable: tuple[StrictBool, ...] = Field(min_length=2, max_length=8)
+    primary_key: tuple[str, ...] | None = Field(
+        default=None,
+        max_length=8,
+        description="Ordered declared primary-key columns; [] declares no primary key.",
+        exclude_if=lambda value: value is None,
+    )
 
 
 class NSITableMaterial(BaseModel):
@@ -218,6 +224,13 @@ class NSITableMaterial(BaseModel):
             or re.fullmatch(r"[A-Za-z][A-Za-z0-9_]{0,31}", self.sql.table_name) is None
         ):
             raise ValueError("Descripteur SQL imprimé invalide")
+        key = self.sql.primary_key
+        if key is not None and (
+            len(set(key)) != len(key)
+            or any(column not in self.columns for column in key)
+            or any(self.sql.nullable[self.columns.index(column)] for column in key)
+        ):
+            raise ValueError("Clé primaire SQL imprimée invalide")
         return self
 
 

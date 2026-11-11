@@ -5,6 +5,7 @@ from jsonschema.exceptions import ValidationError as SchemaValidationError
 
 from Backend.Core.france import llm_pipeline as pipeline
 from Backend.Core.france.nsi import NSITableMaterial
+from Backend.Core.france.sql_sources import sql_caption
 from Backend.Core.france.verification import verify_contract
 from tests.test_french_llm_pipeline import raw_exercise
 from tests.test_french_llm_runtime import publication as _runtime_publication
@@ -36,6 +37,56 @@ def contract():
         "query": "SELECT nom_client FROM clients WHERE id_client = 3",
         "expected": [["Claire"]],
     }
+
+
+@pytest.mark.parametrize(
+    ("declared", "schema_key", "passed"),
+    [
+        (["id_client"], "id_client", True),
+        (["id_client"], None, False),
+        (["id_client"], "nom_client", False),
+        ([], "id_client", False),
+        ([], None, True),
+        (["nom_client", "id_client"], "nom_client,id_client", True),
+        (["nom_client", "id_client"], "id_client,nom_client", False),
+    ],
+)
+def test_printed_primary_key_matches_sql_fixture(declared, schema_key, passed):
+    public = material()
+    public["sql"]["primary_key"] = declared
+    source = NSITableMaterial.model_validate(public)
+    caption = sql_caption(source)
+    if declared:
+        assert f"Clé primaire : {', '.join(declared)}." in caption
+    else:
+        assert "Aucune clé primaire déclarée." in caption
+    check = contract()
+    if schema_key:
+        check["schema"] = check["schema"].replace(
+            "nom_client TEXT);", f"nom_client TEXT, PRIMARY KEY({schema_key}));"
+        )
+    assert verify_contract(check, sql_materials=[source])["passed"] is passed
+
+
+@pytest.mark.parametrize(
+    ("key", "nullable"),
+    [
+        (["unknown"], [False, False]),
+        (["id_client", "id_client"], [False, False]),
+        (["id_client"], [True, False]),
+    ],
+)
+def test_public_primary_key_requires_unique_known_nonnullable_columns(key, nullable):
+    public = material()
+    public["sql"].update(primary_key=key, nullable=nullable)
+    with pytest.raises(ValueError, match="Clé primaire SQL imprimée invalide"):
+        NSITableMaterial.model_validate(public)
+
+
+def test_legacy_sql_descriptor_does_not_acquire_a_primary_key_declaration():
+    source = NSITableMaterial.model_validate(material())
+    assert "primary_key" not in source.model_dump()["sql"]
+    assert "clé primaire" not in sql_caption(source).lower()
 
 
 def test_private_fixture_cannot_replace_printed_claire_with_bob():
@@ -418,8 +469,9 @@ def test_live_runtime_requires_current_source_binding_policy(
 
 @pytest.mark.parametrize("large_print", [False, True])
 @pytest.mark.parametrize("correction", [False, True])
+@pytest.mark.parametrize("declares_key", [False, True])
 def test_real_pdf_preserves_owned_sql_caption_and_all_public_rows(
-    tmp_path, large_print, correction
+    tmp_path, large_print, correction, declares_key
 ):
     import pymupdf
 
@@ -433,6 +485,12 @@ def test_real_pdf_preserves_owned_sql_caption_and_all_public_rows(
         if identifier == "2":
             raw["materials"][0] = material()
             raw["questions"][0]["verification"] = contract()
+            if declares_key:
+                raw["materials"][0]["sql"]["primary_key"] = ["id_client"]
+                data = raw["questions"][0]["verification"]
+                data["schema"] = data["schema"].replace(
+                    "id_client INTEGER", "id_client INTEGER PRIMARY KEY"
+                )
         exercises.append(
             pipeline.validate_authored_exercise(
                 raw, identifier, large_print=large_print
@@ -451,6 +509,29 @@ def test_real_pdf_preserves_owned_sql_caption_and_all_public_rows(
 
     assert compact(sql_caption(exercises[1].materials[0])) in compact(text)
     assert "Claire" in text
+    if declares_key:
+        assert compact("Clé primaire : id_client.") in compact(text)
+
+
+def test_pdf_gate_refuses_missing_primary_key_caption(tmp_path, monkeypatch):
+    from Backend.Core.france import llm_pdf, sql_sources
+    from tests.test_french_llm_pdf import render
+
+    exercises = []
+    for identifier in ("1", "2", "3"):
+        raw = raw_exercise(identifier)
+        raw["materials"][0] = material()
+        raw["materials"][0]["sql"]["primary_key"] = ["id_client"]
+        exercises.append(pipeline.validate_authored_exercise(raw, identifier))
+    monkeypatch.setattr(
+        sql_sources,
+        "sql_caption",
+        lambda table: sql_caption(table).replace(" Clé primaire : id_client.", ""),
+    )
+    path = tmp_path / "missing-key.pdf"
+    render(path, exercises)
+    with pytest.raises(ValueError, match="contenu imprimé"):
+        llm_pdf.validate_llm_pdf(path, exercises, correction=False)
 
 
 @pytest.mark.parametrize("large_print", [False, True])

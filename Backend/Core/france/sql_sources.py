@@ -44,6 +44,12 @@ def sql_caption(material: NSITableMaterial) -> str:
     )
     if "REAL" in descriptor.column_types:
         caption += " REAL utilise des nombres binaires approchés; les décimaux sont écrits avec un point."
+    if descriptor.primary_key is not None:
+        caption += (
+            f" Clé primaire : {', '.join(descriptor.primary_key)}."
+            if descriptor.primary_key
+            else " Aucune clé primaire déclarée."
+        )
     return caption
 
 
@@ -148,6 +154,12 @@ def validate_database(
             row[6] for row in columns
         ):
             raise ValueError("Colonnes SQL différentes de la source imprimée")
+        if material.sql.primary_key is not None:
+            actual_key = tuple(
+                row[1] for row in sorted(columns, key=lambda row: row[5]) if row[5]
+            )
+            if actual_key != material.sql.primary_key:
+                raise ValueError("Clé primaire SQL différente de la source imprimée")
         wanted_rows = Counter(
             tuple(
                 _cell(value, kind, nullable)
