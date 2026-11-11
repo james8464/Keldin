@@ -91,6 +91,38 @@ def test_local_memory_refusal_has_a_distinct_terminal_code(publication, monkeypa
     assert not any(event["type"] in {"done", "file"} for event in events)
 
 
+@pytest.mark.parametrize("workers", [1, 2])
+def test_mlx_memory_refusal_precedes_model_hashing(publication, monkeypatch, workers):
+    from types import SimpleNamespace
+
+    from Backend.Core import mlx_setup
+    from Backend.Core.ollama_admission import ResourceAdmissionError
+
+    subject, args, events = publication
+    args.provider = "apple"
+    model_path = args.reference_index.parent / "cached-model"
+    monkeypatch.setattr(
+        subject,
+        "HostedLLMClient",
+        lambda **_kwargs: SimpleNamespace(parallel_generation_workers=workers),
+    )
+    monkeypatch.setattr(mlx_setup, "resolve_local_mlx_model", lambda _model: model_path)
+    monkeypatch.setattr(
+        subject, "_model_snapshot", lambda _args: pytest.fail("Model was hashed")
+    )
+    called = []
+
+    def refuse(path, *, workers):
+        called.append((path, workers))
+        raise ResourceAdmissionError("Not enough memory")
+
+    monkeypatch.setattr(mlx_setup, "ensure_mlx_memory_capacity", refuse)
+    assert subject.handle_generate_llm_assessment(args) == 1
+    assert called == [(model_path, workers)]
+    assert [event.get("code") for event in events] == ["local_memory_unavailable"]
+    assert not args.output.exists()
+
+
 def test_cancellation_during_model_snapshot_is_reported(publication, monkeypatch):
     subject, args, events = publication
     previous = signal.getsignal(signal.SIGTERM)
@@ -127,7 +159,8 @@ def cancel_during_snapshot(_args):
 llm_runtime._model_snapshot = cancel_during_snapshot
 raise SystemExit(llm_runtime.handle_generate_llm_assessment(Namespace(
     assessment="fr-bac-general-nsi-written-2027",
-    provider="apple", model="test-only", seed=42,
+    provider="ollama", model="test-only", seed=42,
+    ollama_url="http://localhost:11434",
     reference_index=Path(sys.argv[1]), output=Path(sys.argv[2]),
 )))
 """
