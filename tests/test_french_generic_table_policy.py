@@ -2,8 +2,10 @@
 
 from copy import deepcopy
 
+import pymupdf
 import pytest
 from reportlab.lib.styles import ParagraphStyle
+from reportlab.pdfbase.pdfmetrics import stringWidth
 
 from Backend.Core.france import llm_pdf, rendering
 from Backend.Core.france import llm_pipeline as pipeline
@@ -12,6 +14,7 @@ from Backend.Core.france.nsi import NSITableMaterial
 from Backend.Core.france.print_policy import (
     V34_PRINT_POLICY,
     V35_PRINT_POLICY,
+    V36_EQUAL_TABLE_PRINT_POLICY,
     V36_FOREIGN_EDGE_PRINT_POLICIES,
     V36_GENERIC_TABLE_PRINT_POLICIES,
     V36_GRAPH_PRINT_POLICY,
@@ -26,7 +29,7 @@ OLD_POLICIES = (
     None,
     V34_PRINT_POLICY,
     V35_PRINT_POLICY,
-    *(f"fr-nsi-v36-model-review-v{version}" for version in range(1, 5)),
+    *(f"fr-nsi-v36-model-review-v{version}" for version in range(1, 6)),
 )
 
 
@@ -43,13 +46,13 @@ def material(identifier, columns, rows):
     )
 
 
-def table_for(source, **kwargs):
+def table_for(source, *, available_width=440, **kwargs):
     block = rendering.structured_material(
         source,
         body=ParagraphStyle("table", fontName="Helvetica", fontSize=12, leading=15),
         bold_font="Helvetica-Bold",
         regular_font="Helvetica",
-        available_width=440,
+        available_width=available_width,
         **kwargs,
     )
     return next(item for item in block._content if hasattr(item, "_rowHeights"))
@@ -67,6 +70,61 @@ def test_new_policy_uses_dimensions_not_material_identity(identifier, columns, r
     assert table._colWidths == [440 / columns] * columns
     assert table._rowHeights == [None] * (rows + 1)
     assert source.model_dump(mode="json") == before
+
+
+def test_content_widths_keep_feasible_tokens_at_original_font_size():
+    source = NSITableMaterial(
+        kind="table",
+        id="registre",
+        title="Registre brut",
+        columns=(
+            "id_membre",
+            "pseudo",
+            "quartier",
+            "id_atelier",
+            "intitule",
+            "niveau",
+            "date_inscription",
+            "statut",
+        ),
+        rows=(
+            (
+                "1",
+                "luna",
+                "Nord",
+                "3",
+                "Modelage 3D",
+                "debutant",
+                "2025-08-20",
+                "liste_attente",
+            ),
+        ),
+    )
+    table = table_for(
+        source, available_width=500, generic_tables=True, content_widths=True
+    )
+    style = table._cellStyles[0][-2]
+    assert sum(table._colWidths) == pytest.approx(500)
+    assert table._cellvalues[0][-2].style.fontSize == 12
+    assert (
+        table._colWidths[-2]
+        >= stringWidth("date_inscription", "Helvetica", 12)
+        + style.leftPadding
+        + style.rightPadding
+    )
+    assert table._colWidths != [62.5] * 8
+
+
+def test_content_widths_keep_equal_columns_if_tokens_cannot_fit():
+    source = NSITableMaterial(
+        kind="table",
+        id="long",
+        title="Données",
+        columns=("W" * 50, "valeur"),
+        rows=(("x", "y"),),
+    )
+    table = table_for(source, generic_tables=True, content_widths=True)
+    assert table._colWidths == [220, 220]
 
 
 @pytest.mark.parametrize("identifier", COLLIDING_IDS)
@@ -89,7 +147,13 @@ def test_resolved_host_policy_selects_table_scope_without_model_fields(
     original = rendering.structured_material
 
     def capture(*args, **kwargs):
-        observed.append((kwargs["generic_tables"], kwargs["avoid_foreign_graph_edges"]))
+        observed.append(
+            (
+                kwargs["generic_tables"],
+                kwargs["avoid_foreign_graph_edges"],
+                kwargs["content_widths"],
+            )
+        )
         return original(*args, **kwargs)
 
     monkeypatch.setattr(rendering, "structured_material", capture)
@@ -102,17 +166,27 @@ def test_resolved_host_policy_selects_table_scope_without_model_fields(
     )
     assert observed
     assert set(observed) == {
-        (policy == PRINT_POLICY, policy in V36_FOREIGN_EDGE_PRINT_POLICIES)
+        (
+            policy in V36_GENERIC_TABLE_PRINT_POLICIES,
+            policy in V36_FOREIGN_EDGE_PRINT_POLICIES,
+            policy == PRINT_POLICY,
+        )
     }
     assert not path.exists()
 
 
 def test_policy_membership_keeps_all_historical_versions():
-    assert PRINT_POLICY == "fr-nsi-v36-model-review-v5"
+    assert PRINT_POLICY == "fr-nsi-v36-model-review-v6"
     assert V36_GRAPH_PRINT_POLICY == "fr-nsi-v36-model-review-v4"
-    assert {f"fr-nsi-v36-model-review-v{i}" for i in range(1, 6)} == V36_PRINT_POLICIES
-    assert {PRINT_POLICY} == V36_GENERIC_TABLE_PRINT_POLICIES
-    assert {V36_GRAPH_PRINT_POLICY, PRINT_POLICY} == V36_FOREIGN_EDGE_PRINT_POLICIES
+    assert {f"fr-nsi-v36-model-review-v{i}" for i in range(1, 7)} == V36_PRINT_POLICIES
+    assert {
+        V36_EQUAL_TABLE_PRINT_POLICY,
+        PRINT_POLICY,
+    } == V36_GENERIC_TABLE_PRINT_POLICIES
+    assert {
+        V36_GRAPH_PRINT_POLICY,
+        *V36_GENERIC_TABLE_PRINT_POLICIES,
+    } == V36_FOREIGN_EDGE_PRINT_POLICIES
 
 
 def test_unknown_policy_still_refuses_before_creating_a_pdf(tmp_path):
@@ -150,7 +224,7 @@ def collision_exercises():
 
 @pytest.mark.parametrize("correction", [False, True])
 @pytest.mark.parametrize("large_print", [False, True])
-def test_real_v5_pdf_accepts_all_colliding_generic_table_ids(
+def test_current_pdf_accepts_all_colliding_generic_table_ids(
     tmp_path, correction, large_print
 ):
     source = collision_exercises()
@@ -162,4 +236,37 @@ def test_real_v5_pdf_accepts_all_colliding_generic_table_ids(
         correction=correction,
         large_print=large_print,
         print_policy=PRINT_POLICY,
+    )
+
+
+@pytest.mark.parametrize("correction", [False, True])
+@pytest.mark.parametrize("large_print", [False, True])
+def test_current_pdf_keeps_complete_table_tokens(tmp_path, correction, large_print):
+    source = collision_exercises()
+    exercise = source[0]
+    table = exercise.materials[0].model_copy(
+        update={
+            "title": "Registre de contrôle",
+            "columns": (
+                "id_membre",
+                "pseudo",
+                "date_inscription",
+                "statut",
+                "atelier",
+            ),
+            "rows": (("1", "luna", "2025-08-20", "liste_attente", "3"),),
+        }
+    )
+    source[0] = exercise.model_copy(update={"materials": (table,)})
+    path = tmp_path / "weighted-table.pdf"
+    render(path, source, correction=correction, large_print=large_print)
+    llm_pdf.validate_llm_pdf(
+        path, source, correction=correction, large_print=large_print
+    )
+    with pymupdf.open(path) as document:
+        table_page = next(page for page in document if table.title in page.get_text())
+        printed = table_page.get_text().split(table.title, 1)[1]
+    assert all(
+        token in printed
+        for token in ("date_inscription", "2025-08-20", "liste_attente")
     )

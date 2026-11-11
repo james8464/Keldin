@@ -1264,11 +1264,8 @@
     {
       "path": "Backend/Core/france/originality.py",
       "classification": "maintained-source",
-      "status": "reviewed",
-      "reason": "Complete 154-line EOF review attributed to root and independent reviewers, within the linked bounded scope and exact source hash. Originality report-isolation red/green controls are separate from unchanged network, inline, provider tests and Economics factory/CLI reads. No whole dependency, live model-quality, rights or release-acceptance claim.",
-      "source_sha256": "81eda6245f73c1b2e2ca8a12b58b3901623349a4ab908f88d074860ac5f0dccc",
-      "review_evidence": "docs/quality/originality-report-isolation-review.md",
-      "review_evidence_sha256": "2754c42b9e93f321c67c024556c0509f37891059c88609fa3fd5f7cd53518165"
+      "status": "pending",
+      "reason": "No file-level semantic implementation review recorded in this ledger."
     },
     {
       "path": "Backend/Core/france/pipeline.py",
@@ -1288,11 +1285,8 @@
     {
       "path": "Backend/Core/france/print_policy.py",
       "classification": "maintained-source",
-      "status": "reviewed",
-      "reason": "Complete current 30-line module EOF independently reviewed; explicit v5 generic-table selection and historical policy membership. Not model quality or release approval. Prior evidence docs/quality/french-graph-label-clearance-review.md at 09820e237db145c7842f187fde270b7eb3736a1d70f062bba5778be4a332a380; prior source 286adb79fc2b847de338faaa264dacd547edaa74dc9942fca7b76db43a989099.",
-      "source_sha256": "2a2c0133bb2e4bb2705a4b35a70c2c68f7ac6992a26d8a170ec267be6eb857be",
-      "review_evidence": "docs/quality/french-generic-table-policy-review.md",
-      "review_evidence_sha256": "954b235c85ed5cac715c21d49672e42bc05ccfb690e82e90d595e7cbe8a3a831"
+      "status": "pending",
+      "reason": "No file-level semantic implementation review recorded in this ledger."
     },
     {
       "path": "Backend/Core/france/provider.py",
@@ -7783,20 +7777,14 @@
     {
       "path": "tests/test_french_generic_table_policy.py",
       "classification": "test",
-      "status": "reviewed",
-      "reason": "Complete current 165-line test EOF independently reviewed. Synthetic shape, policy, replay and print controls are not universal table-fit or model qualification.",
-      "source_sha256": "cc4bd4466efeac0b727276ea594349451c4af79f8125cda11b252ba875189c4b",
-      "review_evidence": "docs/quality/french-generic-table-policy-review.md",
-      "review_evidence_sha256": "954b235c85ed5cac715c21d49672e42bc05ccfb690e82e90d595e7cbe8a3a831"
+      "status": "pending",
+      "reason": "No file-level semantic implementation review recorded in this ledger."
     },
     {
       "path": "tests/test_french_graph_clearance_policy.py",
       "classification": "test",
-      "status": "reviewed",
-      "reason": "Preserves existing complete source-bound test review plus complete independently reviewed v5/old-v4 control delta. Not a fresh current whole-file EOF read or universal graph correctness proof. Prior evidence docs/quality/french-graph-label-clearance-review.md at 09820e237db145c7842f187fde270b7eb3736a1d70f062bba5778be4a332a380; prior source 7dce7dd722519f92631318ee5daa03a8313da477ffa1d561b4bd24bbc46e871a.",
-      "source_sha256": "72c6d02aecad31fbb7c237811318bf26b05e91e5145350e7e2cf38bcd6663f86",
-      "review_evidence": "docs/quality/french-generic-table-policy-review.md",
-      "review_evidence_sha256": "954b235c85ed5cac715c21d49672e42bc05ccfb690e82e90d595e7cbe8a3a831"
+      "status": "pending",
+      "reason": "No file-level semantic implementation review recorded in this ledger."
     },
     {
       "path": "tests/test_french_graph_field_schema.py",
@@ -8101,11 +8089,8 @@
     {
       "path": "tests/test_french_originality_report_isolation.py",
       "classification": "test",
-      "status": "reviewed",
-      "reason": "Complete 53-line EOF review attributed to root and independent reviewers, within the linked bounded scope and exact source hash. Originality report-isolation red/green controls are separate from unchanged network, inline, provider tests and Economics factory/CLI reads. No whole dependency, live model-quality, rights or release-acceptance claim.",
-      "source_sha256": "a791db86a680fc84a77c95606a51100fbecd5a782831c795934b1d07a3fe526d",
-      "review_evidence": "docs/quality/originality-report-isolation-review.md",
-      "review_evidence_sha256": "2754c42b9e93f321c67c024556c0509f37891059c88609fa3fd5f7cd53518165"
+      "status": "pending",
+      "reason": "No file-level semantic implementation review recorded in this ledger."
     },
     {
       "path": "tests/test_french_positive_credit_schema.py",
