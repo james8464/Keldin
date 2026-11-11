@@ -1111,11 +1111,8 @@
     {
       "path": "Backend/Core/france/llm_runtime.py",
       "classification": "maintained-source",
-      "status": "reviewed",
-      "reason": "Complete-file semantic review of French cancellation and printed-code boundaries.",
-      "source_sha256": "760cb451e6f6e43f23122f0943e6452fef8edd59bf4569b333b78d9a4867854a",
-      "review_evidence": "docs/quality/french-cancellation-and-print-boundaries-2026-11-11.md",
-      "review_evidence_sha256": "4fd9990fa1522b1f70fa22e797bb42c6a62f4ef661535c4d3ea1027238f0e5ff"
+      "status": "pending",
+      "reason": "No file-level semantic implementation review recorded in this ledger."
     },
     {
       "path": "Backend/Core/france/loan_case.py",

@@ -113,18 +113,29 @@ def handle_generate_llm_assessment(args) -> int:
         # Reference and model snapshots can read several gigabytes. Report
         # cancellation during that preflight as well as during generation.
         previous_handler = signal.signal(signal.SIGTERM, cancel)
+        provider_client = HostedLLMClient(
+            provider=args.provider,
+            model=args.model,
+            api_key=getattr(args, "api_key", ""),
+            base_url=args.ollama_url,
+        )
+        if args.provider == "apple":
+            from Backend.Core.mlx_setup import (
+                ensure_mlx_memory_capacity,
+                resolve_local_mlx_model,
+            )
+
+            # Refuse before reading large cached weights for provenance.
+            # The loader checks again immediately before allocating memory.
+            ensure_mlx_memory_capacity(
+                resolve_local_mlx_model(args.model),
+                workers=provider_client.parallel_generation_workers,
+            )
         reference_hash = _file_hash(args.reference_index)
         source_hash = implementation_identity()
         model_snapshot = _model_snapshot(args)
         output.mkdir(parents=True, exist_ok=True)
-        client = FrenchGenerationBudget(
-            HostedLLMClient(
-                provider=args.provider,
-                model=args.model,
-                api_key=getattr(args, "api_key", ""),
-                base_url=args.ollama_url,
-            )
-        )
+        client = FrenchGenerationBudget(provider_client)
         if args.provider in {"openai", "anthropic", "deepseek"}:
             emit_progress(
                 "Ce sujet peut nécessiter jusqu'à 24 requêtes de génération, y compris les reprises. Des frais du fournisseur peuvent s'appliquer; annuler ne garantit pas l'arrêt de sa facturation.",
