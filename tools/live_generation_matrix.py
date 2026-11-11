@@ -17,6 +17,8 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
+from Backend.Core.apple_intelligence import HELPER_NAME as APPLE_SYSTEM_HELPER
+from Backend.Core.apple_intelligence import MODEL as APPLE_SYSTEM_MODEL
 from Backend.Core.events import BACKEND_VERSION
 from Backend.Core.model_recommendations import default_ollama_model
 from Backend.Core.qualification.manifest import (
@@ -98,6 +100,16 @@ def run_matrix(
     dry_run: bool,
     resume: bool,
 ) -> dict[str, Any]:
+    if provider == "apple_intelligence":
+        if resume or model != APPLE_SYSTEM_MODEL:
+            raise ValueError(
+                "Apple Intelligence requires a fresh run with the system model"
+            )
+        if (
+            not command_prefix
+            or _packaged_apple_system_helper(Path(command_prefix[0])) is None
+        ):
+            raise ValueError("Apple Intelligence requires an executable bundled helper")
     output_root.mkdir(parents=True, exist_ok=True)
     results: list[dict[str, Any]] = []
     started = time.time()
@@ -502,7 +514,7 @@ def _request_identity(
     model_digest: str | None,
     runtime_sha256: str | None = None,
 ) -> dict[str, Any]:
-    return {
+    identity: dict[str, Any] = {
         "version": 2,
         "job": job.id,
         "seed": seed,
@@ -532,6 +544,26 @@ def _request_identity(
         else None,
         "expected_roles": list(job.expected_roles),
     }
+    if not dry_run and provider == "apple_intelligence":
+        helper = _packaged_apple_system_helper(Path(command_prefix[0]))
+        identity["apple_system_helper_sha256"] = _sha256(helper) if helper else None
+    return identity
+
+
+def _packaged_apple_system_helper(path: Path) -> Path | None:
+    backend = path.resolve()
+    if (
+        backend.parts[-4:]
+        != ("Contents", "Resources", "KeldinBackend", "KeldinBackend")
+        or backend.parents[3].suffix != ".app"
+        or not backend.is_file()
+        or not os.access(backend, os.X_OK)
+    ):
+        return None
+    helper = backend.parents[2] / "Helpers" / APPLE_SYSTEM_HELPER
+    if helper.is_symlink() or not helper.is_file() or not os.access(helper, os.X_OK):
+        return None
+    return helper
 
 
 def _runtime_sha256() -> str:
@@ -625,6 +657,12 @@ def _resumable_result(
     if (
         request_identity["provider"] in {"ollama", "apple"}
         and not request_identity["model_digest"]
+    ):
+        return None
+    if request_identity[
+        "provider"
+    ] == "apple_intelligence" and not request_identity.get(
+        "apple_system_helper_sha256"
     ):
         return None
     files = result.get("files")
@@ -832,10 +870,10 @@ def main(argv: list[str] | None = None) -> int:
         description="Generate every advertised paper through the app backend."
     )
     parser.add_argument("--output", type=Path, required=True)
-    parser.add_argument("--model", default=default_ollama_model())
+    parser.add_argument("--model")
     parser.add_argument(
         "--provider",
-        choices=("ollama", "openai", "anthropic", "apple"),
+        choices=("ollama", "openai", "anthropic", "apple", "apple_intelligence"),
         default="ollama",
     )
     parser.add_argument("--ollama-url", default="http://localhost:11434")
@@ -856,6 +894,24 @@ def main(argv: list[str] | None = None) -> int:
         help="Run only a specific registry job; may be repeated.",
     )
     args = parser.parse_args(argv)
+    if args.provider == "apple_intelligence":
+        if args.backend_executable is None:
+            parser.error(
+                "Apple Intelligence requires --backend-executable from a packaged app"
+            )
+        if _packaged_apple_system_helper(args.backend_executable) is None:
+            parser.error(
+                "Apple Intelligence requires a packaged backend and executable bundled helper"
+            )
+        if args.model not in {None, APPLE_SYSTEM_MODEL}:
+            parser.error(f"Apple Intelligence uses only {APPLE_SYSTEM_MODEL}")
+        if args.resume:
+            parser.error(
+                "Apple Intelligence requires a fresh run; the system model revision cannot be pinned"
+            )
+        model = APPLE_SYSTEM_MODEL
+    else:
+        model = args.model if args.model is not None else default_ollama_model()
     registry = json.loads(REGISTRY_PATH.read_text(encoding="utf-8"))
     jobs = matrix_jobs(registry)
     if args.only:
@@ -873,7 +929,7 @@ def main(argv: list[str] | None = None) -> int:
         jobs,
         output_root=args.output.resolve(),
         command_prefix=command_prefix,
-        model=args.model,
+        model=model,
         provider=args.provider,
         ollama_url=args.ollama_url,
         base_seed=args.seed,
