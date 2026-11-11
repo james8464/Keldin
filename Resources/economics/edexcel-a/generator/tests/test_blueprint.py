@@ -1,8 +1,32 @@
 from pathlib import Path
 
+from pastpapergen.extended_scenarios import concrete_fallback
 from pastpapergen.generator import build_paper_blueprint
+from pastpapergen.models import QuestionBlueprint
 from pastpapergen.paper_configs import load_builtin_paper_config
 from pastpapergen.syllabus import load_syllabus
+
+
+def test_linked_vegetable_case_extracts_each_add_evidence():
+    def details(marks: int, reference: str) -> set[str]:
+        question = QuestionBlueprint(
+            section="B",
+            number="6",
+            marks=marks,
+            command_word="Discuss",
+            topic_id="1.2.4",
+            prompt="Discuss the change in supply.",
+            source_reference=reference,
+            mark_scheme=["Correctly identifies or defines supply."],
+        )
+        result = concrete_fallback(question)
+        assert result.source_reference == reference
+        return set(result.source_text.rstrip(".").split(". "))
+
+    extract_c = details(12, "Extract C")
+    extract_d = details(15, "Extract D")
+    assert extract_c - extract_d
+    assert extract_d - extract_c
 
 
 def test_blueprint_is_deterministic_for_seed():
