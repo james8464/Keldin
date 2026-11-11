@@ -1,4 +1,4 @@
-"""Conservative local Ollama preflight, not a runtime memory-fit guarantee."""
+"""Conservative local model admission, not a runtime memory-fit guarantee."""
 
 from __future__ import annotations
 
@@ -62,17 +62,46 @@ def require_local_ollama_capacity(base_url: str, model: str) -> None:
         )
 
 
-def _checked_physical_memory() -> int:
+def require_local_mlx_capacity(weight_bytes: int, *, workers: int = 1) -> None:
+    """Check a cold MLX load using cached weights and a per-worker allowance."""
+    if (
+        type(weight_bytes) is not int
+        or weight_bytes <= 0
+        or type(workers) is not int
+        or workers not in {1, 2}
+    ):
+        raise ResourceAdmissionError("Could not verify Apple MLX memory requirements.")
+    physical = _checked_physical_memory("Apple MLX")
+    reserve = max(4 * GIB, (physical + 3) // 4)
+    required = weight_bytes + workers * max(2 * GIB, (weight_bytes + 3) // 4)
+    if required > physical - reserve:
+        raise ResourceAdmissionError(
+            "This Apple MLX model exceeds the estimated memory headroom limit. "
+            "Choose a smaller model or lower parallel generation."
+        )
+    headroom = _headroom_snapshot(physical)
+    if type(headroom) is not int or not 0 <= headroom <= physical:
+        raise ResourceAdmissionError("Could not verify local memory headroom.")
+    if _checked_physical_memory("Apple MLX") != physical:
+        raise ResourceAdmissionError("System memory changed during admission.")
+    if required > headroom:
+        raise ResourceAdmissionError(
+            "Apple MLX has insufficient estimated memory headroom. "
+            "The model was not loaded."
+        )
+
+
+def _checked_physical_memory(provider: str = "Ollama") -> int:
     physical, pressure = _memory_snapshot()
     if type(physical) is not int or physical <= 0:
         raise ResourceAdmissionError(
-            "Could not verify physical memory for local Ollama."
+            f"Could not verify physical memory for local {provider}."
         )
     # Linux has no equivalent categorical macOS pressure sensor. Its physical
     # memory bound still applies; do not invent a pressure level from free pages.
     if platform.system() != "Linux" and (type(pressure) is not int or pressure != 1):
         raise ResourceAdmissionError(
-            "Local Ollama generation requires normal system memory pressure. "
+            f"Local {provider} requires normal system memory pressure. "
             "Close memory-heavy apps and try again."
         )
     return physical
@@ -251,7 +280,7 @@ def _read_memory_snapshot() -> tuple[int, int | None]:
         raise
     except (OSError, ValueError, subprocess.SubprocessError) as error:
         raise ResourceAdmissionError(
-            "Could not verify system memory for local Ollama. Generation was not started."
+            "Could not verify system memory. Local generation was not started."
         ) from error
 
 

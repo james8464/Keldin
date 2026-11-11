@@ -160,10 +160,9 @@ def test_local_model_resolution_never_enables_network_download(tmp_path: Path) -
 
 
 def test_guided_setup_downloads_data_only_and_never_trusts_remote_code(
-    monkeypatch, tmp_path
+    monkeypatch, mlx_snapshot
 ):
-    snapshot = tmp_path / "snapshot"
-    snapshot.mkdir()
+    snapshot = mlx_snapshot
     downloads = []
     loads = []
     module = ModuleType("mlx_lm")

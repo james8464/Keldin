@@ -168,13 +168,13 @@ def test_completed_provider_response_is_accepted(provider, reply, monkeypatch):
     assert client.generate_json("Return JSON.") == {"answer": "complete"}
 
 
-def test_apple_provider_loads_model_once(monkeypatch) -> None:
+def test_apple_provider_loads_model_once(monkeypatch, mlx_snapshot) -> None:
     calls = {"load": 0, "generate": 0}
     module = ModuleType("mlx_lm")
 
     def load(model_name: str, *, tokenizer_config) -> tuple[object, object]:
         calls["load"] += 1
-        assert model_name == "/local/test-model"
+        assert model_name == str(mlx_snapshot)
         assert tokenizer_config == {
             "trust_remote_code": False,
             "local_files_only": True,
@@ -199,7 +199,7 @@ def test_apple_provider_loads_model_once(monkeypatch) -> None:
     monkeypatch.setitem(sys.modules, "mlx_lm", module)
     monkeypatch.setattr(
         "Backend.Core.providers.resolve_local_mlx_model",
-        lambda model: f"/local/{model}",
+        lambda _: str(mlx_snapshot),
     )
     client = HostedLLMClient(
         provider="apple",
@@ -238,7 +238,9 @@ def test_solver_schema_reads_compact_closed_slots_before_choice_shape():
     assert schema["properties"]["answer"]["required"] == ["row-1", "row-2"]
 
 
-def test_apple_provider_applies_the_models_chat_template(monkeypatch) -> None:
+def test_apple_provider_applies_the_models_chat_template(
+    monkeypatch, mlx_snapshot
+) -> None:
     module = ModuleType("mlx_lm")
     calls = []
 
@@ -258,7 +260,7 @@ def test_apple_provider_applies_the_models_chat_template(monkeypatch) -> None:
     module.generate = generate
     monkeypatch.setitem(sys.modules, "mlx_lm", module)
     monkeypatch.setattr(
-        "Backend.Core.providers.resolve_local_mlx_model", lambda _: "/local/model"
+        "Backend.Core.providers.resolve_local_mlx_model", lambda _: str(mlx_snapshot)
     )
     client = HostedLLMClient(provider="apple", model="test-model", api_key="")
     assert client.generate_json("Return JSON.") == {"answer": "ready"}
@@ -295,7 +297,7 @@ def test_apple_provider_missing_runtime_uses_human_recovery_message(
     assert "pip" not in message.lower()
 
 
-def test_apple_batch_format_and_identifier_repair(monkeypatch):
+def test_apple_batch_format_and_identifier_repair(monkeypatch, mlx_snapshot):
     module = ModuleType("mlx_lm")
     prompts = []
     replies = iter(
@@ -318,7 +320,7 @@ def test_apple_batch_format_and_identifier_repair(monkeypatch):
     )
     monkeypatch.setitem(sys.modules, "mlx_lm", module)
     monkeypatch.setattr(
-        "Backend.Core.providers.resolve_local_mlx_model", lambda _: "/local/model"
+        "Backend.Core.providers.resolve_local_mlx_model", lambda _: str(mlx_snapshot)
     )
     client = HostedLLMClient(provider="apple", model="test", api_key="")
     prompt = (
@@ -349,7 +351,9 @@ def test_apple_batch_format_and_identifier_repair(monkeypatch):
         ),
     ],
 )
-def test_apple_rejects_missing_or_extra_batch_items(monkeypatch, items, field, prompt):
+def test_apple_rejects_missing_or_extra_batch_items(
+    monkeypatch, mlx_snapshot, items, field, prompt
+):
     module = ModuleType("mlx_lm")
     module.load = lambda _, **kwargs: (object(), object())
     module.generate = lambda *args, **kwargs: json.dumps({field: items})
@@ -360,7 +364,7 @@ def test_apple_rejects_missing_or_extra_batch_items(monkeypatch, items, field, p
     )
     monkeypatch.setitem(sys.modules, "mlx_lm", module)
     monkeypatch.setattr(
-        "Backend.Core.providers.resolve_local_mlx_model", lambda _: "/local/model"
+        "Backend.Core.providers.resolve_local_mlx_model", lambda _: str(mlx_snapshot)
     )
     client = HostedLLMClient(provider="apple", model="test", api_key="")
     with pytest.raises(ValueError, match="identifiers or count did not match"):
@@ -474,13 +478,13 @@ def test_apple_structured_decoder_missing_dependency_is_actionable(monkeypatch):
         '[{"answer":"complete"}]',
     ],
 )
-def test_apple_constrained_output_is_not_salvaged(monkeypatch, response):
+def test_apple_constrained_output_is_not_salvaged(monkeypatch, mlx_snapshot, response):
     module = ModuleType("mlx_lm")
     module.load = lambda _, **kwargs: (object(), object())
     module.generate = lambda *args, **kwargs: pytest.fail("unconstrained generation")
     monkeypatch.setitem(sys.modules, "mlx_lm", module)
     monkeypatch.setattr(
-        "Backend.Core.providers.resolve_local_mlx_model", lambda _: "/local/model"
+        "Backend.Core.providers.resolve_local_mlx_model", lambda _: str(mlx_snapshot)
     )
     monkeypatch.setattr(
         HostedLLMClient,

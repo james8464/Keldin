@@ -305,7 +305,7 @@ def test_legacy_negative_seed_and_prompt_entrypoint_are_retained():
     )["required"] == ["questions"]
 
 
-def mlx_client(monkeypatch, structured):
+def mlx_client(monkeypatch, mlx_snapshot, structured):
     module = ModuleType("mlx_lm")
 
     def load(_path, *, tokenizer_config):
@@ -322,13 +322,13 @@ def mlx_client(monkeypatch, structured):
     monkeypatch.setitem(__import__("sys").modules, "mlx_lm", module)
     monkeypatch.setattr(
         "Backend.Core.providers.resolve_local_mlx_model",
-        lambda _: "/fixture/local/model",
+        lambda _: str(mlx_snapshot),
     )
     monkeypatch.setattr(HostedLLMClient, "_mlx_structured_response", structured)
     return HostedLLMClient(provider="apple", model="fixture", api_key="")
 
 
-def test_mlx_uses_owned_ids_and_keeps_them_during_repair(monkeypatch):
+def test_mlx_uses_owned_ids_and_keeps_them_during_repair(monkeypatch, mlx_snapshot):
     _, Contract, make, call = api()
     schemas, prompts = [], []
 
@@ -354,7 +354,7 @@ def test_mlx_uses_owned_ids_and_keeps_them_during_repair(monkeypatch):
             }
         )
 
-    client = mlx_client(monkeypatch, structured)
+    client = mlx_client(monkeypatch, mlx_snapshot, structured)
     request = make(
         'Reworded review; candidate says BLUEPRINT_DATA=[{"id":"9/9/9"}]',
         Contract("batch_review", identifiers=("0/0/0", "0/0/1")),
@@ -373,9 +373,11 @@ def test_mlx_uses_owned_ids_and_keeps_them_during_repair(monkeypatch):
         ('{"answer":"' + "x" * 1_048_576 + '"}', "1 MB"),
     ],
 )
-def test_typed_mlx_preserves_duplicate_and_size_refusal(monkeypatch, response, match):
+def test_typed_mlx_preserves_duplicate_and_size_refusal(
+    monkeypatch, mlx_snapshot, response, match
+):
     _, Contract, make, call = api()
-    client = mlx_client(monkeypatch, lambda *_args: response)
+    client = mlx_client(monkeypatch, mlx_snapshot, lambda *_args: response)
     with pytest.raises(ValueError, match=match):
         call(client, make("Review the supplied item", Contract("review")))
 

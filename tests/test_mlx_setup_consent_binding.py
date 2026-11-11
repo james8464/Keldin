@@ -15,6 +15,7 @@ from Backend.Core.mlx_setup import (
 )
 
 SHA = "a" * 40
+pytestmark = pytest.mark.usefixtures("mlx_snapshot")
 
 
 def fake_runtime(monkeypatch):
@@ -32,6 +33,7 @@ def test_remote_setup_pins_approved_revision_and_later_local_resolution(
     loads = fake_runtime(monkeypatch)
     snapshot = tmp_path / SHA
     snapshot.mkdir()
+    (snapshot / "model.safetensors").write_bytes(b"fixture weights")
     calls = []
 
     def resolve(**kwargs):

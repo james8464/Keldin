@@ -12,6 +12,7 @@ import platform
 import re
 import shutil
 import signal
+import stat
 import subprocess
 import sys
 import tempfile
@@ -21,6 +22,10 @@ from pathlib import Path
 from typing import Any
 
 from Backend.Core.events import emit, emit_progress
+from Backend.Core.ollama_admission import (
+    ResourceAdmissionError,
+    require_local_mlx_capacity,
+)
 
 MLX_PACKAGE_SPECS = (
     "mlx-lm==0.30.2",
@@ -324,6 +329,28 @@ def resolve_local_mlx_model(
         ) from error
 
 
+def ensure_mlx_memory_capacity(model_path: str | Path, *, workers: int = 1) -> None:
+    """Measure the same local weight shards the packaged MLX loader reads."""
+    weight_bytes = 0
+    try:
+        for index, shard in enumerate(Path(model_path).glob("model*.safetensors"), 1):
+            metadata = shard.stat()
+            if (
+                index > 1024
+                or not stat.S_ISREG(metadata.st_mode)
+                or metadata.st_size <= 0
+            ):
+                raise OSError("Invalid MLX weights")
+            weight_bytes += metadata.st_size
+        if not weight_bytes:
+            raise OSError("Missing MLX weights")
+    except OSError as error:
+        raise MLXModelSetupRequired(
+            "The selected Apple MLX model is incomplete. Check its setup and try again."
+        ) from error
+    require_local_mlx_capacity(weight_bytes, workers=workers)
+
+
 def load_mlx_model(
     model: str,
     *,
@@ -368,8 +395,10 @@ def load_mlx_model(
                         **binding,
                     )
                 )
+        path = path.resolve()
+        ensure_mlx_memory_capacity(path)
         load(
-            str(path.resolve()),
+            str(path),
             tokenizer_config={
                 "trust_remote_code": False,
                 "local_files_only": True,
@@ -377,7 +406,7 @@ def load_mlx_model(
         )
         if revision is not None:
             _save_approved_revision(model, revision)
-    except MLXModelSetupRequired:
+    except (MLXModelSetupRequired, ResourceAdmissionError):
         raise
     except Exception as error:
         if local_only:
@@ -464,6 +493,9 @@ def handle_setup_mlx(args: argparse.Namespace) -> int:
     except MLXSetupCancelled:
         emit_progress("Apple MLX setup cancelled", stage="cancel", progress=0.0)
         return 130
+    except ResourceAdmissionError as error:
+        emit("error", message=str(error), code=error.code)
+        return 1
     except MLXSetupError as error:
         emit("error", message=str(error))
         return 1
