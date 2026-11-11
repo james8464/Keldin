@@ -56,8 +56,9 @@ def require_code_width(
     *,
     location: str = "code",
 ) -> None:
-    for number, line in enumerate(source.splitlines(), 1):
-        # Preserve the historical Preformatted source and its width measurement.
+    # ReportLab's Preformatted splits on LF only. Other Unicode line
+    # separators still occupy space on the line that will be painted.
+    for number, line in enumerate(source.split("\n"), 1):
         width = stringWidth(line, font_name, font_size)
         if width > available_width:
             raise CodeLayoutError(
