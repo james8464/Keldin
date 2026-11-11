@@ -638,7 +638,7 @@ def _written_question(
         authoring_context.update(growth_context)
         if "." in number:
             prompt = (
-                f"Using the business sales data for {business}, calculate the "
+                f"Using the business sales index for {business}, calculate the "
                 "percentage change from 2021 to 2025. Give your answer to one "
                 "decimal place."
             )
