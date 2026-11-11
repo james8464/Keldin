@@ -267,4 +267,8 @@ def test_missing_partial_ambiguous_or_corrupt_material_grid_refuses(
     with pytest.raises(
         ValueError, match=r"[Cc]ell|tableau|colonne|ligne|Glyphe|Grille|Limites"
     ):
-        table_pdf.check_material_tables(changed_pages, source, starts, tables)
+        anchors = [
+            (page, pages[page].search_for(llm_pdf._heading(exercise))[0].y1)
+            for page, exercise in zip(starts, source, strict=True)
+        ]
+        table_pdf.check_material_tables(changed_pages, source, anchors, tables)

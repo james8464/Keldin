@@ -241,6 +241,7 @@ def validate_llm_pdf(
     with pymupdf.open(path) as pdf:
         pages, lines, starts = list(pdf), [], []
         headings = [_compact(_heading(exercise)) for exercise in exercises]
+        heading_size = code_layout(large_print).exercise_heading_size
         for number, page in enumerate(pages, 1):
             if (
                 abs(page.rect.width - 595.276) > 0.5
@@ -266,36 +267,25 @@ def validate_llm_pdf(
                 and line != V34_FOOTER
                 and not re.fullmatch(r"Page\s*:\s*\d+\s*/\s*\d+", line)
             ]
-            page_text = _compact("\n".join(body_lines))
-            for heading in headings:
-                if heading in page_text:
-                    starts.append((headings.index(heading), number - 1))
+            for block in page.get_text("dict", flags=pymupdf.TEXTFLAGS_TEXT)["blocks"]:
+                for line in block.get("lines", []):
+                    spans = line["spans"]
+                    label = _compact("".join(span["text"] for span in spans))
+                    if label in headings and all(
+                        abs(span["size"] - heading_size) <= 0.1 for span in spans
+                    ):
+                        starts.append(
+                            (headings.index(label), number - 1, line["bbox"][3])
+                        )
             lines.extend(body_lines)
-        if [index for index, _ in starts] != [0, 1, 2]:
-            raise ValueError("Début des exercices ambigu")
-        # Text equality alone cannot distinguish standard and enlarged PDFs
-        # without graphs. Bind each owned heading to the physical print mode.
-        heading_size = code_layout(large_print).exercise_heading_size
-        for index, page_number in starts:
-            matching = [
-                line["spans"]
-                for block in pages[page_number].get_text(
-                    "dict", flags=pymupdf.TEXTFLAGS_TEXT
-                )["blocks"]
-                for line in block["lines"]
-                if _compact("".join(span["text"] for span in line["spans"]))
-                == headings[index]
-            ]
-            if len(matching) != 1 or any(
-                abs(span["size"] - heading_size) > 0.1 for span in matching[0]
-            ):
-                raise ValueError(
-                    "Taille des titres V36 incompatible avec le mode de rendu"
-                )
+        if [index for index, _, _ in starts] != [0, 1, 2]:
+            raise ValueError(
+                "Taille des titres V36 incompatible ou début des exercices ambigu"
+            )
         omitted_headers, _table_provenance = check_material_tables(
             pages,
             exercises,
-            [page for _, page in starts],
+            [(page, bottom) for _, page, bottom in starts],
             [
                 [
                     (_table_label(exercise, material), material)
@@ -314,26 +304,20 @@ def validate_llm_pdf(
                 and line.strip() != V34_FOOTER
                 and not re.fullmatch(r"Page\s*:\s*\d+\s*/\s*\d+", line.strip())
             ]
-        text = _compact("\n".join(lines))
-        if any(text.count(heading) != 1 for heading in headings):
-            raise ValueError("Exercice absent ou dupliqué dans le PDF")
-        positions = [text.index(heading) for heading in headings]
-        if positions != sorted(positions) or text[: positions[0]] != _expected_preface(
-            correction, print_policy=print_policy
-        ):
-            raise ValueError("Couverture, rôle ou ordre des exercices invalide")
-        for index, exercise in enumerate(exercises):
-            end = positions[index + 1] if index + 1 < len(positions) else len(text)
-            if text[positions[index] : end] != _expected_exercise(
-                exercise, correction, print_policy=print_policy
-            ):
-                raise ValueError(
-                    f"Contenu imprimé différent de l'exercice {exercise.id}"
-                )
+        # Compare the whole stream, including headings. An inline quotation
+        # belongs to its exercise text, not to the physical section structure.
+        expected = _expected_preface(correction, print_policy=print_policy) + "".join(
+            _expected_exercise(exercise, correction, print_policy=print_policy)
+            for exercise in exercises
+        )
+        if _compact("\n".join(lines)) != expected:
+            raise ValueError(
+                "Couverture, rôle ou contenu imprimé V36 différent de la source"
+            )
         _check_graphs(
             pages,
             exercises,
-            [page for _, page in starts],
+            [page for _, page, _ in starts],
             large_print=large_print,
             print_policy=print_policy,
         )

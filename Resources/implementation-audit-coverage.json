@@ -1408,11 +1408,8 @@
     {
       "path": "Backend/Core/france/table_pdf.py",
       "classification": "maintained-source",
-      "status": "reviewed",
-      "reason": "Complete 300-line review, including ruled cells, glyph bounds, repeated headers and narrowly scoped material regions.",
-      "source_sha256": "88b99c34d28709fc240ce5093997690be9f0f208508300ea47f5cc04d725803d",
-      "review_evidence": "docs/quality/implementation-audit-reconciliation-2026-11-10.md",
-      "review_evidence_sha256": "799d0c38f8fce9352aa3b7697bae3e7e9bd9ccf480cafc45c12e94e6d1582c10"
+      "status": "pending",
+      "reason": "No file-level semantic implementation review recorded in this ledger."
     },
     {
       "path": "Backend/Core/france/teacher_review.py",
@@ -8260,11 +8257,8 @@
     {
       "path": "tests/test_french_table_cell_integrity.py",
       "classification": "test",
-      "status": "reviewed",
-      "reason": "Complete 270-line review. Physical-PDF negative cases are distinguished from in-memory drawing/glyph mutations.",
-      "source_sha256": "0dd6646f454f1ab0cff56e3ddc353167f58be53f6e6f96dc398a2a5529ceae32",
-      "review_evidence": "docs/quality/implementation-audit-reconciliation-2026-11-10.md",
-      "review_evidence_sha256": "799d0c38f8fce9352aa3b7697bae3e7e9bd9ccf480cafc45c12e94e6d1582c10"
+      "status": "pending",
+      "reason": "No file-level semantic implementation review recorded in this ledger."
     },
     {
       "path": "tests/test_french_timeline_marking_revision.py",
