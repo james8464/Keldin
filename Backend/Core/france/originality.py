@@ -81,14 +81,63 @@ def _jaccard(left: set, right: set) -> float:
     return len(left & right) / len(left | right)
 
 
+def _longest_common_substring(left: str, right: str) -> int:
+    """Return the exact contiguous match length, indexing the shorter text."""
+    if not left or not right:
+        return 0
+    if len(left) > len(right):
+        left, right = right, left
+
+    # Each suffix-automaton state stores outgoing characters, its longest
+    # represented substring length, and a link to the next shorter suffix.
+    transitions: list[dict[str, int]] = [{}]
+    lengths = [0]
+    links = [-1]
+    last = 0
+    for character in left:
+        end = len(transitions)
+        transitions.append({})
+        lengths.append(lengths[last] + 1)
+        links.append(0)
+        state = last
+        while state >= 0 and character not in transitions[state]:
+            transitions[state][character] = end
+            state = links[state]
+        if state >= 0:
+            target = transitions[state][character]
+            if lengths[state] + 1 == lengths[target]:
+                links[end] = target
+            else:
+                # Split off the shorter suffix without changing its continuations.
+                clone = len(transitions)
+                transitions.append(transitions[target].copy())
+                lengths.append(lengths[state] + 1)
+                links.append(links[target])
+                while state >= 0 and transitions[state].get(character) == target:
+                    transitions[state][character] = clone
+                    state = links[state]
+                links[target] = links[end] = clone
+        last = end
+
+    state = length = longest = 0
+    for character in right:
+        while state and character not in transitions[state]:
+            state = links[state]
+            length = lengths[state]
+        target = transitions[state].get(character)
+        if target is None:
+            state = length = 0
+        else:
+            state = target
+            length += 1
+            longest = max(longest, length)
+    return longest
+
+
 def _scores(candidate: str, comparison: str) -> dict[str, float | int]:
     candidate_prose, candidate_tokens = _normalise_prose(candidate)
     comparison_prose, comparison_tokens = _normalise_prose(comparison)
-    longest = (
-        SequenceMatcher(None, candidate_prose, comparison_prose, autojunk=False)
-        .find_longest_match()
-        .size
-    )
+    longest = _longest_common_substring(candidate_prose, comparison_prose)
     prose_jaccard = _jaccard(
         _shingles(candidate_tokens, 5), _shingles(comparison_tokens, 5)
     )

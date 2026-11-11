@@ -1,6 +1,8 @@
 """Originality evidence must not expose mutable screening policy."""
 
 import json
+from difflib import SequenceMatcher
+from itertools import product
 
 import pytest
 
@@ -51,3 +53,29 @@ def test_serialized_report_keeps_existing_policy_and_counts(policy):
     assert saved["comparison_counts"] == {"references": 0, "previous_generations": 0}
     assert saved["copyright_guarantee"] is False
     assert saved["teacher_review_required"] is True
+
+
+def test_contiguous_match_keeps_exact_scores_including_unicode_and_empty_inputs():
+    texts = [
+        "".join(chars) for length in range(5) for chars in product("aé ", repeat=length)
+    ]
+    for left, right in product(texts, repeat=2):
+        old = SequenceMatcher(None, left, right, autojunk=False).find_longest_match()
+        assert originality._longest_common_substring(left, right) == old.size
+
+
+def test_originality_uses_bounded_contiguous_index_not_character_sequence_matcher(
+    monkeypatch,
+):
+    matcher = originality.SequenceMatcher
+
+    def token_matcher(junk, left, right, *, autojunk):
+        assert not isinstance(left, str)
+        assert not isinstance(right, str)
+        return matcher(junk, left, right, autojunk=autojunk)
+
+    monkeypatch.setattr(originality, "SequenceMatcher", token_matcher)
+    shared = "éà" * 800
+    assert originality._scores("début " + shared, shared + " fin")[
+        "contiguous_characters"
+    ] == len(shared)
