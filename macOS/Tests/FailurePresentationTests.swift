@@ -3,6 +3,15 @@ import XCTest
 @testable import Keldin
 
 final class FailurePresentationTests: XCTestCase {
+    func testCachedMLXSetupProgressUsesSelectedLanguage() {
+        let message = "Keldin is preparing the selected local model."
+        XCTAssertEqual(GenerationPresentation.progress(message, language: "en"), message)
+        XCTAssertEqual(
+            GenerationPresentation.progress(message, language: "fr"),
+            "Keldin prépare le modèle local sélectionné."
+        )
+    }
+
     func testLocalMemoryRefusalUsesSelectedLanguageNotProviderDetails() {
         let raw = "PRIVATE_RESOURCE_DETAILS"
         let english = "Local generation couldn't start within the memory checks. Choose a smaller model, close memory-heavy apps, or use a remote provider."
