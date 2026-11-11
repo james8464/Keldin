@@ -5938,11 +5938,8 @@
     {
       "path": "macOS/Keldin/Domain/GenerationPresentation.swift",
       "classification": "maintained-source",
-      "status": "reviewed",
-      "reason": "Prior source-bound baseline review plus complete local-memory admission or fake-capacity fixture delta and relevant call-path review. No fresh whole-file, whole-project or model-quality claim.",
-      "source_sha256": "5d7104be75c1e3b1018fd52ad4af3c322c76165b47b9b5b7da3e9ef03e86462b",
-      "review_evidence": "docs/quality/local-model-memory-admission-review.md",
-      "review_evidence_sha256": "cf69a54da1b965e288139aea670bd2e5ad124e0d8353cb885c3188c51992263d"
+      "status": "pending",
+      "reason": "No file-level semantic implementation review recorded in this ledger."
     },
     {
       "path": "macOS/Keldin/Domain/HostedModelCandidate.swift",
@@ -6409,11 +6406,8 @@
     {
       "path": "macOS/Tests/FailurePresentationTests.swift",
       "classification": "test",
-      "status": "reviewed",
-      "reason": "Prior source-bound baseline review plus complete local-memory admission or fake-capacity fixture delta and relevant call-path review. No fresh whole-file, whole-project or model-quality claim.",
-      "source_sha256": "aca3a18c8f79acc84757f00648b9dc18d0d0750c91e58132e0db0eac428a726c",
-      "review_evidence": "docs/quality/local-model-memory-admission-review.md",
-      "review_evidence_sha256": "cf69a54da1b965e288139aea670bd2e5ad124e0d8353cb885c3188c51992263d"
+      "status": "pending",
+      "reason": "No file-level semantic implementation review recorded in this ledger."
     },
     {
       "path": "macOS/Tests/FinalInterfaceGuardTests.swift",

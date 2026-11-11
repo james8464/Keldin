@@ -191,6 +191,25 @@ def test_guided_setup_downloads_data_only_and_never_trusts_remote_code(
     ]
 
 
+def test_cached_setup_does_not_report_a_download(monkeypatch, mlx_snapshot):
+    messages = []
+    module = ModuleType("mlx_lm")
+    module.load = lambda *_args, **_kwargs: None
+    monkeypatch.setitem(sys.modules, "mlx_lm", module)
+    monkeypatch.setattr(
+        "Backend.Core.mlx_setup.emit_progress",
+        lambda message, **fields: messages.append((message, fields["stage"])),
+    )
+    requests = []
+    load_mlx_model(
+        "mlx-community/test",
+        local_only=True,
+        snapshot_resolver=lambda **kwargs: requests.append(kwargs) or str(mlx_snapshot),
+    )
+    assert requests[0]["local_files_only"] is True
+    assert messages == [("Keldin is preparing the selected local model.", "mlx-model")]
+
+
 def test_missing_local_model_requests_setup_again() -> None:
     def missing_snapshot(**_kwargs) -> str:
         raise FileNotFoundError

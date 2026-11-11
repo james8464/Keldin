@@ -58,6 +58,8 @@ enum GenerationPresentation {
 
     static func progress(_ message: String, language: String = "system") -> String {
         switch message {
+        case "Keldin is preparing the selected local model.":
+            return localized("Keldin is preparing the selected local model.", language: language)
         case "Préparation de l'extrait public d'Occitanie", "Préparation de l’extrait public d’Occitanie":
             return localized("Preparing the Occitanie case study", language: language)
         case "Création de l'activité annulée", "Création de l’activité annulée":

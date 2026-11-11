@@ -364,7 +364,9 @@ def load_mlx_model(
     ):
         raise MLXSetupError("The approved model ID is invalid.")
     emit_progress(
-        "Preparing the selected model. The first download may take several minutes…",
+        "Keldin is preparing the selected local model."
+        if local_only
+        else "Preparing the selected model. The first download may take several minutes…",
         stage="mlx-model",
         progress=0.55,
     )
