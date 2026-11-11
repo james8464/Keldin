@@ -676,11 +676,8 @@
     {
       "path": "Backend/Core/france/code_fences.py",
       "classification": "maintained-source",
-      "status": "reviewed",
-      "reason": "Complete EOF static review recorded; dependencies and runtime/model/qualification limits remain explicit.",
-      "source_sha256": "a0eb534a3dd7c9412eb1b26cca1968a162e1e9def1aafb4f30cc78c2d4748f3f",
-      "review_evidence": "docs/quality/model-download-and-packaging-input-review-2026-11-02.md",
-      "review_evidence_sha256": "9f13e6fbd83877c17dbad7659d266ce11619458437938f95242ecd585565908e"
+      "status": "pending",
+      "reason": "No file-level semantic implementation review recorded in this ledger."
     },
     {
       "path": "Backend/Core/france/code_layout.py",

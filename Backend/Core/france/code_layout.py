@@ -13,6 +13,7 @@ CODE_LAYOUT_POLICY = "fr-nsi-v36-code-layout-v1"
 CODE_FENCE_PATTERN = r"```(?:python|sql)?[ \t]*(?:\r?\n)?"
 LEFT_MARGIN = 70
 RIGHT_MARGIN = 54
+_UNPRINTABLE_SEPARATORS = frozenset("\x85\u2028\u2029")
 
 
 class CodeLayoutError(ValueError):
@@ -66,4 +67,12 @@ def require_code_width(
                 f"ligne {number} : {width:.2f} pt > {available_width:.2f} pt). "
                 "Rédiger un nouvel exercice avec des lignes plus courtes, sans "
                 "modifier automatiquement le programme avant de publier le PDF."
+            )
+        separator = next(
+            (char for char in line if char in _UNPRINTABLE_SEPARATORS), None
+        )
+        if separator is not None:
+            raise CodeLayoutError(
+                f"Le code contient un séparateur non imprimable "
+                f"({location}, ligne {number}, U+{ord(separator):04X})."
             )
