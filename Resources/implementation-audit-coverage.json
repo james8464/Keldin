@@ -8545,11 +8545,8 @@
     {
       "path": "tests/test_live_generation_matrix.py",
       "classification": "test",
-      "status": "reviewed",
-      "reason": "Read and extended fresh/resumed error-before-done, error-after-done, missing/duplicate completion and parsed events after completion cases. Valid historical cases remain tested.",
-      "source_sha256": "898c21232b87ce05dbfad489024b2e433209e3e057e79cceead8ca9ae89c566e",
-      "review_evidence": "docs/quality/qualification-boundary-audit-2026-10-29.md",
-      "review_evidence_sha256": "69281beaf26320c6eac473664131dd1a96918104246f228c414c7cb7cb64ec1a"
+      "status": "pending",
+      "reason": "No file-level semantic implementation review recorded in this ledger."
     },
     {
       "path": "tests/test_live_process.py",

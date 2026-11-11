@@ -10,6 +10,7 @@ from tools.live_generation_matrix import (
     _request_identity,
     _resumable_result,
     _sha256,
+    main,
     matrix_jobs,
     matrix_markdown,
     run_matrix,
@@ -119,6 +120,102 @@ def test_live_matrix_is_derived_from_every_advertised_registry_paper() -> None:
         "economics_ocr",
     }
     assert all("assessment_package" in job.expected_roles for job in value)
+
+
+def test_apple_system_matrix_uses_packaged_backend_and_system_model(
+    tmp_path, monkeypatch
+):
+    captured = {}
+
+    def capture(jobs, **kwargs):
+        captured.update(kwargs)
+        assert len(jobs) == 21
+        return {"summary": {"failed": 0}}
+
+    monkeypatch.setattr("tools.live_generation_matrix.run_matrix", capture)
+    executable = apple_system_fixture(tmp_path)
+    assert (
+        main(
+            [
+                "--output",
+                str(tmp_path / "results"),
+                "--provider",
+                "apple_intelligence",
+                "--backend-executable",
+                str(executable),
+            ]
+        )
+        == 0
+    )
+    assert captured["provider"] == "apple_intelligence"
+    assert captured["model"] == "apple-system-on-device"
+    assert captured["command_prefix"] == [str(executable.resolve())]
+    assert not captured["resume"]
+
+
+def apple_system_fixture(root):
+    contents = root / "Keldin.app" / "Contents"
+    backend = contents / "Resources" / "KeldinBackend" / "KeldinBackend"
+    helper = contents / "Helpers" / "KeldinAppleIntelligence"
+    for executable in (backend, helper):
+        executable.parent.mkdir(parents=True)
+        executable.touch()
+        executable.chmod(0o700)
+    return backend
+
+
+def test_apple_system_identity_changes_when_bundled_helper_changes(tmp_path):
+    backend = apple_system_fixture(tmp_path)
+    helper = backend.parents[2] / "Helpers" / "KeldinAppleIntelligence"
+
+    def identity():
+        return _request_identity(
+            jobs()[0],
+            seed=42,
+            model="apple-system-on-device",
+            provider="apple_intelligence",
+            ollama_url="http://localhost:11434",
+            dry_run=False,
+            command_prefix=[str(backend)],
+            model_digest=None,
+            runtime_sha256="source-fixture",
+        )
+
+    before = identity()
+    assert before["apple_system_helper_sha256"] == _sha256(helper)
+    assert before["model_digest"] is None
+    helper.write_bytes(b"changed helper")
+    assert identity() != before
+
+
+@pytest.mark.parametrize(
+    "reason", ["no_backend", "not_packaged", "no_helper", "wrong_model", "resume"]
+)
+def test_apple_system_matrix_rejects_invalid_requests_before_launch(
+    tmp_path, monkeypatch, reason
+):
+    backend = apple_system_fixture(tmp_path)
+    args = ["--output", str(tmp_path / "results"), "--provider", "apple_intelligence"]
+    if reason == "not_packaged":
+        backend = tmp_path / "KeldinBackend"
+        backend.touch()
+        backend.chmod(0o700)
+    if reason != "no_backend":
+        args.extend(["--backend-executable", str(backend)])
+    if reason == "no_helper":
+        (backend.parents[2] / "Helpers" / "KeldinAppleIntelligence").unlink()
+    if reason == "wrong_model":
+        args.extend(["--model", "different-model"])
+    if reason == "resume":
+        args.append("--resume")
+    monkeypatch.setattr(
+        "tools.live_generation_matrix.run_matrix",
+        lambda *a, **kw: pytest.fail("must not launch"),
+    )
+    with pytest.raises(SystemExit) as error:
+        main(args)
+    assert error.value.code == 2
+    assert not (tmp_path / "results").exists()
 
 
 def test_live_matrix_markdown_reports_failures_without_false_success() -> None:

@@ -116,7 +116,7 @@ python3 -m tools.paper_fidelity_audit \
   --markdown output/pdf/perfection-audit-2026-07-27/fidelity-report.md
 ```
 
-To generate every advertised paper through the same backend used by the app,
+To generate every advertised UK paper through the same backend used by the app,
 with resumable per-paper evidence:
 
 ```bash
@@ -129,6 +129,14 @@ python3 -m tools.live_generation_matrix \
 
 The job list is derived from `generator-registry.json`; adding a conforming
 subject or exam board automatically adds its papers to this matrix.
+
+For Apple Intelligence on a supported Mac, use `--provider apple_intelligence`
+and point `--backend-executable` to `Contents/Resources/KeldinBackend/KeldinBackend`
+in the tested app bundle. The runner selects `apple-system-on-device` and records
+the bundled helper's hash, but the system model revision cannot be pinned, so
+`--resume` is unavailable. Use `--only SUBJECT:PAPER` to run one job, or `--dry-run`
+for an offline layout preview that does not exercise the model. French NSI needs
+its separate assessment route and is not covered by this UK matrix.
 
 ## CLI
 
