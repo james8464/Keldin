@@ -493,7 +493,10 @@ def test_real_pdf_preserves_owned_sql_caption_and_all_public_rows(
                 )
         exercises.append(
             pipeline.validate_authored_exercise(
-                raw, identifier, large_print=large_print
+                raw,
+                identifier,
+                large_print=large_print,
+                authoring_schema_policy=pipeline.PRINTED_SQL_KEYS_AUTHORING_POLICY,
             )
         )
     path = tmp_path / "sql.pdf"
@@ -522,7 +525,13 @@ def test_pdf_gate_refuses_missing_primary_key_caption(tmp_path, monkeypatch):
         raw = raw_exercise(identifier)
         raw["materials"][0] = material()
         raw["materials"][0]["sql"]["primary_key"] = ["id_client"]
-        exercises.append(pipeline.validate_authored_exercise(raw, identifier))
+        exercises.append(
+            pipeline.validate_authored_exercise(
+                raw,
+                identifier,
+                authoring_schema_policy=pipeline.PRINTED_SQL_KEYS_AUTHORING_POLICY,
+            )
+        )
     monkeypatch.setattr(
         sql_sources,
         "sql_caption",

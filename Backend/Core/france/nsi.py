@@ -414,6 +414,7 @@ def authoring_schema(
     machine_field_constraints: bool = False,
     positive_points: bool = False,
     bounded_graph_fields: bool = False,
+    printed_primary_keys: bool = False,
 ) -> dict:
     schema = NSIExercise.model_json_schema()
     schema["required"].append("materials")
@@ -425,6 +426,8 @@ def authoring_schema(
         schema["$defs"]["NSITableMaterial"]["properties"].pop("sql")
         schema["$defs"].pop("NSISQLDescriptor")
         return schema
+    if not printed_primary_keys:
+        schema["$defs"]["NSISQLDescriptor"]["properties"].pop("primary_key")
     # Generation uses machine-readable dot decimals, not French display commas.
     # Keep runtime fullmatch/positive-credit/sum validation: portable JSON Schema
     # '$' handling can still admit a final newline in some regex implementations.
