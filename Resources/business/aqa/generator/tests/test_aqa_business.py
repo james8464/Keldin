@@ -359,7 +359,7 @@ def test_paper_two_calculations_name_the_displayed_sales_series() -> None:
     ]
 
     assert calculations
-    assert all("business sales data" in question.prompt for question in calculations)
+    assert all("business sales index" in question.prompt for question in calculations)
     assert all("2021 to 2025" in question.prompt for question in calculations)
 
 
@@ -458,6 +458,20 @@ def test_paper_two_bar_chart_prints_exact_sales_operands() -> None:
 
     for value in option.chart_values:
         assert f"{value:.1f}" in texts
+
+
+def test_paper_two_first_calculation_declares_the_chart_index_units() -> None:
+    option = build_paper(RULES["paper_2"], SYLLABUS, 26080106).sections[0].options[0]
+    question = next(q for q in option.questions if q.number == "01.1")
+    drawing = _paper_two_grouped_bar_chart(option)
+    labels = {shape.text for shape in drawing.contents if hasattr(shape, "text")}
+
+    assert question.authoring_context["calculation_input_units"] == {
+        "start": "index",
+        "end": "index",
+    }
+    assert "Business sales index" in labels
+    assert "sales index" in question.prompt
 
 
 def test_paper_two_later_chart_names_the_question_sales_series() -> None:

@@ -2281,20 +2281,14 @@
     {
       "path": "Resources/business/aqa/generator/aqabizgen/generator.py",
       "classification": "maintained-source",
-      "status": "reviewed",
-      "reason": "Recorded complete baseline plus complete independently reviewed repair delta and relevant call paths; not a fresh whole-file or whole-repository read. Targeted tests and source-only render limits remain explicit.",
-      "source_sha256": "9d1416235cdc448c1f7ef1fe60b7457e3b61f1532ed29b8d3ad6168bf659c587",
-      "review_evidence": "docs/quality/business-source-and-marking-review.md",
-      "review_evidence_sha256": "06e603c846a5c676e1b045434cf45573610b3a986ee084130e7d3839dea41af8"
+      "status": "pending",
+      "reason": "No file-level semantic implementation review recorded in this ledger."
     },
     {
       "path": "Resources/business/aqa/generator/aqabizgen/render_pdf.py",
       "classification": "maintained-source",
-      "status": "reviewed",
-      "reason": "Previously recorded review plus complete independently reviewed cover/source repair delta; no new whole-file audit claimed.",
-      "source_sha256": "d71ee8eaa5aa6958d357e4e09752992e9db3fe02aa7a030293f3d946307382d4",
-      "review_evidence": "docs/quality/renderer-eof-audit-and-release-follow-ups.md",
-      "review_evidence_sha256": "bb98a3b38c4795e8b83ad544940570d72884305e0cb6edbe836c7081490fe8f6"
+      "status": "pending",
+      "reason": "No file-level semantic implementation review recorded in this ledger."
     },
     {
       "path": "Resources/business/aqa/generator/aqabizgen/syllabus.py",
@@ -3052,11 +3046,8 @@
     {
       "path": "Resources/economics/edexcel-a/generator/pastpapergen/extended_scenarios.py",
       "classification": "maintained-source",
-      "status": "reviewed",
-      "reason": "All 591 lines. Scenario concepts, public facts, detail selection and fallback binding were inspected. This review established the actual seed-0 eight-mark mismatch in the downstream credit selector. The scenario facts themselves remain unchanged.",
-      "source_sha256": "010800bfb766073079eb44982e5dcab0a58683a4f32b0c9c250ab934162c1850",
-      "review_evidence": "docs/quality/implementation-audit-reconciliation-2026-11-10.md",
-      "review_evidence_sha256": "799d0c38f8fce9352aa3b7697bae3e7e9bd9ccf480cafc45c12e94e6d1582c10"
+      "status": "pending",
+      "reason": "No file-level semantic implementation review recorded in this ledger."
     },
     {
       "path": "Resources/economics/edexcel-a/generator/pastpapergen/generator.py",

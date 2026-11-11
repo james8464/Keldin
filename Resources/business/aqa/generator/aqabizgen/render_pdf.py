@@ -1318,7 +1318,7 @@ def _paper_two_grouped_bar_chart(option: GeneratedOption) -> Drawing:
         String(
             38,
             170,
-            f"Value of the market and {option.title} sales",
+            f"Market value and {option.title} sales (index values)",
             fontName=FONT_BOLD,
             fontSize=9,
         )
@@ -1394,7 +1394,7 @@ def _paper_two_grouped_bar_chart(option: GeneratedOption) -> Drawing:
     legend_y = 158
     drawing.add(
         Rect(
-            318,
+            303,
             legend_y,
             9,
             6,
@@ -1403,11 +1403,15 @@ def _paper_two_grouped_bar_chart(option: GeneratedOption) -> Drawing:
             strokeWidth=0.35,
         )
     )
-    drawing.add(String(331, legend_y, "Market value", fontName=FONT, fontSize=6.5))
+    drawing.add(
+        String(316, legend_y, "Market value index", fontName=FONT, fontSize=6.5)
+    )
     drawing.add(
         Rect(386, legend_y, 9, 6, fillColor=INK, strokeColor=INK, strokeWidth=0.35)
     )
-    drawing.add(String(399, legend_y, "Business sales", fontName=FONT, fontSize=6.5))
+    drawing.add(
+        String(399, legend_y, "Business sales index", fontName=FONT, fontSize=6.5)
+    )
     return drawing
 
 

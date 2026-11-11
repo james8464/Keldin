@@ -573,7 +573,17 @@ def concrete_fallback(question):
         15: (2, 0),
         25: (0, 1, 2),
     }[question.marks]
-    context += " " + " ".join(details[i] for i in indices)
+    selected_details = tuple(details[i] for i in indices)
+    if (
+        question.section == "B"
+        and question.topic_id == "1.2.4"
+        and question.marks == 15
+    ):
+        selected_details = (
+            "Retailers' stocks cover only the first few days of the shortage.",
+            "By the next growing season, some growers plan to switch land to vegetables if wholesale prices remain high.",
+        )
+    context += " " + " ".join(selected_details)
     if question.section == "C":
         # Essay choices have short stimulus extracts, not a full article that
         # overflows the shared question page. Both facts are printed in full.
