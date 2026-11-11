@@ -4020,8 +4020,8 @@
     "semantic_hash": ""
   },
   "Resources/implementation-audit-coverage.json": {
-    "mtime": 1794373261.6882262,
-    "ast_hash": "33bfb85adf1ecfbe2bf832e619d8a00d",
+    "mtime": 1794373484.169662,
+    "ast_hash": "d5528825f888487ed782f90a2a3dfda1",
     "semantic_hash": ""
   },
   "macOS/Keldin/Services/PDFDocumentAccess.swift": {
@@ -5105,8 +5105,8 @@
     "semantic_hash": ""
   },
   "Backend/Core/apple_intelligence.py": {
-    "mtime": 1794373434.4533546,
-    "ast_hash": "ec320f864ba72e0bef3d479040a2eedb",
+    "mtime": 1794373904.8795693,
+    "ast_hash": "d388320687233903f2fcb6e043da64dd",
     "semantic_hash": ""
   },
   "macOS/AppleIntelligenceHelper/CapabilityProbe.swift": {
@@ -5160,8 +5160,8 @@
     "semantic_hash": ""
   },
   "tests/test_apple_intelligence_provider.py": {
-    "mtime": 1794373439.504688,
-    "ast_hash": "e9769e3385f7db3534a061453bdefbf8",
+    "mtime": 1794373897.824224,
+    "ast_hash": "91d8d4d90d3cd288ecee0fbc5c49de05",
     "semantic_hash": ""
   },
   "tests/test_solver_reasoning_budget.py": {

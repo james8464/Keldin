@@ -643,6 +643,26 @@ def test_written_authoring_guides_without_model_owned_choice_fields(
             )
 
 
+@pytest.mark.parametrize("optional_field", ["questions", "mark_scheme"])
+def test_written_guidance_requires_fields_needed_for_restoration(optional_field):
+    request = make_request(
+        "Write a synthetic question.",
+        OutputContract(
+            "authoring",
+            identifiers=("1/1/1",),
+            authoring_shapes=(("1/1/1", "constructed_response"),),
+        ),
+    )
+    schema = request.schema
+    owner = (
+        schema
+        if optional_field == "questions"
+        else schema["properties"]["questions"]["items"]
+    )
+    owner["required"].remove(optional_field)
+    assert service.solver_schema_mode(request.operation, schema) == "structured_text"
+
+
 def test_actual_uk_review_contract_selects_guidance_with_unchanged_640_token_budget(
     monkeypatch,
 ):

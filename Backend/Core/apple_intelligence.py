@@ -133,7 +133,10 @@ def _written_authoring_schema(schema: dict[str, Any]) -> dict[str, Any] | None:
         questions.get("minItems") != 1
         or questions.get("maxItems") != 1
         or any(node.get("additionalProperties") is not False for node in (item, mark))
+        or not isinstance(schema.get("required"), list)
+        or "questions" not in schema["required"]
         or not isinstance(item.get("required"), list)
+        or "mark_scheme" not in item["required"]
         or not isinstance(mark.get("required"), list)
         or any(field not in item["required"] for field in _WRITTEN_FIXED_FIELDS)
         or _OBJECTIVE not in mark["required"]
