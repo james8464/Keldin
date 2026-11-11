@@ -57,6 +57,23 @@ def test_multiple_empty_indented_and_crlf_blocks_preserve_source():
     assert list(code_blocks(text)) == ["    x = 1", "SELECT 1;"]
 
 
+@pytest.mark.parametrize("separator", ["\u2028", "\u2029", "\x85"])
+@pytest.mark.parametrize("newline", ["\n", "\r\n"])
+def test_unicode_string_separators_do_not_start_a_fence_line(separator, newline):
+    fence = "```"
+    source = f'texte = """avant{separator}{fence}{newline}apres"""'
+    compile(source, "<listing>", "exec")
+    text = newline.join((f"{fence}python", source, fence))
+    parts = [part for part in fenced_parts(text) if part.language is not None]
+    assert [(part.language, part.text) for part in parts] == [
+        ("python", source + newline)
+    ]
+    assert _content_parts(text, subject.V36_PRINT_POLICY)[1] == (
+        True,
+        source.replace("\r\n", "\n") + "\n",
+    )
+
+
 @pytest.mark.parametrize(
     "label", ["text", "plaintext", "console", "unknown extra-info"]
 )

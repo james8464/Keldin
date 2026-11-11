@@ -2,6 +2,7 @@
 
 import re
 from dataclasses import dataclass
+from io import StringIO
 
 
 class CodeFenceError(ValueError):
@@ -28,7 +29,9 @@ def fenced_parts(
     parts = []
     opening = None
     prose_start = offset = 0
-    for line in text.splitlines(keepends=True):
+    # Only LF (including CRLF) ends a physical line. Unicode separators
+    # inside a string must not make its backticks a standalone delimiter.
+    for line in StringIO(text, newline="\n"):
         match = _DELIMITER.fullmatch(line)
         if opening is None:
             if match:
