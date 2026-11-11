@@ -181,7 +181,12 @@ final class BackendClient: BackendRunning, @unchecked Sendable {
                 let stderr = String(data: errorData, encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
                 if !stderr.isEmpty {
                     events.append(.error(message: Self.displayMessage(forBackendError: stderr)))
-                } else if !events.contains(where: { if case .error = $0 { return true }; return false }) {
+                } else if !events.contains(where: {
+                    switch $0 {
+                    case .error, .cancelledAfterSave: true
+                    default: false
+                    }
+                }) {
                     events.append(.error(message: "The generation service stopped (exit code \(process.terminationStatus))."))
                 }
             }

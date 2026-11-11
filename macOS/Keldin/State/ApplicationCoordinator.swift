@@ -30,6 +30,7 @@ final class ApplicationCoordinator: ObservableObject {
     @Published var outputFolder = AppDefaults.defaultOutputFolder()
     @Published var dryRun = false
     @Published private var activeRun: BackendRun?
+    private var cancelledFrenchRuns: [UUID: (jobID: UUID, root: URL)] = [:]
     @Published var status = "Ready"
     @Published var generationProgress: Double?
     @Published var progressEntries: [ProgressEntry] = []
@@ -1282,7 +1283,13 @@ final class ApplicationCoordinator: ObservableObject {
         let operation = run.intent.operation
         var historyFailureDetail: String?
         if let jobID = run.ownedJobID {
-            do { try generationCoordinator.cancel(expectedJobID: jobID) }
+            do {
+                try generationCoordinator.cancel(expectedJobID: jobID)
+                if run.documents.frameworkID == FrenchAssessmentRequest.assessmentID,
+                   let root = run.documents.workingFolder, run.process != nil {
+                    cancelledFrenchRuns[run.id] = (jobID, root)
+                }
+            }
             catch { historyFailureDetail = error.localizedDescription }
         }
         mlxRecoveryState.cancel()
@@ -1681,8 +1688,28 @@ final class ApplicationCoordinator: ObservableObject {
     }
 
     private func apply(_ event: BackendEvent, from session: UUID) {
+        if case let .cancelledAfterSave(_, bundle) = event,
+           let cancelled = cancelledFrenchRuns.removeValue(forKey: session) {
+            retainCancelledFrenchPDFs(bundle: bundle, jobID: cancelled.jobID, root: cancelled.root)
+            return
+        }
         guard activeRun?.id == session, activeRun?.phase == .running else { return }
         apply(event)
+    }
+
+    private func retainCancelledFrenchPDFs(bundle: String, jobID: UUID, root: URL) {
+        guard !isImportingPreviousData,
+              var record = recentDocumentStore.records.first(where: { $0.id == jobID }),
+              record.state == .cancelled, record.artifacts.isEmpty else { return }
+        do {
+            record.artifacts = try FrenchLLMAssessmentRequest.recoverSavedPDFs(
+                bundle: bundle, in: root, configuration: record.configuration
+            )
+            try recentDocumentStore.save(record)
+        } catch {
+            // Do not send an old run's recovery failure to the active workspace.
+            // The private files remain untouched.
+        }
     }
 
     func apply(_ event: BackendEvent, errorPresentation: SettingsActionPresentation? = nil) {
@@ -1741,6 +1768,8 @@ final class ApplicationCoordinator: ObservableObject {
             generationProgress = 1.0
             updateGenerationEstimate()
             progressEntries.append(ProgressEntry(stage: "done", message: message))
+        case let .cancelledAfterSave(message, _):
+            apply(.error(message: message, code: "cancelled"), errorPresentation: errorPresentation)
         case let .error(message, code):
             guard activeRun?.phase != .cancelling else { return }
             activeRun?.backendErrorMessage = message
@@ -1778,6 +1807,7 @@ final class ApplicationCoordinator: ObservableObject {
     }
 
     private func finishRun(_ result: Result<Int32, Error>, from session: UUID) {
+        cancelledFrenchRuns.removeValue(forKey: session)
         guard let run = activeRun, run.id == session else { return }
         completedDocuments = run.documents
         activeRun = nil

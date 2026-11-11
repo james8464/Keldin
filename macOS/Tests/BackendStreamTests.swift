@@ -4,6 +4,21 @@ import XCTest
 @testable import Keldin
 
 final class BackendStreamTests: XCTestCase {
+    func testFrenchSavedCancellationDecodesOnlyAnExactBundleName() throws {
+        let bundle = "nsi-2027-v36-42-0123456789ab"
+        func decode(_ name: String, code: String = "cancelled") throws -> BackendEvent {
+            let data = try JSONEncoder().encode([
+                "type": "error", "message": "Cancelled", "code": code, "retained_bundle": name,
+            ])
+            return try BackendEvent(jsonLine: String(decoding: data, as: UTF8.self))
+        }
+        XCTAssertEqual(try decode(bundle), .cancelledAfterSave(message: "Cancelled", bundle: bundle))
+        for invalid in ["../\(bundle)", "/\(bundle)", "\(bundle)/x", "\(bundle)\n", "nsi-2027-v36-42-not-a-digest"] {
+            XCTAssertEqual(try decode(invalid), .error(message: "Cancelled", code: "cancelled"))
+        }
+        XCTAssertEqual(try decode(bundle, code: "failed"), .error(message: "Cancelled", code: "failed"))
+    }
+
     @MainActor
     func testCollectionFailureReachesTheRefreshErrorPresentation() async throws {
         let application = isolatedApplication(backend: try fixtureClient("exit 7"))

@@ -26,6 +26,31 @@ struct FrenchLLMAssessmentRequest {
         return result
     }
 
+    static func recoverSavedPDFs(bundle: String, in root: URL, configuration: GenerationConfiguration) throws -> [GeneratedFile] {
+        guard root.isFileURL, let seed = configuration.seed,
+              configuration.assessmentID == FrenchAssessmentRequest.assessmentID,
+              configuration.authoringVersion == "v36",
+              bundle.hasPrefix("nsi-2027-v36-\(seed)-"),
+              bundle.range(of: #"\Ansi-2027-v36--?[0-9]{1,19}-[0-9a-f]{12}\z"#, options: .regularExpression) != nil else {
+            throw CocoaError(.fileReadInvalidFileName)
+        }
+        let directory = root.appendingPathComponent(bundle, isDirectory: true)
+        for folder in [root, directory] {
+            let attributes = try FileManager.default.attributesOfItem(atPath: folder.path)
+            guard attributes[.type] as? FileAttributeType == .typeDirectory else {
+                throw CocoaError(.fileReadInvalidFileName)
+            }
+        }
+        let artifacts = [
+            GeneratedFile(role: "question_paper", url: directory.appendingPathComponent("sujet.pdf")),
+            GeneratedFile(role: "mark_scheme", url: directory.appendingPathComponent("corrige.pdf")),
+            GeneratedFile(role: "assessment_package", url: directory.appendingPathComponent("assessment.json")),
+            GeneratedFile(role: "package_manifest", url: directory.appendingPathComponent("manifest.json")),
+        ]
+        try validatePublication(artifacts: artifacts, configuration: configuration)
+        return Array(artifacts.prefix(2))
+    }
+
     static func validatePublication(at url: URL, configuration: GenerationConfiguration) throws {
         let decoder = JSONDecoder()
         decoder.keyDecodingStrategy = .convertFromSnakeCase

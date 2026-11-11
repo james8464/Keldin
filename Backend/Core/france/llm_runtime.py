@@ -261,7 +261,6 @@ def handle_generate_llm_assessment(args) -> int:
     except InterruptedError as error:
         # SIGTERM can arrive just after rename, before staging is cleared.
         # Report retained output without claiming that the app received it.
-        message = str(error)
         if destination is not None and (
             staging is None or (not staging.exists() and destination.is_dir())
         ):
@@ -270,7 +269,14 @@ def handle_generate_llm_assessment(args) -> int:
                 "Les deux PDF ont déjà été enregistrés. "
                 f"Retrouvez-les dans le dossier « {destination.name} »."
             )
-        emit("error", message=message, code="cancelled")
+            emit(
+                "error",
+                message=message,
+                code="cancelled",
+                retained_bundle=destination.name,
+            )
+        else:
+            emit("error", message=str(error), code="cancelled")
         return 130
     except ResourceAdmissionError as error:
         emit("error", message=str(error), code=error.code)
