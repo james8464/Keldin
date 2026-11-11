@@ -3052,11 +3052,8 @@
     {
       "path": "Resources/economics/edexcel-a/generator/pastpapergen/extended_scenarios.py",
       "classification": "maintained-source",
-      "status": "reviewed",
-      "reason": "All 591 lines. Scenario concepts, public facts, detail selection and fallback binding were inspected. This review established the actual seed-0 eight-mark mismatch in the downstream credit selector. The scenario facts themselves remain unchanged.",
-      "source_sha256": "010800bfb766073079eb44982e5dcab0a58683a4f32b0c9c250ab934162c1850",
-      "review_evidence": "docs/quality/implementation-audit-reconciliation-2026-11-10.md",
-      "review_evidence_sha256": "799d0c38f8fce9352aa3b7697bae3e7e9bd9ccf480cafc45c12e94e6d1582c10"
+      "status": "pending",
+      "reason": "No file-level semantic implementation review recorded in this ledger."
     },
     {
       "path": "Resources/economics/edexcel-a/generator/pastpapergen/generator.py",
