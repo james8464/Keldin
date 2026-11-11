@@ -110,11 +110,13 @@ def handle_generate_llm_assessment(args) -> int:
             raise ValueError("Ajoutez la clé du fournisseur dans les réglages.")
         if args.provider == "deepseek" and not args.api_key.strip():
             raise ValueError("Ajoutez la clé du fournisseur dans les réglages.")
+        # Reference and model snapshots can read several gigabytes. Report
+        # cancellation during that preflight as well as during generation.
+        previous_handler = signal.signal(signal.SIGTERM, cancel)
         reference_hash = _file_hash(args.reference_index)
         source_hash = implementation_identity()
         model_snapshot = _model_snapshot(args)
         output.mkdir(parents=True, exist_ok=True)
-        previous_handler = signal.signal(signal.SIGTERM, cancel)
         client = FrenchGenerationBudget(
             HostedLLMClient(
                 provider=args.provider,
