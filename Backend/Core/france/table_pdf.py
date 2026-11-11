@@ -8,7 +8,7 @@ from itertools import pairwise
 import pymupdf
 
 from Backend.Core.france.code_layout import LEFT_MARGIN, RIGHT_MARGIN
-from Backend.Core.france.whole_case_pdf import _compact, _heading
+from Backend.Core.france.whole_case_pdf import _compact
 
 TOLERANCE = 0.5
 
@@ -206,8 +206,8 @@ def check_material_tables(pages, exercises, starts, material_tables):
         sources = material_tables[index]
         if not sources:
             continue
-        first = starts[index]
-        last = starts[index + 1] if index + 1 < len(starts) else len(pages)
+        first, heading_bottom = starts[index]
+        last = starts[index + 1][0] if index + 1 < len(starts) else len(pages)
         # The unchanged renderer places the question bullet six points after its
         # frame padding, outside material cells. Use the source question ID.
         markers = [
@@ -221,16 +221,13 @@ def check_material_tables(pages, exercises, starts, material_tables):
         if len(markers) != 1:
             raise ValueError("Début des questions ambigu pour les tableaux")
         question_start = markers[0]
-        headings = pages[first].search_for(_heading(exercise))
-        if len(headings) != 1:
-            raise ValueError("En-tête ambigu pour les tableaux matériels")
         available = [
             grid
             for number in range(first, question_start[0] + 1)
             for grid in _grids(
                 pages[number],
                 number,
-                headings[0].y1 if number == first else 0,
+                heading_bottom if number == first else 0,
                 question_start[1] if number == question_start[0] else float("inf"),
             )
         ]

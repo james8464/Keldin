@@ -79,6 +79,57 @@ def test_real_generic_multimaterial_first_use_later_and_both_print_sizes(
 
 
 @pytest.mark.parametrize("correction", [False, True])
+@pytest.mark.parametrize("large_print", [False, True])
+def test_inline_heading_quote_does_not_create_an_exercise_boundary(
+    tmp_path, correction, large_print
+):
+    source = exercises()
+    first = source[0].model_dump()
+    first["context"] += (
+        " Le dossier interne porte la mention « Exercice 1 (6 points) »."
+    )
+    source[0] = type(source[0]).model_validate(first)
+    path = tmp_path / "quoted-heading.pdf"
+    render(path, source, correction=correction, large_print=large_print)
+    llm_pdf.validate_llm_pdf(
+        path, source, correction=correction, large_print=large_print
+    )
+
+
+@pytest.mark.parametrize("mutation", ["missing", "duplicate", "reordered"])
+def test_physical_heading_mutations_are_rejected(tmp_path, mutation):
+    source = exercises()
+    original = tmp_path / "original.pdf"
+    render(original, source)
+    modified = tmp_path / "modified.pdf"
+    with pymupdf.open(original) as pdf:
+        headings = [llm_pdf._heading(exercise) for exercise in source[:2]]
+        locations = [
+            next(
+                (page, boxes[0]) for page in pdf if (boxes := page.search_for(heading))
+            )
+            for heading in headings
+        ]
+        size = llm_pdf.code_layout(False).exercise_heading_size
+        for index, (page, box) in enumerate(locations):
+            if mutation == "duplicate":
+                page.insert_text((box.x0, 740), headings[index], fontsize=size)
+                break
+            page.add_redact_annot(box)
+            page.apply_redactions(images=0, graphics=0)
+            if mutation == "missing":
+                break
+            page.insert_text(
+                (box.x0, box.y1 - 3),
+                headings[1 - index],
+                fontsize=size,
+            )
+        pdf.save(modified)
+    with pytest.raises(ValueError, match="début des exercices ambigu"):
+        llm_pdf.validate_llm_pdf(modified, source, correction=False)
+
+
+@pytest.mark.parametrize("correction", [False, True])
 def test_reused_node_labels_across_and_within_exercises_are_not_artificially_banned(
     tmp_path, correction
 ):
