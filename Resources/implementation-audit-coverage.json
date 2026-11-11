@@ -676,14 +676,20 @@
     {
       "path": "Backend/Core/france/code_fences.py",
       "classification": "maintained-source",
-      "status": "pending",
-      "reason": "No file-level semantic implementation review recorded in this ledger."
+      "status": "reviewed",
+      "reason": "Complete-file semantic review of French cancellation and printed-code boundaries.",
+      "source_sha256": "6181ca1f761ed3efa1b999dcf7179755a15731f4008e0eb702304df9d46dd405",
+      "review_evidence": "docs/quality/french-cancellation-and-print-boundaries-2026-11-11.md",
+      "review_evidence_sha256": "4fd9990fa1522b1f70fa22e797bb42c6a62f4ef661535c4d3ea1027238f0e5ff"
     },
     {
       "path": "Backend/Core/france/code_layout.py",
       "classification": "maintained-source",
-      "status": "pending",
-      "reason": "No file-level semantic implementation review recorded in this ledger."
+      "status": "reviewed",
+      "reason": "Complete-file semantic review of French cancellation and printed-code boundaries.",
+      "source_sha256": "8147195558b3f58b3a611b547cea46b010b8dfab14c2c3c48e6d7489930b2ddb",
+      "review_evidence": "docs/quality/french-cancellation-and-print-boundaries-2026-11-11.md",
+      "review_evidence_sha256": "4fd9990fa1522b1f70fa22e797bb42c6a62f4ef661535c4d3ea1027238f0e5ff"
     },
     {
       "path": "Backend/Core/france/content_authoring.py",
@@ -1105,8 +1111,11 @@
     {
       "path": "Backend/Core/france/llm_runtime.py",
       "classification": "maintained-source",
-      "status": "pending",
-      "reason": "No file-level semantic implementation review recorded in this ledger."
+      "status": "reviewed",
+      "reason": "Complete-file semantic review of French cancellation and printed-code boundaries.",
+      "source_sha256": "760cb451e6f6e43f23122f0943e6452fef8edd59bf4569b333b78d9a4867854a",
+      "review_evidence": "docs/quality/french-cancellation-and-print-boundaries-2026-11-11.md",
+      "review_evidence_sha256": "4fd9990fa1522b1f70fa22e797bb42c6a62f4ef661535c4d3ea1027238f0e5ff"
     },
     {
       "path": "Backend/Core/france/loan_case.py",
@@ -3990,6 +3999,12 @@
     },
     {
       "path": "docs/quality/foundation-subject-boundaries-review-2026-10-29.md",
+      "classification": "historical-evidence",
+      "status": "excluded",
+      "reason": "Retained diagnostic/review evidence, not maintained executable implementation; exclusion does not certify its claims."
+    },
+    {
+      "path": "docs/quality/french-cancellation-and-print-boundaries-2026-11-11.md",
       "classification": "historical-evidence",
       "status": "excluded",
       "reason": "Retained diagnostic/review evidence, not maintained executable implementation; exclusion does not certify its claims."
