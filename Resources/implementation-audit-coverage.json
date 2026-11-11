@@ -688,11 +688,8 @@
     {
       "path": "Backend/Core/france/code_layout.py",
       "classification": "maintained-source",
-      "status": "reviewed",
-      "reason": "Complete-file review within the documented French formatting and saved-data scope; remaining release and semantic-question checks are separate.",
-      "source_sha256": "5202282c79f9acc3f5eef12e2904cc2077b636c0debe6e509081120ae480a5a3",
-      "review_evidence": "docs/quality/french-format-and-data-review-2026-10-30.md",
-      "review_evidence_sha256": "96f39d5350cfc64500e7e273096925535fca6e62d8858c866db9f69e89f2889b"
+      "status": "pending",
+      "reason": "No file-level semantic implementation review recorded in this ledger."
     },
     {
       "path": "Backend/Core/france/content_authoring.py",
@@ -1102,11 +1099,8 @@
     {
       "path": "Backend/Core/france/llm_pdf.py",
       "classification": "maintained-source",
-      "status": "reviewed",
-      "reason": "Fresh complete 325-line review of expected prose, figure scoping, code indentation, material-table integration and ordered whole-document comparison. Earlier scoped reads were not treated as complete baseline evidence. This does not qualify model answers or every possible generated PDF.",
-      "source_sha256": "57a22ca2d89f00ea1a68dc1cc13edadfaf5fa4df35c03c87b6a02a3ef9f4c964",
-      "review_evidence": "docs/quality/implementation-audit-reconciliation-2026-11-10.md",
-      "review_evidence_sha256": "799d0c38f8fce9352aa3b7697bae3e7e9bd9ccf480cafc45c12e94e6d1582c10"
+      "status": "pending",
+      "reason": "No file-level semantic implementation review recorded in this ledger."
     },
     {
       "path": "Backend/Core/france/llm_pipeline.py",
@@ -1333,11 +1327,8 @@
     {
       "path": "Backend/Core/france/rendering.py",
       "classification": "maintained-source",
-      "status": "reviewed",
-      "reason": "Composite review: prior complete 1210-line EOF baseline SHAbcca2bbebac1444f2435c4fd4e258c73532451aac062ca3e4765ba2f4b1f2be9 plus complete independently reviewed generic-table policy delta and scoped material/graph callers. Not a fresh current whole-file EOF read or universal PDF fit proof.",
-      "source_sha256": "a1f993e6e7e6478b62df10296321b81736de9ca23fdffd2bb9b0ca63d248289b",
-      "review_evidence": "docs/quality/french-generic-table-policy-review.md",
-      "review_evidence_sha256": "954b235c85ed5cac715c21d49672e42bc05ccfb690e82e90d595e7cbe8a3a831"
+      "status": "pending",
+      "reason": "No file-level semantic implementation review recorded in this ledger."
     },
     {
       "path": "Backend/Core/france/round_robin_case.py",
