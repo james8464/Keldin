@@ -26,6 +26,10 @@ class CodeLayout:
     content_width: float = A4[0] - LEFT_MARGIN - RIGHT_MARGIN - 12
     question_width: float = A4[0] - LEFT_MARGIN - RIGHT_MARGIN - 42
 
+    @property
+    def exercise_heading_size(self) -> int:
+        return self.font_size + 2
+
     def columns(self, width: float) -> int:
         return int(width // stringWidth("M", self.font_name, self.font_size))
 

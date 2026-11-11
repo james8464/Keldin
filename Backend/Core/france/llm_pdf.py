@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pymupdf
 
-from Backend.Core.france.code_layout import code_blocks
+from Backend.Core.france.code_layout import code_blocks, code_layout
 from Backend.Core.france.graph_layout import graph_layout
 from Backend.Core.france.graph_pdf import validate_graph
 from Backend.Core.france.inline_prose import inline_text, printed_prose
@@ -273,6 +273,25 @@ def validate_llm_pdf(
             lines.extend(body_lines)
         if [index for index, _ in starts] != [0, 1, 2]:
             raise ValueError("Début des exercices ambigu")
+        # Text equality alone cannot distinguish standard and enlarged PDFs
+        # without graphs. Bind each owned heading to the physical print mode.
+        heading_size = code_layout(large_print).exercise_heading_size
+        for index, page_number in starts:
+            matching = [
+                line["spans"]
+                for block in pages[page_number].get_text(
+                    "dict", flags=pymupdf.TEXTFLAGS_TEXT
+                )["blocks"]
+                for line in block["lines"]
+                if _compact("".join(span["text"] for span in line["spans"]))
+                == headings[index]
+            ]
+            if len(matching) != 1 or any(
+                abs(span["size"] - heading_size) > 0.1 for span in matching[0]
+            ):
+                raise ValueError(
+                    "Taille des titres V36 incompatible avec le mode de rendu"
+                )
         omitted_headers, _table_provenance = check_material_tables(
             pages,
             exercises,
@@ -311,8 +330,6 @@ def validate_llm_pdf(
                 raise ValueError(
                     f"Contenu imprimé différent de l'exercice {exercise.id}"
                 )
-        if [index for index, _ in starts] != [0, 1, 2]:
-            raise ValueError("Début des exercices ambigu")
         _check_graphs(
             pages,
             exercises,

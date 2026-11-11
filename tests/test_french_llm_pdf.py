@@ -96,6 +96,20 @@ def test_swapped_subject_correction_role_refuses(tmp_path):
         llm_pdf.validate_llm_pdf(path, source, correction=True)
 
 
+@pytest.mark.parametrize("correction", [False, True])
+@pytest.mark.parametrize("large_print", [False, True])
+def test_graph_free_pdf_cannot_pass_as_the_other_print_mode(
+    tmp_path, correction, large_print
+):
+    path = tmp_path / "paper.pdf"
+    source = exercises()
+    render(path, source, correction=correction, large_print=large_print)
+    with pytest.raises(ValueError, match="Taille des titres"):
+        llm_pdf.validate_llm_pdf(
+            path, source, correction=correction, large_print=not large_print
+        )
+
+
 def test_reversed_graph_arrow_refuses_even_when_node_and_weight_text_match(tmp_path):
     path = tmp_path / "graphs.pdf"
     source = exercises(graphs=True)
