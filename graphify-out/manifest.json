@@ -4020,8 +4020,8 @@
     "semantic_hash": ""
   },
   "Resources/implementation-audit-coverage.json": {
-    "mtime": 1794354137.6163595,
-    "ast_hash": "7b9fa297b450e35f48cadc6d14ee980f",
+    "mtime": 1794357992.148988,
+    "ast_hash": "a93ee8900259bf0b14283ae0ed862283",
     "semantic_hash": ""
   },
   "macOS/Keldin/Services/PDFDocumentAccess.swift": {
@@ -4410,8 +4410,8 @@
     "semantic_hash": ""
   },
   "tests/test_static_type_contracts.py": {
-    "mtime": 1793543731.7259524,
-    "ast_hash": "ba63456be03aa79468a1dfc8d706802f",
+    "mtime": 1794357985.605755,
+    "ast_hash": "0fa00f6be49ed98691af08342fa514cd",
     "semantic_hash": ""
   },
   "tests/test_topic_task_contract.py": {
@@ -4915,8 +4915,8 @@
     "semantic_hash": ""
   },
   "tests/test_family_adapter_typing.py": {
-    "mtime": 1793543731.7064211,
-    "ast_hash": "6ecdfb6f1884df514663993ab9fb2070",
+    "mtime": 1794357985.6060371,
+    "ast_hash": "fabda2270a3d31b787d18d7787b64dda",
     "semantic_hash": ""
   },
   "docs/quality/family-adapter-type-boundary-2026-10-30.md": {

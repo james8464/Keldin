@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-import shutil
 import subprocess
+import sys
 from pathlib import Path
 
 import pytest
@@ -26,13 +26,13 @@ class ExtraArgument:
 
 
 def _check(tmp_path: Path, assignment: str) -> subprocess.CompletedProcess[str]:
-    checker = shutil.which("mypy")
-    assert checker is not None, "Install requirements-test.txt; mypy is a required gate"
     fixture = tmp_path / "client_contract.py"
     fixture.write_text(CLIENTS + assignment, encoding="utf-8")
     return subprocess.run(
         [
-            checker,
+            sys.executable,
+            "-m",
+            "mypy",
             "--config-file",
             str(ROOT / "tools/typecheck.ini"),
             "--cache-dir",
@@ -46,7 +46,8 @@ def _check(tmp_path: Path, assignment: str) -> subprocess.CompletedProcess[str]:
     )
 
 
-def test_minimal_client_and_factory_satisfy_static_contract(tmp_path):
+def test_minimal_client_and_factory_satisfy_static_contract(tmp_path, monkeypatch):
+    monkeypatch.setenv("PATH", str(tmp_path))
     result = _check(
         tmp_path,
         """

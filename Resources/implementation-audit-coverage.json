@@ -9100,11 +9100,8 @@
     {
       "path": "tests/test_static_type_contracts.py",
       "classification": "test",
-      "status": "reviewed",
-      "reason": "Complete-file semantic review within the documented scope, with exact-byte evidence; remaining release gates and broader project audit are separate.",
-      "source_sha256": "18a69a44d1c92e904effc1732b68193740b18a807ad3a107ead0a73447d3bca9",
-      "review_evidence": "docs/quality/release-safety-tooling-review-2026-10-29.md",
-      "review_evidence_sha256": "749f4a81589a0670a4310ea244f7052d0cfe012c1860b159aced7dc2bc3e6896"
+      "status": "pending",
+      "reason": "No file-level semantic implementation review recorded in this ledger."
     },
     {
       "path": "tests/test_subject_helper_guards.py",
