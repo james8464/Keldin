@@ -4,16 +4,21 @@ from copy import deepcopy
 
 import pymupdf
 import pytest
+from reportlab.lib.styles import ParagraphStyle
 
 from Backend.Core.france import llm_pipeline as subject
 from Backend.Core.france.code_fences import CodeFenceError, fenced_parts, printed_text
-from Backend.Core.france.code_layout import code_blocks
+from Backend.Core.france.code_layout import CodeLayoutError, code_blocks, code_layout
 from Backend.Core.france.llm_pdf import validate_llm_pdf
 from Backend.Core.france.print_policy import (
     V36_LEGACY_PRINT_POLICY,
     V36_READABLE_PRINT_POLICY,
 )
-from Backend.Core.france.rendering import _content_parts, render_assessment
+from Backend.Core.france.rendering import (
+    _content_parts,
+    code_listing,
+    render_assessment,
+)
 from Backend.Core.render_transaction import render_pdf_atomically
 from tests.test_french_llm_pdf import exercises, render
 from tests.test_french_llm_pipeline import Client as PackageClient
@@ -72,6 +77,33 @@ def test_unicode_string_separators_do_not_start_a_fence_line(separator, newline)
         True,
         source.replace("\r\n", "\n") + "\n",
     )
+
+
+@pytest.mark.parametrize("separator", ["\u2028", "\u2029", "\x85"])
+@pytest.mark.parametrize("boundary", ["render", "review"])
+def test_unprintable_separator_is_refused_without_rewriting(separator, boundary):
+    source = f'texte = "avant{separator}après"'
+    compile(source, "<listing>", "exec")
+    if boundary == "render":
+        layout = code_layout(True)
+        style = ParagraphStyle(
+            "test", fontName=layout.font_name, fontSize=layout.font_size
+        )
+        with pytest.raises(CodeLayoutError, match="séparateur non imprimable"):
+            code_listing(source, style, layout.question_width)
+    else:
+        raw = draft(f"```python\n{source}\n```")
+        original = deepcopy(raw)
+        with pytest.raises(CodeLayoutError, match="séparateur non imprimable"):
+            subject.validate_authored_exercise(raw, "1", large_print=True)
+        assert raw == original
+
+
+def test_printable_literal_escape_remains_unchanged():
+    source = r'texte = "avant\u2028après"'
+    text = f"```python\n{source}\n```"
+    exercise = subject.validate_authored_exercise(draft(text), "1", large_print=True)
+    assert exercise.questions[0].answer == text
 
 
 @pytest.mark.parametrize(

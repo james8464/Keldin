@@ -4020,8 +4020,8 @@
     "semantic_hash": ""
   },
   "Resources/implementation-audit-coverage.json": {
-    "mtime": 1794385559.729457,
-    "ast_hash": "16ed34242d97fcef0547d58b94338257",
+    "mtime": 1794388152.2802892,
+    "ast_hash": "156f0810ba93c5eb616a87530f6d4044",
     "semantic_hash": ""
   },
   "macOS/Keldin/Services/PDFDocumentAccess.swift": {
@@ -5005,8 +5005,8 @@
     "semantic_hash": ""
   },
   "Backend/Core/france/code_layout.py": {
-    "mtime": 1794388106.0834289,
-    "ast_hash": "c854347547d5eafc368ccf67c0f86a9a",
+    "mtime": 1794388361.4402266,
+    "ast_hash": "a0a7cd8bdd4ddb8df2ae8f3ab0d33f74",
     "semantic_hash": ""
   },
   "tests/test_french_code_layout.py": {
@@ -5215,8 +5215,8 @@
     "semantic_hash": ""
   },
   "tests/test_french_fence_boundaries.py": {
-    "mtime": 1794388124.5110083,
-    "ast_hash": "f51aea7bea215702d7b84150f0b5f756",
+    "mtime": 1794388376.3642168,
+    "ast_hash": "495d52debb521b24da3fea3b44ac0edf",
     "semantic_hash": ""
   },
   "docs/quality/french-format-and-data-review-2026-10-30.md": {
