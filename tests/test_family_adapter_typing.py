@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-import shutil
 import subprocess
+import sys
 from pathlib import Path
 
 import pytest
@@ -43,13 +43,13 @@ adapter = FamilyAdapter[Syllabus, Rule, Assessment, Context](
 
 
 def check(tmp_path, source):
-    checker = shutil.which("mypy")
-    assert checker is not None, "Install requirements-test.txt; mypy is a required gate"
     path = tmp_path / "adapter_contract.py"
     path.write_text(source)
     return subprocess.run(
         [
-            checker,
+            sys.executable,
+            "-m",
+            "mypy",
             "--config-file",
             str(ROOT / "tools/typecheck.ini"),
             "--cache-dir",
@@ -63,7 +63,8 @@ def check(tmp_path, source):
     )
 
 
-def test_generic_adapter_and_wrapped_context_pass_static_checks(tmp_path):
+def test_generic_adapter_and_wrapped_context_pass_static_checks(tmp_path, monkeypatch):
+    monkeypatch.setenv("PATH", str(tmp_path))
     result = check(tmp_path, FIXTURE)
     assert result.returncode == 0, result.stdout + result.stderr
 
