@@ -1010,6 +1010,9 @@ def run_plan(args: argparse.Namespace) -> int:
             item.model,
             "--provider",
             "ollama",
+            # This verifier accepts the historical whole-case contract only.
+            "--authoring-version",
+            "v32",
             "--ollama-url",
             args.ollama_url,
         ]

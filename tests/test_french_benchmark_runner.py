@@ -1110,7 +1110,10 @@ def test_french_benchmark_rejects_fresh_invalid_artifacts_before_pass(
     monkeypatch.setattr(benchmark, "model_identity", lambda *_: "model-sha")
     monkeypatch.setattr(benchmark, "hardware_record", lambda: {})
 
-    def fake_backend(_command, *, cwd, run_dir, timeout_seconds):
+    def fake_backend(command, *, cwd, run_dir, timeout_seconds):
+        # The integrity checker below accepts historical V32 artifacts, not V36.
+        assert "--authoring-version" in command
+        assert command[command.index("--authoring-version") + 1] == "v32"
         manifest = run_dir / "manifest.json"
         manifest.write_text("{}")
         event = json.dumps(
