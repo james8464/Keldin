@@ -50,6 +50,7 @@ from Backend.Core.france.print_policy import (
     V36_FOREIGN_EDGE_PRINT_POLICIES,
     V36_GENERIC_TABLE_PRINT_POLICIES,
     V36_INLINE_PRINT_POLICIES,
+    V36_PRINT_POLICY,
     V36_READABLE_PRINT_POLICIES,
 )
 
@@ -116,6 +117,7 @@ def structured_material(
     avoid_foreign_graph_edges: bool = False,
     large_print: bool = False,
     generic_tables: bool = False,
+    content_widths: bool = False,
 ):
     heading = (
         f"{material.title} — {material.id}"
@@ -143,7 +145,35 @@ def structured_material(
             if route_trace_table
             else [available_width / len(material.columns)] * len(material.columns)
         )
-        if balance_columns:
+        horizontal_padding = 5
+        if content_widths and generic_tables:
+            # Keep complete tokens at body size when the table can fit them.
+            # If it cannot, retain the existing wrapping and column widths.
+            token_widths = [
+                max(
+                    (
+                        stringWidth(word, body.fontName, body.fontSize)
+                        for value in (column, *(row[index] for row in material.rows))
+                        for word in value.split()
+                    ),
+                    default=0.0,
+                )
+                for index, column in enumerate(material.columns)
+            ]
+            if any(
+                width + 10 > column_widths[index]
+                for index, width in enumerate(token_widths)
+            ):
+                for padding in (5, 2):
+                    minimums = [width + 2 * padding for width in token_widths]
+                    spare = available_width - sum(minimums)
+                    if spare >= 0:
+                        column_widths = [
+                            width + spare / len(minimums) for width in minimums
+                        ]
+                        horizontal_padding = padding
+                        break
+        elif balance_columns:
             # Preserve identifiers at the requested font size. Equal columns
             # otherwise split "temperature" despite ample room in ID columns.
             minimums = [
@@ -177,8 +207,8 @@ def structured_material(
                     ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#E8E8E8")),
                     ("FONTNAME", (0, 0), (-1, 0), bold_font),
                     ("VALIGN", (0, 0), (-1, -1), "TOP"),
-                    ("LEFTPADDING", (0, 0), (-1, -1), 5),
-                    ("RIGHTPADDING", (0, 0), (-1, -1), 5),
+                    ("LEFTPADDING", (0, 0), (-1, -1), horizontal_padding),
+                    ("RIGHTPADDING", (0, 0), (-1, -1), horizontal_padding),
                     ("TOPPADDING", (0, 0), (-1, -1), 4),
                     ("BOTTOMPADDING", (0, 0), (-1, -1), 4),
                 ]
@@ -891,6 +921,7 @@ def render_assessment(
                 in V36_FOREIGN_EDGE_PRINT_POLICIES,
                 large_print=large_print,
                 generic_tables=print_policy in V36_GENERIC_TABLE_PRINT_POLICIES,
+                content_widths=print_policy == V36_PRINT_POLICY,
             )
             if flatten:
                 # Avoid nested KeepTogether blocks: the outer question group owns
