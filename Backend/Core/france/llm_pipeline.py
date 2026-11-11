@@ -83,6 +83,7 @@ SOURCE_POLICY = "fr-nsi-v36-exercise-curriculum-scope-v2"
 LEGACY_AUTHORING_SCHEMA_POLICY = "fr-nsi-v36-machine-fields-v1"
 POSITIVE_POINTS_AUTHORING_SCHEMA_POLICY = "fr-nsi-v36-positive-points-v1"
 AUTHORING_SCHEMA_POLICY = "fr-nsi-v36-graph-bounds-v1"
+PRINTED_SQL_KEYS_AUTHORING_POLICY = "fr-nsi-v36-printed-sql-keys-v1"
 
 
 def _validate_authoring_schema_policy(value: str) -> str:
@@ -90,6 +91,7 @@ def _validate_authoring_schema_policy(value: str) -> str:
         LEGACY_AUTHORING_SCHEMA_POLICY,
         POSITIVE_POINTS_AUTHORING_SCHEMA_POLICY,
         AUTHORING_SCHEMA_POLICY,
+        PRINTED_SQL_KEYS_AUTHORING_POLICY,
         MARK_PLAN_AUTHORING_POLICY,
     }:
         raise ValueError("Politique de schéma de rédaction NSI invalide")
@@ -104,6 +106,7 @@ def _identity_authoring_schema_policy(identity: dict) -> str:
     if type(value) is not str or value not in {
         POSITIVE_POINTS_AUTHORING_SCHEMA_POLICY,
         AUTHORING_SCHEMA_POLICY,
+        PRINTED_SQL_KEYS_AUTHORING_POLICY,
         MARK_PLAN_AUTHORING_POLICY,
     }:
         raise ValueError("Politique de schéma de rédaction NSI invalide")
@@ -215,7 +218,12 @@ def exercise_request(
         machine_field_constraints=True,
         positive_points=schema_policy != LEGACY_AUTHORING_SCHEMA_POLICY,
         bounded_graph_fields=schema_policy
-        in {AUTHORING_SCHEMA_POLICY, MARK_PLAN_AUTHORING_POLICY},
+        in {
+            AUTHORING_SCHEMA_POLICY,
+            MARK_PLAN_AUTHORING_POLICY,
+            PRINTED_SQL_KEYS_AUTHORING_POLICY,
+        },
+        printed_primary_keys=schema_policy == PRINTED_SQL_KEYS_AUTHORING_POLICY,
     )
     schema["properties"]["materials"]["minItems"] = 0
     schema["properties"]["id"] = {"type": "string", "const": exercise_id}

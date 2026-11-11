@@ -179,6 +179,12 @@ class NSISQLDescriptor(BaseModel):
         min_length=2, max_length=8
     )
     nullable: tuple[StrictBool, ...] = Field(min_length=2, max_length=8)
+    primary_key: tuple[str, ...] | None = Field(
+        default=None,
+        max_length=8,
+        description="Ordered declared primary-key columns; [] declares no primary key.",
+        exclude_if=lambda value: value is None,
+    )
 
 
 class NSITableMaterial(BaseModel):
@@ -218,6 +224,13 @@ class NSITableMaterial(BaseModel):
             or re.fullmatch(r"[A-Za-z][A-Za-z0-9_]{0,31}", self.sql.table_name) is None
         ):
             raise ValueError("Descripteur SQL imprimé invalide")
+        key = self.sql.primary_key
+        if key is not None and (
+            len(set(key)) != len(key)
+            or any(column not in self.columns for column in key)
+            or any(self.sql.nullable[self.columns.index(column)] for column in key)
+        ):
+            raise ValueError("Clé primaire SQL imprimée invalide")
         return self
 
 
@@ -401,6 +414,7 @@ def authoring_schema(
     machine_field_constraints: bool = False,
     positive_points: bool = False,
     bounded_graph_fields: bool = False,
+    printed_primary_keys: bool = False,
 ) -> dict:
     schema = NSIExercise.model_json_schema()
     schema["required"].append("materials")
@@ -412,6 +426,8 @@ def authoring_schema(
         schema["$defs"]["NSITableMaterial"]["properties"].pop("sql")
         schema["$defs"].pop("NSISQLDescriptor")
         return schema
+    if not printed_primary_keys:
+        schema["$defs"]["NSISQLDescriptor"]["properties"].pop("primary_key")
     # Generation uses machine-readable dot decimals, not French display commas.
     # Keep runtime fullmatch/positive-credit/sum validation: portable JSON Schema
     # '$' handling can still admit a final newline in some regex implementations.

@@ -116,6 +116,10 @@ def test_real_pdf_publication_keeps_model_identity_and_private_evidence(
     assert manifest["large_print"] is large_print
     assert manifest["identity"]["large_print"] is large_print
     assert manifest["identity"]["layout_policy"] == "fr-nsi-v36-code-layout-v1"
+    assert (
+        manifest["identity"]["authoring_schema_policy"]
+        == subject.llm_pipeline.PRINTED_SQL_KEYS_AUTHORING_POLICY
+    )
     assert manifest["warnings"]
     assert manifest["generation_limits"]["started_requests"] == 9
     assert manifest["generation_limits"]["completed_requests"] == 9

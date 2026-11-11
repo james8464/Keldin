@@ -149,6 +149,7 @@ def handle_generate_llm_assessment(args) -> int:
             progress=progress,
             large_print=args.large_print,
             record_round=recorder,
+            authoring_schema_policy=llm_pipeline.PRINTED_SQL_KEYS_AUTHORING_POLICY,
         )
         operational_warnings = []
         if recorder.retention_warning:

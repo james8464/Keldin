@@ -1246,11 +1246,8 @@
     {
       "path": "Backend/Core/france/nsi.py",
       "classification": "maintained-source",
-      "status": "reviewed",
-      "reason": "Composite source-bound review: root previously completed 469-line EOF, then root and independent reviewer read complete 13-line generation-graph schema delta and scoped runtime validator. Current 480 lines, without a fresh full-file reread claim. Historical default schemas and runtime validation remain unchanged.",
-      "source_sha256": "35ac192fe980fb24d697325018b8f703d5a41a8bffa1dc7cda70f81f9f129eff",
-      "review_evidence": "docs/quality/french-graph-schema-review.md",
-      "review_evidence_sha256": "5e5224b05f89568c8fcc92291875cfa4cf7456bb6571775cda6e8c70b36b09b2"
+      "status": "pending",
+      "reason": "No file-level semantic implementation review recorded in this ledger."
     },
     {
       "path": "Backend/Core/france/occitanie_case_study.py",
@@ -1366,11 +1363,8 @@
     {
       "path": "Backend/Core/france/sql_sources.py",
       "classification": "maintained-source",
-      "status": "reviewed",
-      "reason": "Complete-file independent review of typed visible-table binding, DDL object inspection and bounded row comparison; selective callers and focused SQL regressions. No whole-pipeline or model-quality qualification.",
-      "source_sha256": "1e01aa318c2d9c01113c515df3381235bc07874598731234073dd160f92df055",
-      "review_evidence": "docs/quality/french-python-range-review.md",
-      "review_evidence_sha256": "6e4f684326fb9ffff33609a8f062ce4b2c5d7c7dcd48490c58d1a1ffed86e1d6"
+      "status": "pending",
+      "reason": "No file-level semantic implementation review recorded in this ledger."
     },
     {
       "path": "Backend/Core/france/synthesized_authoring.py",
