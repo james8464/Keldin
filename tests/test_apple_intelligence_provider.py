@@ -568,6 +568,81 @@ def test_compatible_solver_selects_guidance_before_inference_with_full_schema(
     assert client.usage_records[0]["generation_mode"] == "guided_with_postvalidation"
 
 
+@pytest.mark.parametrize(
+    ("mutation", "valid", "expected_objective"),
+    [
+        ("omitted", True, None),
+        ("valid_objective", True, "AO2"),
+        ("extra_choices", False, None),
+        ("extra_correct_choice", False, None),
+        ("invalid_objective", False, None),
+        ("wrong_identifier", False, None),
+        ("locked_marking", True, None),
+        ("extra_locked_marking", False, None),
+    ],
+)
+def test_written_authoring_guides_without_model_owned_choice_fields(
+    monkeypatch, mutation, valid, expected_objective
+):
+    request = make_request(
+        "Write a synthetic question.",
+        OutputContract(
+            "authoring",
+            identifiers=("1/1/1",),
+            authoring_shapes=(("1/1/1", "constructed_response"),),
+            mark_schemes_locked=mutation in {"locked_marking", "extra_locked_marking"},
+        ),
+    )
+    item = {
+        "id": "1/1/1",
+        "prompt": "Explain one effect.",
+        "mark_scheme": [{"text": "One effect.", "marks": 1, "credit_type": "point"}],
+    }
+    if mutation == "extra_choices":
+        item["choices"] = ["A"]
+    elif mutation == "extra_correct_choice":
+        item["correct_choice"] = None
+    elif mutation in {"valid_objective", "invalid_objective"}:
+        item["mark_scheme"][0]["assessment_objective"] = (
+            "AO2" if mutation == "valid_objective" else "AO5"
+        )
+    elif mutation == "wrong_identifier":
+        item["id"] = "1/1/2"
+    elif mutation == "locked_marking":
+        item["mark_scheme"] = []
+
+    def guided(payload):
+        assert payload["schema_mode"] == "guided_with_postvalidation"
+        properties = payload["schema"]["properties"]["questions"]["items"]["properties"]
+        assert "choices" not in properties and "correct_choice" not in properties
+        assert (
+            json.loads(payload["prompt"].rsplit("\nOUTPUT_SCHEMA=", 1)[1])
+            == payload["schema"]
+        )
+        return {
+            **reply(payload),
+            "generation_mode": payload["schema_mode"],
+            "output": {"questions": [item]},
+        }
+
+    monkeypatch.setattr(service, "roundtrip", guided)
+    client = HostedLLMClient(provider=service.PROVIDER, model=service.MODEL, api_key="")
+    if not valid:
+        with pytest.raises(
+            service.GenerationEvidenceError, match="invalid structured output"
+        ):
+            client.generate_request(request)
+    else:
+        (result,) = client.generate_request(request)["questions"]
+        assert result["choices"] == [] and result["correct_choice"] is None
+        if mutation == "locked_marking":
+            assert result["mark_scheme"] == []
+        else:
+            assert (
+                result["mark_scheme"][0]["assessment_objective"] == expected_objective
+            )
+
+
 def test_actual_uk_review_contract_selects_guidance_with_unchanged_640_token_budget(
     monkeypatch,
 ):

@@ -190,11 +190,8 @@
     {
       "path": "Backend/Core/apple_intelligence.py",
       "classification": "maintained-source",
-      "status": "reviewed",
-      "reason": "Complete-file internal provider-boundary review with exact-byte evidence; live model quality and broader release acceptance remain separate.",
-      "source_sha256": "91862246849e3a08acef4cfd7c907d30f8432dce27d0776be57e5828fc9d40ef",
-      "review_evidence": "docs/quality/provider-boundary-file-review-2026-11-02.md",
-      "review_evidence_sha256": "0e9bfbaca8f7a004eb704f74819070e996fc3e12b8793d813a4f49ff979a82e9"
+      "status": "pending",
+      "reason": "No file-level semantic implementation review recorded in this ledger."
     },
     {
       "path": "Backend/Core/assessment_checkpoints.py",
