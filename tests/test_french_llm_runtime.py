@@ -1,5 +1,7 @@
 import json
 import signal
+import subprocess
+import sys
 from argparse import Namespace
 from pathlib import Path
 
@@ -104,6 +106,42 @@ def test_cancellation_during_model_snapshot_is_reported(publication, monkeypatch
     assert signal.getsignal(signal.SIGTERM) is previous
     assert [event.get("code") for event in events] == ["cancelled"]
     assert not args.output.exists()
+
+
+def test_real_sigterm_during_french_preflight_has_cancelled_terminal_event(tmp_path):
+    index = tmp_path / "references.sqlite"
+    index.touch()
+    output = tmp_path / "output"
+    script = """
+import os
+import signal
+import sys
+from argparse import Namespace
+from pathlib import Path
+from Backend.Core.france import llm_runtime
+
+def cancel_during_snapshot(_args):
+    os.kill(os.getpid(), signal.SIGTERM)
+    raise AssertionError("SIGTERM did not interrupt the snapshot")
+
+llm_runtime._model_snapshot = cancel_during_snapshot
+raise SystemExit(llm_runtime.handle_generate_llm_assessment(Namespace(
+    assessment="fr-bac-general-nsi-written-2027",
+    provider="apple", model="test-only", seed=42,
+    reference_index=Path(sys.argv[1]), output=Path(sys.argv[2]),
+)))
+"""
+    result = subprocess.run(
+        [sys.executable, "-c", script, str(index), str(output)],
+        capture_output=True,
+        text=True,
+        timeout=20,
+    )
+    assert result.returncode == 130, result.stderr
+    events = [json.loads(line) for line in result.stdout.splitlines()]
+    assert [event["type"] for event in events] == ["error"]
+    assert events[0]["code"] == "cancelled"
+    assert not output.exists()
 
 
 @pytest.mark.parametrize("large_print", [False, True])
