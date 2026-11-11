@@ -58,6 +58,7 @@ from Backend.Core.france.nsi import (
     cognitive_profile_findings,
     require_authoring_fields,
 )
+from Backend.Core.france.originality import reject_contiguous_reference_copy
 from Backend.Core.france.print_policy import V36_PRINT_POLICY
 from Backend.Core.france.source_identity import implementation_identity
 from Backend.Core.france.sql_sources import SQL_SOURCE_POLICY, bound_materials
@@ -78,7 +79,7 @@ CHECKABLE = frozenset({"sql", "python_trace", "shortest_path"})
 PROGRAMME_REFERENCE_LIMIT = 10
 OFFICIAL_PAPER_REFERENCE_LIMIT = 2
 REFERENCE_LIMIT = PROGRAMME_REFERENCE_LIMIT + OFFICIAL_PAPER_REFERENCE_LIMIT
-SOURCE_POLICY = "fr-nsi-v36-exercise-curriculum-scope-v1"
+SOURCE_POLICY = "fr-nsi-v36-exercise-curriculum-scope-v2"
 LEGACY_AUTHORING_SCHEMA_POLICY = "fr-nsi-v36-machine-fields-v1"
 POSITIVE_POINTS_AUTHORING_SCHEMA_POLICY = "fr-nsi-v36-positive-points-v1"
 AUTHORING_SCHEMA_POLICY = "fr-nsi-v36-graph-bounds-v1"
@@ -1237,6 +1238,19 @@ def _retrieve_references(
     return result
 
 
+def _reject_scoped_reference_copy(
+    exercise: NSIExercise, references: list[dict]
+) -> None:
+    reject_contiguous_reference_copy(
+        [
+            exercise.title,
+            exercise.context,
+            *(question.prompt for question in exercise.questions),
+        ],
+        [item["text"] for item in references if item["category"] == "official_paper"],
+    )
+
+
 def _validate_scope_references(references: list[dict]) -> None:
     _validate_references(references)
     if len(references) > 4 or any(
@@ -2119,6 +2133,7 @@ def generate(
                     mark_plan=mark_plan,
                 )
                 _require_primary_topic(exercise, scope["primary_topic"])
+                _reject_scoped_reference_copy(exercise, scope["references"])
                 if progress:
                     progress(
                         f"Résolution et contrôle indépendants de l'exercice {identifier}"
@@ -2346,6 +2361,7 @@ def validate_package(package: dict) -> list[NSIExercise]:
             raise ValueError("Plan des domaines NSI modifié")
         _validate_scope_references(scope["references"])
         _require_primary_topic(exercise, topic)
+        _reject_scoped_reference_copy(exercise, scope["references"])
     if package.get("references") != _reference_union(plan):
         raise ValueError("Union des références NSI modifiée")
     reviews = package.get("reviews")

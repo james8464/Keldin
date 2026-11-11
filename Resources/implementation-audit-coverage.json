@@ -1102,11 +1102,8 @@
     {
       "path": "Backend/Core/france/llm_pipeline.py",
       "classification": "maintained-source",
-      "status": "reviewed",
-      "reason": "Preserves prior composite EOF attribution from the linked prior source/policy reviews, plus complete independently reviewed pre-authoring mark-plan delta and scoped request/author/recovery/replay callers at 2369 current lines; not a fresh whole-file EOF read. Explicit backend opt-in only; exact old request fingerprints/default route and strict implementation identity retained. Offline checks do not establish live French content quality.",
-      "source_sha256": "36ffff5557941b645191749e437afe5bdd66eb16dc03f68261817a94bf58dd34",
-      "review_evidence": "docs/quality/french-preauthoring-mark-plan-review.md",
-      "review_evidence_sha256": "c4202863bce42e86b1f41256befae901a90e60357a05cc569dab0f49ed0f92eb"
+      "status": "pending",
+      "reason": "No file-level semantic implementation review recorded in this ledger."
     },
     {
       "path": "Backend/Core/france/llm_runtime.py",
