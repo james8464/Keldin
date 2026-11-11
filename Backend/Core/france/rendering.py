@@ -615,7 +615,7 @@ def render_assessment(
         parent=body,
         fontName=bold,
         alignment=1,
-        fontSize=14 if not large_print else 18,
+        fontSize=layout.exercise_heading_size,
         leading=18 if not large_print else 23,
         spaceBefore=0,
         spaceAfter=15,
