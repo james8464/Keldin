@@ -755,7 +755,7 @@ def validate_authored_exercise(
                         "Rédiger le code avec des espaces pour préserver l'indentation imprimée."
                     )
                 require_code_width(
-                    source,
+                    source.replace("\r\n", "\n"),
                     layout.font_name,
                     layout.font_size,
                     width,

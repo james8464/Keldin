@@ -83,6 +83,38 @@ def test_source_guard_uses_exact_metrics_and_preserves_tabs():
         subject.validate_authored_exercise(raw, "1", large_print=False)
 
 
+@pytest.mark.parametrize("separator", ["\u2028", "\u2029", "\x85"])
+@pytest.mark.parametrize("boundary", ["render", "review"])
+def test_unicode_separator_cannot_hide_a_wide_printed_line(separator, boundary):
+    source = 'label = "' + "M" * 27 + separator + "M" * 27 + '"'
+    compile(source, "<listing>", "exec")
+    if boundary == "render":
+        layout = code_layout(True)
+        style = ParagraphStyle(
+            "test", fontName=layout.font_name, fontSize=layout.font_size
+        )
+        with pytest.raises(CodeLayoutError, match="largeur disponible"):
+            code_listing(source, style, layout.question_width)
+    else:
+        raw = raw_exercise()
+        raw["questions"][0]["prompt"] = f"Analysez :\n```python\n{source}\n```"
+        with pytest.raises(CodeLayoutError, match="question 1"):
+            subject.validate_authored_exercise(raw, "1", large_print=True)
+
+
+@pytest.mark.parametrize("newline", ["\n", "\r\n"])
+def test_fit_source_keeps_its_stored_line_endings(newline):
+    layout = code_layout(True)
+    columns = layout.columns(layout.question_width)
+    first = 'label = "' + "M" * (columns - len('label = ""')) + '"'
+    source = f'{first}{newline}label += "M"'
+    prompt = newline.join(("Analysez :", "```python", source, "```"))
+    raw = raw_exercise()
+    raw["questions"][0]["prompt"] = prompt
+    exercise = subject.validate_authored_exercise(raw, "1", large_print=True)
+    assert exercise.questions[0].prompt == prompt
+
+
 def test_current_recovery_package_cannot_drop_captured_layout_mode(tmp_path):
     package = generate(tmp_path, Client())
     package["identity"].pop("layout_policy")
