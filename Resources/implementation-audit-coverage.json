@@ -4040,6 +4040,12 @@
       "reason": "Retained diagnostic/review evidence, not maintained executable implementation; exclusion does not certify its claims."
     },
     {
+      "path": "docs/quality/french-cancelled-publication-recovery-review.md",
+      "classification": "historical-evidence",
+      "status": "excluded",
+      "reason": "Retained diagnostic/review evidence, not maintained executable implementation; exclusion does not certify its claims."
+    },
+    {
       "path": "docs/quality/french-format-and-data-review-2026-10-30.md",
       "classification": "historical-evidence",
       "status": "excluded",
@@ -5908,11 +5914,8 @@
     {
       "path": "macOS/Keldin/Domain/AppModels.swift",
       "classification": "maintained-source",
-      "status": "reviewed",
-      "reason": "Complete-file implementation review recorded with scope and limitations in the linked evidence.",
-      "source_sha256": "e861a7fe54a05f0afd2abab2197813d43d78085a4877559b730410b2c12ebdd0",
-      "review_evidence": "docs/quality/business-rounding-and-benchmark-completion-2026-11-03.md",
-      "review_evidence_sha256": "99dbd2c83dbbdb74f6c6aa07666bb33cbcb458a391f02c32c92a6d7036d596da"
+      "status": "pending",
+      "reason": "No file-level semantic implementation review recorded in this ledger."
     },
     {
       "path": "macOS/Keldin/Domain/AssessmentBundleExporter.swift",
@@ -5944,11 +5947,8 @@
     {
       "path": "macOS/Keldin/Domain/FrenchLLMAssessmentRequest.swift",
       "classification": "maintained-source",
-      "status": "reviewed",
-      "reason": "Complete current 126-line native publication request module EOF independently reviewed; not the distinct 77-line form adapter. Native tests were not executed in this review. Prior evidence docs/quality/french-graph-label-clearance-review.md at 09820e237db145c7842f187fde270b7eb3736a1d70f062bba5778be4a332a380; prior source eb947e112f115985e2223f5b46993e1c70cd437ee13575be8250429078f8b4f8.",
-      "source_sha256": "b40c1fdfb0a83d8a7b9fc0cba47d7a457d3530472f762a1a7fcb99b9c299cbee",
-      "review_evidence": "docs/quality/french-generic-table-policy-review.md",
-      "review_evidence_sha256": "954b235c85ed5cac715c21d49672e42bc05ccfb690e82e90d595e7cbe8a3a831"
+      "status": "pending",
+      "reason": "No file-level semantic implementation review recorded in this ledger."
     },
     {
       "path": "macOS/Keldin/Domain/FrenchReviewRequest.swift",
@@ -6229,11 +6229,8 @@
     {
       "path": "macOS/Keldin/Services/BackendClient.swift",
       "classification": "maintained-source",
-      "status": "reviewed",
-      "reason": "Prior complete-file attestation plus independent complete cancellation-dispatch delta and client ownership context; runtime scope is documented separately.",
-      "source_sha256": "f034036a21539f3cab054d24ca90619c19a4db183b9228e1d3a372708dccd655",
-      "review_evidence": "docs/quality/owned-helper-cancellation-review.md",
-      "review_evidence_sha256": "52f259dd6ffadbd34a0557bd7cd7cc5af7b3234dda3117649ad6bf97089a5c34"
+      "status": "pending",
+      "reason": "No file-level semantic implementation review recorded in this ledger."
     },
     {
       "path": "macOS/Keldin/Services/BackendProcessLifecycle.swift",
@@ -6274,11 +6271,8 @@
     {
       "path": "macOS/Keldin/State/ApplicationCoordinator.swift",
       "classification": "maintained-source",
-      "status": "reviewed",
-      "reason": "Existing source-bound complete baseline plus entire reviewed delta for production files; new tests read in full. Bounded scope and release limits are in the linked evidence.",
-      "source_sha256": "884893b25e1787a80ac014665c7e9a2eb8f14225028b4b4ab1eb286d5191bc33",
-      "review_evidence": "docs/quality/generation-failure-history-review.md",
-      "review_evidence_sha256": "32ed19810dedb46a67f49217135746afdde3af8f8151efa9ce4f79e2563e4d6d"
+      "status": "pending",
+      "reason": "No file-level semantic implementation review recorded in this ledger."
     },
     {
       "path": "macOS/Keldin/State/BenchmarkCoordinator.swift",

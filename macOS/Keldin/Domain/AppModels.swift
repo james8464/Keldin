@@ -1137,6 +1137,7 @@ enum BackendEvent: Equatable {
     case file(role: String, path: String)
     case done(message: String)
     case error(message: String, code: String? = nil)
+    case cancelledAfterSave(message: String, bundle: String)
     case models([String], message: String?)
     case ollamaStatus(installed: Bool, running: Bool, command: String?, message: String?)
     case mlxDownloadInfo(MLXDownloadInfo)
@@ -1162,10 +1163,14 @@ enum BackendEvent: Equatable {
         case "done":
             self = .done(message: payload.message ?? "Done")
         case "error":
-            self = .error(
-                message: payload.message ?? "Unknown backend error",
-                code: payload.code
-            )
+            let message = payload.message ?? "Unknown backend error"
+            if payload.code == "cancelled", let bundle = payload.retainedBundle,
+               bundle.utf8.count <= 64,
+               bundle.range(of: #"\Ansi-2027-v36--?[0-9]{1,19}-[0-9a-f]{12}\z"#, options: .regularExpression) != nil {
+                self = .cancelledAfterSave(message: message, bundle: bundle)
+            } else {
+                self = .error(message: message, code: payload.code)
+            }
         case "models":
             self = .models(payload.models ?? [], message: payload.message)
         case "mlx_download_info":
@@ -1295,6 +1300,7 @@ private struct BackendEventPayload: Decodable {
     let stage: String?
     let message: String?
     let code: String?
+    let retainedBundle: String?
     let role: String?
     let path: String?
     let page: Int?
@@ -1341,6 +1347,7 @@ private struct BackendEventPayload: Decodable {
         case stage
         case message
         case code
+        case retainedBundle = "retained_bundle"
         case role
         case path
         case page

@@ -1,4 +1,5 @@
 import Combine
+import CryptoKit
 import Foundation
 import PDFKit
 import XCTest
@@ -1747,6 +1748,94 @@ final class RunIsolationTests: XCTestCase {
             backend.requests[1].onEvent(.progress(stage: "current", message: "Current progress", progress: 0.2))
             XCTAssertEqual(application.generationProgress, 0.2)
             application.cancelGeneration()
+        }
+    }
+
+    @MainActor
+    func testSavedFrenchCancellationRecoversOnlyTheOriginalValidatedPDFs() throws {
+        enum SavedState: CaseIterable { case intact, altered, missing, linked }
+        for savedState in SavedState.allCases {
+            let backend = ControlledRunBackend()
+            let history = try temporaryHistoryURL()
+            let application = application(backend: backend, historyDirectory: history)
+            let exportFolder = history.deletingLastPathComponent().appendingPathComponent("export", isDirectory: true)
+            try FileManager.default.createDirectory(at: exportFolder, withIntermediateDirectories: true)
+            application.outputFolder = exportFolder
+            application.generateFrenchFixture(largePrint: false)
+            let original = try XCTUnwrap(application.generationCoordinator.activeJob)
+            let request = try XCTUnwrap(backend.requests.first)
+            let outputFlag = try XCTUnwrap(request.arguments.firstIndex(of: "--output"))
+            let root = URL(fileURLWithPath: request.arguments[outputFlag + 1], isDirectory: true)
+            let seed = try XCTUnwrap(original.configuration.seed)
+            let bundle = "nsi-2027-v36-\(seed)-0123456789ab"
+            let directory = root.appendingPathComponent(bundle, isDirectory: true)
+            try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+            let identity: [String: Any] = [
+                "provider": original.configuration.provider, "model": original.configuration.model, "seed": seed,
+                "prompt_version": FrenchLLMAssessmentRequest.promptVersion,
+                "print_policy": FrenchLLMAssessmentRequest.printPolicy,
+                "sql_source_policy": FrenchLLMAssessmentRequest.sqlSourcePolicy,
+                "source_policy": FrenchLLMAssessmentRequest.sourcePolicy,
+                "review_recovery_policy": FrenchLLMAssessmentRequest.reviewRecoveryPolicy,
+            ]
+            let pdf = PDFDocument()
+            pdf.insert(PDFPage(), at: 0)
+            let subject = try XCTUnwrap(pdf.dataRepresentation())
+            pdf.insert(PDFPage(), at: 1)
+            let files = [
+                "question_paper": ("sujet.pdf", subject),
+                "mark_scheme": ("corrige.pdf", try XCTUnwrap(pdf.dataRepresentation())),
+                "assessment_package": ("assessment.json", try JSONSerialization.data(withJSONObject: ["identity": identity])),
+            ]
+            var artifacts: [String: [String: String]] = [:]
+            for (role, (name, data)) in files {
+                try data.write(to: directory.appendingPathComponent(name))
+                artifacts[role] = ["file": name, "sha256": SHA256.hash(data: data).map { String(format: "%02x", $0) }.joined()]
+            }
+            let manifest: [String: Any] = [
+                "schema_version": 1, "assessment": FrenchAssessmentRequest.assessmentID,
+                "status": "unreviewed_draft", "generation_origin": "model_authored", "model_used": true,
+                "teacher_review": "not_run", "empirical_calibration": "not_run", "identity": identity, "artifacts": artifacts,
+            ]
+            try JSONSerialization.data(withJSONObject: manifest).write(to: directory.appendingPathComponent("manifest.json"))
+            let correction = directory.appendingPathComponent("corrige.pdf")
+            switch savedState {
+            case .intact: break
+            case .altered: try Data("changed".utf8).write(to: correction)
+            case .missing: try FileManager.default.removeItem(at: correction)
+            case .linked:
+                let outside = root.appendingPathComponent("outside.pdf")
+                try FileManager.default.moveItem(at: correction, to: outside)
+                try FileManager.default.createSymbolicLink(at: correction, withDestinationURL: outside)
+            }
+
+            application.cancelGeneration()
+            application.generateFrenchFixture(largePrint: true)
+            let replacement = try XCTUnwrap(application.generationCoordinator.activeJob)
+            let status = application.status
+            request.onEvent(.cancelledAfterSave(message: "Cancelled after save", bundle: bundle))
+            request.onFinish(.success(130))
+            let record = try XCTUnwrap(application.recentDocumentStore.records.first { $0.id == original.id })
+            XCTAssertEqual(record.state, .cancelled)
+            let expectedNames = savedState == .intact ? ["sujet.pdf", "corrige.pdf"] : []
+            XCTAssertEqual(application.historyPDFs(for: original.id).map { $0.url.lastPathComponent }, expectedNames)
+            XCTAssertEqual(try FileManager.default.contentsOfDirectory(atPath: exportFolder.path), [])
+            XCTAssertEqual(application.generationCoordinator.activeJob?.id, replacement.id)
+            XCTAssertEqual(application.status, status)
+            XCTAssertFalse(application.showError)
+            XCTAssertTrue(application.currentGenerationFiles.isEmpty)
+            application.cancelGeneration()
+            if savedState == .intact {
+                let correctionFile = try XCTUnwrap(application.historyPDFs(for: original.id).last)
+                application.openHistoryPDF(from: [original.id], fileID: correctionFile.id)
+                XCTAssertEqual(application.previewedFileID, correctionFile.id)
+                XCTAssertEqual(PDFDocument(url: correctionFile.url)?.pageCount, 2)
+            }
+            let reopened = RecentDocumentStore(directory: history, retentionLimit: 20, defaults: isolatedDefaults())
+            try reopened.load()
+            let reopenedRecord = try XCTUnwrap(reopened.records.first { $0.id == original.id })
+            XCTAssertEqual(reopenedRecord.state, .cancelled)
+            XCTAssertEqual(reopenedRecord.artifacts.map { $0.url.lastPathComponent }, expectedNames)
         }
     }
 
