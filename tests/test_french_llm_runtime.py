@@ -1,4 +1,5 @@
 import json
+import signal
 from argparse import Namespace
 from pathlib import Path
 
@@ -86,6 +87,23 @@ def test_local_memory_refusal_has_a_distinct_terminal_code(publication, monkeypa
     assert events[-1]["type"] == "error"
     assert events[-1]["code"] == "local_memory_unavailable"
     assert not any(event["type"] in {"done", "file"} for event in events)
+
+
+def test_cancellation_during_model_snapshot_is_reported(publication, monkeypatch):
+    subject, args, events = publication
+    previous = signal.getsignal(signal.SIGTERM)
+
+    def cancel_during_snapshot(_args):
+        handler = signal.getsignal(signal.SIGTERM)
+        assert callable(handler) and handler is not previous
+        handler(signal.SIGTERM, None)
+        pytest.fail("SIGTERM handler did not stop generation")
+
+    monkeypatch.setattr(subject, "_model_snapshot", cancel_during_snapshot)
+    assert subject.handle_generate_llm_assessment(args) == 130
+    assert signal.getsignal(signal.SIGTERM) is previous
+    assert [event.get("code") for event in events] == ["cancelled"]
+    assert not args.output.exists()
 
 
 @pytest.mark.parametrize("large_print", [False, True])
