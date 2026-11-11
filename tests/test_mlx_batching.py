@@ -235,7 +235,7 @@ def test_unbatchable_pair_uses_the_existing_constrained_serial_path(monkeypatch)
     assert seen == requests
 
 
-def test_fallback_still_loads_one_model_on_one_owner_thread(monkeypatch):
+def test_fallback_still_loads_one_model_on_one_owner_thread(monkeypatch, mlx_snapshot):
     monkeypatch.setenv("KELDIN_PARALLEL_MLX_GENERATION", "1")
     module = ModuleType("mlx_lm")
     loaded = []
@@ -247,7 +247,7 @@ def test_fallback_still_loads_one_model_on_one_owner_thread(monkeypatch):
     module.load = load
     monkeypatch.setitem(sys.modules, "mlx_lm", module)
     monkeypatch.setattr(
-        "Backend.Core.providers.resolve_local_mlx_model", lambda _: "/local/model"
+        "Backend.Core.providers.resolve_local_mlx_model", lambda _: str(mlx_snapshot)
     )
     client = HostedLLMClient(provider="apple", model="fixture", api_key="")
     monkeypatch.setattr(

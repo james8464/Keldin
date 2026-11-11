@@ -1600,11 +1600,8 @@
     {
       "path": "Backend/Core/mlx_setup.py",
       "classification": "maintained-source",
-      "status": "reviewed",
-      "reason": "quality_status_review read complete prior 471-line EOF and all subsequent deltas to current 486 lines: cached preparation, download headroom, platform, revision, local-only and frozen/runtime protections. No real low-disk model execution claimed.",
-      "source_sha256": "8f6035fd9419b89c876a2b837c5b428eb3a217d0b7075b4fb8fa1dba16eaaac4",
-      "review_evidence": "docs/quality/cached-mlx-preparation-and-solver-audit-2026-11-03.md",
-      "review_evidence_sha256": "c7542516acd3d96a737e3497a9b376ab68965c8c8b5d0d8183d71f74a1eaf465"
+      "status": "pending",
+      "reason": "No file-level semantic implementation review recorded in this ledger."
     },
     {
       "path": "Backend/Core/model_recommendations.py",
@@ -1654,11 +1651,8 @@
     {
       "path": "Backend/Core/ollama_admission.py",
       "classification": "maintained-source",
-      "status": "reviewed",
-      "reason": "Root complete current 259-line source EOF read plus independent complete initial 255-line EOF and all final source/annotation deltas. Current-headroom and exact-residency admission remain approximate, with snapshot/parallel-start/peak limitations explicit; no live model, native-incident fix or runtime safety guarantee. Prior physical-reserve/pressure review remains historical and unchanged.",
-      "source_sha256": "d6f62485633e80f575695fafa748164f9d0d386dcde96f988cd820fcb3d93e0e",
-      "review_evidence": "docs/quality/local-model-current-headroom-review.md",
-      "review_evidence_sha256": "56278db735289cf84ee185b23467621507581b8fc53a14b3e443ac598fe788ec"
+      "status": "pending",
+      "reason": "No file-level semantic implementation review recorded in this ledger."
     },
     {
       "path": "Backend/Core/ollama_thinking.py",
@@ -1771,11 +1765,8 @@
     {
       "path": "Backend/Core/providers.py",
       "classification": "maintained-source",
-      "status": "reviewed",
-      "reason": "Recorded complete baseline plus complete independently reviewed repair delta and relevant call paths; not a fresh whole-file or whole-repository read. Targeted tests and source-only render limits remain explicit.",
-      "source_sha256": "34a10a61899d0bcd2f3f51c2e695fbcdc9992642158177f4273987b50051ec93",
-      "review_evidence": "docs/quality/local-model-memory-admission-review.md",
-      "review_evidence_sha256": "cf69a54da1b965e288139aea670bd2e5ad124e0d8353cb885c3188c51992263d"
+      "status": "pending",
+      "reason": "No file-level semantic implementation review recorded in this ledger."
     },
     {
       "path": "Backend/Core/psychometrics.py",
@@ -3496,11 +3487,8 @@
     {
       "path": "conftest.py",
       "classification": "maintained-source",
-      "status": "reviewed",
-      "reason": "Root complete 57-line EOF review and bounded import/export or test-discovery review; exact bytes rechecked in integration worktree. Imported dependency implementations, model quality and final release gates remain separate.",
-      "source_sha256": "2c2248cc98dfc663d3f3e4ff9d1ce32f5613cf2e79f705abd22dad30d6476b6b",
-      "review_evidence": "docs/quality/entrypoint-topic-evidence-review.md",
-      "review_evidence_sha256": "dff7a5c51d4b12804c7ac1a1c0803fc26b0fd494344c4fe888a6bcdf41bd23f8"
+      "status": "pending",
+      "reason": "No file-level semantic implementation review recorded in this ledger."
     },
     {
       "path": "docs/ARCHITECTURE.md",
@@ -8583,6 +8571,12 @@
     },
     {
       "path": "tests/test_mlx_matrix_identity.py",
+      "classification": "test",
+      "status": "pending",
+      "reason": "No file-level semantic implementation review recorded in this ledger."
+    },
+    {
+      "path": "tests/test_mlx_memory_admission.py",
       "classification": "test",
       "status": "pending",
       "reason": "No file-level semantic implementation review recorded in this ledger."

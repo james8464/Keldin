@@ -19,6 +19,19 @@ BUSINESS_ROOT = ROOT / "Resources" / "business" / "aqa" / "generator"
 ACCOUNTING_ROOT = ROOT / "Resources" / "accounting" / "aqa" / "generator"
 
 
+@pytest.fixture
+def mlx_snapshot(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
+    """Give fake MLX loaders a weight file and deterministic memory sensors."""
+    (tmp_path / "model.safetensors").write_bytes(b"fixture weights")
+    monkeypatch.setattr(
+        "Backend.Core.ollama_admission._memory_snapshot", lambda: (16 << 30, 1)
+    )
+    monkeypatch.setattr(
+        "Backend.Core.ollama_admission._headroom_snapshot", lambda _: 8 << 30
+    )
+    return tmp_path
+
+
 @pytest.fixture(autouse=True)
 def generator_working_directory(
     request: pytest.FixtureRequest, monkeypatch: pytest.MonkeyPatch

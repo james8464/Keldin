@@ -27,7 +27,7 @@ from Backend.Core.mlx_batching import (
 from Backend.Core.mlx_batching import (
     output_budget as mlx_output_budget,
 )
-from Backend.Core.mlx_setup import resolve_local_mlx_model
+from Backend.Core.mlx_setup import ensure_mlx_memory_capacity, resolve_local_mlx_model
 from Backend.Core.model_review import CANONICAL_COGNITIVE_OPERATIONS
 from Backend.Core.ollama_admission import require_local_ollama_capacity
 from Backend.Core.ollama_thinking import structured_thinking_policy
@@ -536,8 +536,12 @@ class HostedLLMClient:
                 "MLX, then run the guided setup and try again."
             ) from None
         if self._apple_model is None or self._apple_tokenizer is None:
+            model_path = resolve_local_mlx_model(self.model)
+            ensure_mlx_memory_capacity(
+                model_path, workers=self.parallel_generation_workers
+            )
             self._apple_model, self._apple_tokenizer = load(
-                resolve_local_mlx_model(self.model),
+                model_path,
                 tokenizer_config={"trust_remote_code": False, "local_files_only": True},
             )
 
