@@ -191,6 +191,11 @@ def test_postrename_sigterm_does_not_mask_cancellation(publication, monkeypatch)
     assert publication.handle(publication.args) == 130
     assert commits == [assert_complete_bundle(publication)]
     assert publication.events[-1]["code"] == "cancelled"
+    if publication.args.authoring_version == "v36":
+        assert (
+            "Les deux PDF ont déjà été enregistrés" in publication.events[-1]["message"]
+        )
+        assert commits[0].name in publication.events[-1]["message"]
     assert not any(event["type"] in {"file", "done"} for event in publication.events)
     assert_preserved_state(publication)
 
@@ -221,6 +226,7 @@ def test_precommit_cancellation_keeps_output_absent(publication, monkeypatch, ke
     else:
         assert publication.handle(publication.args) == 130
         assert publication.events[-1]["code"] == "cancelled"
+        assert "déjà été enregistrés" not in publication.events[-1]["message"]
     assert not list(publication.output.glob("nsi-2027-*"))
     assert not any(event["type"] in {"file", "done"} for event in publication.events)
     assert_preserved_state(publication)
