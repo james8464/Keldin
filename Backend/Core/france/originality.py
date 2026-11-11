@@ -160,6 +160,26 @@ def _scores(candidate: str, comparison: str) -> dict[str, float | int]:
     }
 
 
+def reject_contiguous_reference_copy(
+    prose_blocks: list[str], official_excerpts: list[str]
+) -> None:
+    """Reject long copied prose, without comparing users' previous papers."""
+    threshold = THRESHOLDS["contiguous_characters"]
+    references = [_normalise_prose(text)[0] for text in official_excerpts]
+    for block in prose_blocks:
+        prose, _ = _normalise_prose(block)
+        if len(prose) < threshold:
+            continue
+        if any(
+            len(reference) >= threshold
+            and _longest_common_substring(prose, reference) >= threshold
+            for reference in references
+        ):
+            raise SimilarityRejected(
+                "Un passage de l'exercice reprend un extrait officiel."
+            )
+
+
 def _too_similar(scores: dict[str, float | int]) -> bool:
     return any(scores[name] >= threshold for name, threshold in THRESHOLDS.items())
 

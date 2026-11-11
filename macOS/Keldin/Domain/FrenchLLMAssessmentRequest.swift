@@ -6,7 +6,7 @@ struct FrenchLLMAssessmentRequest {
     static let promptVersion = "fr-nsi-written-2027-v36-llm"
     static let printPolicy = "fr-nsi-v36-model-review-v6"
     static let sqlSourcePolicy = "fr-nsi-v36-sql-source-v1"
-    static let sourcePolicy = "fr-nsi-v36-exercise-curriculum-scope-v1"
+    static let sourcePolicy = "fr-nsi-v36-exercise-curriculum-scope-v2"
     static let reviewRecoveryPolicy = "fr-nsi-v36-whole-exercise-redraft-v1"
     let referenceIndex: URL
     let output: URL

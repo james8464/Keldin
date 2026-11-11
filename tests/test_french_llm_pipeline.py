@@ -595,6 +595,35 @@ def generate(tmp_path, client):
     return subject.generate(index_path=path, client=client, seed=42)
 
 
+_SYNTHETIC_REFERENCE_COPY = (
+    "Un atelier municipal observe les variations quotidiennes du niveau d'eau "
+    "dans trois bassins séparés. Une équipe relève chaque mesure à heure fixe "
+    "et range les fiches par quartier avant d'examiner les valeurs manquantes. "
+    "Les participants distinguent les mesures relevées sur place des valeurs "
+    "estimées afin de comparer des observations de même nature."
+)
+
+
+def test_v36_rejects_copied_official_excerpt_before_review(tmp_path, monkeypatch):
+    original = subject._retrieve_references
+
+    def reference(index_path, **kwargs):
+        return [
+            {**item, "text": _SYNTHETIC_REFERENCE_COPY}
+            if item["category"] == "official_paper"
+            else item
+            for item in original(index_path, **kwargs)
+        ]
+
+    monkeypatch.setattr(subject, "_retrieve_references", reference)
+    client = Client(mutate=lambda item: item.update(context=_SYNTHETIC_REFERENCE_COPY))
+    with pytest.raises(ValueError, match="extrait officiel"):
+        generate(tmp_path, client)
+    assert not any(
+        "answers" in request.schema["properties"] for request in client.requests
+    )
+
+
 def test_different_model_responses_produce_different_substantive_papers(tmp_path):
     a = generate(tmp_path, Client("Aventure Alpha"))
     b = generate(tmp_path, Client("Recherche Beta"))
@@ -611,6 +640,20 @@ def test_different_model_responses_produce_different_substantive_papers(tmp_path
     assert a["warnings"] and all(
         item["state"] == "not_checked" for item in a["warnings"]
     )
+
+
+def test_v36_replays_scoped_copy_gate_even_after_content_digest_is_updated(tmp_path):
+    client = Client(mutate=lambda item: item.update(context=_SYNTHETIC_REFERENCE_COPY))
+    package = generate(tmp_path, client)
+    scope = package["curriculum_plan"][0]
+    for item in scope["references"]:
+        if item["category"] == "official_paper":
+            item["text"] = _SYNTHETIC_REFERENCE_COPY
+    package["identity"]["content_sha256"] = subject._digest(
+        {key: value for key, value in package.items() if key != "identity"}
+    )
+    with pytest.raises(ValueError, match="extrait officiel"):
+        subject.validate_package(package)
 
 
 def test_requests_use_typed_schema_and_no_fixed_question_or_answer_bank(tmp_path):

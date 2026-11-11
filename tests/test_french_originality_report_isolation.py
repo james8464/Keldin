@@ -43,6 +43,17 @@ def test_mutating_a_report_cannot_disable_later_copy_refusal(policy):
     assert policy == originality.THRESHOLDS
 
 
+def test_scoped_copy_check_allows_shared_terms_and_rejects_a_long_block():
+    excerpt = " ".join(f"élément{index}" for index in range(40))
+    originality.reject_contiguous_reference_copy(
+        ["Les éléments sont rangés dans un dictionnaire.", excerpt[:50]], [excerpt]
+    )
+    with pytest.raises(originality.SimilarityRejected, match="extrait officiel"):
+        originality.reject_contiguous_reference_copy(
+            ["Les éléments suivants sont étudiés.", excerpt.upper()], [excerpt]
+        )
+
+
 def test_serialized_report_keeps_existing_policy_and_counts(policy):
     report = originality.screen_originality(candidate(), [])
     saved = json.loads(json.dumps(report))
