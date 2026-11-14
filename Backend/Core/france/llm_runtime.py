@@ -20,7 +20,10 @@ from Backend.Core.france.recovery_evidence import RecoveryEvidenceRecorder
 from Backend.Core.france.rendering import render_assessment
 from Backend.Core.france.source_identity import implementation_identity
 from Backend.Core.france.sql_sources import SQL_SOURCE_POLICY
-from Backend.Core.generation_diagnostics import save_failure_diagnostic
+from Backend.Core.generation_diagnostics import (
+    GenerationEvidenceError,
+    save_failure_diagnostic,
+)
 from Backend.Core.generator_registry import assessment_framework
 from Backend.Core.ollama_admission import ResourceAdmissionError
 from Backend.Core.providers import HostedLLMClient
@@ -313,7 +316,13 @@ def handle_generate_llm_assessment(args) -> int:
                 "generation_limits": client.snapshot() if client is not None else None,
             },
         )
-        emit("error", message=str(error), code="french_generation_failed")
+        code = (
+            "french_model_context_unavailable"
+            if isinstance(error, GenerationEvidenceError)
+            and error.details.get("kind") == "context_capacity"
+            else "french_generation_failed"
+        )
+        emit("error", message=str(error), code=code)
         return 1
     finally:
         if previous_handler is not None:

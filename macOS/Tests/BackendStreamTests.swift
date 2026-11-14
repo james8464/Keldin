@@ -170,6 +170,27 @@ final class BackendStreamTests: XCTestCase {
         XCTAssertTrue(message.contains("7"))
     }
 
+    @MainActor
+    func testStreamingPreservesStructuredFailureWhenHelperWritesStderr() async throws {
+        let code = "french_model_context_unavailable"
+        let message = "Context refused"
+        let terminal = #"{"type":"error","message":"Context refused","code":"french_model_context_unavailable"}"#
+        for (output, expected) in [
+            (terminal, [.error(message: message, code: code)]),
+            ("", [.error(message: "Fixture stderr warning")]),
+        ] as [(String, [BackendEvent])] {
+            let client = try fixtureClient("printf '%s' '\(output)'; printf '%s' 'Fixture stderr warning' >&2; exit 7")
+            let finished = expectation(description: "Stream exits")
+            var events: [BackendEvent] = []
+            _ = try client.run(arguments: [], onEvent: { events.append($0) }, onFinish: { result in
+                XCTAssertEqual(try? result.get(), 7)
+                finished.fulfill()
+            })
+            await fulfillment(of: [finished], timeout: 3)
+            XCTAssertEqual(events, expected)
+        }
+    }
+
     func testCollectionPreservesExplicitErrorsAndUnicodeEOFEvents() async throws {
         let detail = #"{"type":"error","message":"Exact backend detail","code":"fixture"}"#
         let explicit = try await fixtureClient("printf '%s' '\(detail)'; exit 9").collect(arguments: [])

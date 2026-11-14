@@ -2,7 +2,7 @@ import Foundation
 
 enum ModelQualityAdvice: Equatable {
     case answerChecksFailed
-    case systemCalculationFailed
+    case systemPaperChecksFailed
     case accountingFalseAcceptance
     case nsiProbeFailed
     case retiredModel
@@ -11,7 +11,7 @@ enum ModelQualityAdvice: Equatable {
     static func forModel(provider: AIProvider, model: String) -> Self {
         let model = model.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
         if provider == .appleIntelligence, model == "apple-system-on-device" {
-            return .systemCalculationFailed
+            return .systemPaperChecksFailed
         }
         if provider == .apple, model == "mlx-community/llama-3.2-3b-instruct-4bit" {
             return .answerChecksFailed
@@ -24,7 +24,8 @@ enum ModelQualityAdvice: Equatable {
 
     var title: LocalizedStringResource {
         switch self {
-        case .answerChecksFailed, .systemCalculationFailed: "Known answer-check failure"
+        case .answerChecksFailed: "Known answer-check failure"
+        case .systemPaperChecksFailed: "Full-paper checks did not pass"
         case .accountingFalseAcceptance: "Known issue in an Accounting test"
         case .nsiProbeFailed: "Wrong answers in an NSI probe"
         case .retiredModel: "This model has been retired"
@@ -36,8 +37,8 @@ enum ModelQualityAdvice: Equatable {
         switch self {
         case .answerChecksFailed:
             "This Apple MLX model failed answer checks in an Accounting test. Memory fit does not establish paper quality."
-        case .systemCalculationFailed:
-            "This Apple on-device model failed an unaided accounting calculation test. Check generated answers and marks; some drafts may be refused."
+        case .systemPaperChecksFailed:
+            "In one test run, none of the 21 UK paper and topic bank routes passed with Apple Intelligence. For a full paper, try another model or provider in Settings."
         case .accountingFalseAcceptance:
             "One tested revision produced an ambiguous Accounting question with an unsupported answer key. Automated checks accepted it."
         case .nsiProbeFailed:

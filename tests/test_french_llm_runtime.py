@@ -1,3 +1,4 @@
+import io
 import json
 import signal
 import subprocess
@@ -93,6 +94,57 @@ def test_local_memory_refusal_has_a_distinct_terminal_code(publication, monkeypa
     assert events[-1]["type"] == "error"
     assert events[-1]["code"] == "local_memory_unavailable"
     assert not any(event["type"] in {"done", "file"} for event in events)
+
+
+@pytest.mark.parametrize(
+    ("input_tokens", "reason", "expected_code"),
+    [
+        (14_000, "context_capacity", "french_model_context_unavailable"),
+        (None, "context_capacity", "french_model_context_unavailable"),
+        (5_000, "provider_structure", "french_generation_failed"),
+    ],
+)
+def test_public_ollama_context_refusal_preserves_distinct_reason(
+    publication, monkeypatch, input_tokens, reason, expected_code
+):
+    from Backend.Core import providers
+
+    subject, args, events = publication
+    monkeypatch.setattr(subject, "HostedLLMClient", providers.HostedLLMClient)
+    monkeypatch.setattr(providers, "require_local_ollama_capacity", lambda *_: None)
+    requests = []
+
+    def transport(url, payload, _headers, **_options):
+        endpoint = url.rsplit("/", 1)[-1]
+        requests.append(endpoint)
+        if endpoint == "show":
+            return io.BytesIO(b'{"capabilities":["completion"]}')
+        assert endpoint == "chat"
+        request = json.loads(payload)
+        assert request["truncate"] is False and request["shift"] is False
+        return io.BytesIO(
+            json.dumps(
+                {
+                    "done": True,
+                    "done_reason": "stop",
+                    "message": {"role": "assistant", "content": "not valid JSON"},
+                    "prompt_eval_count": input_tokens,
+                    "eval_count": 3,
+                }
+            ).encode()
+        )
+
+    monkeypatch.setattr(providers, "urllib_request", transport)
+    assert subject.handle_generate_llm_assessment(args) == 1
+    assert requests == ["show", "chat"]
+    assert not list(args.output.rglob("*.pdf"))
+    assert [event["type"] for event in events] == ["error"]
+    assert events[0]["code"] == expected_code
+    assert "not valid JSON" not in events[0]["message"]
+    (report,) = (args.output / ".keldin-diagnostics").glob("failure-*.json")
+    evidence = json.loads(report.read_text(encoding="utf-8"))["details"]
+    assert evidence["kind"] == reason
+    assert evidence["raw_response"] == "not valid JSON"
 
 
 def test_ollama_memory_refusal_precedes_authoring(publication, monkeypatch):

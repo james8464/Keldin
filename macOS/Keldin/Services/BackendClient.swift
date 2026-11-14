@@ -125,19 +125,25 @@ final class BackendClient: BackendRunning, @unchecked Sendable {
 
             let handle = pipe.fileHandleForReading
             var buffer = BackendEventLineBuffer()
+            var reportedStructuredFailure = false
             while true {
                 let data = handle.availableData
                 if data.isEmpty { break }
                 for line in buffer.append(data) {
-                    await Self.emitLine(line, onEvent: onEvent)
+                    if await Self.emitLine(line, onEvent: onEvent) {
+                        reportedStructuredFailure = true
+                    }
                 }
             }
-            await Self.emitLine(buffer.finish(), onEvent: onEvent)
+            if await Self.emitLine(buffer.finish(), onEvent: onEvent) {
+                reportedStructuredFailure = true
+            }
 
             process.waitUntilExit()
             self.lifecycle.finished(process)
             let stderr = await errorTask.value.trimmingCharacters(in: .whitespacesAndNewlines)
-            if process.terminationStatus != 0, !stderr.isEmpty {
+            // Stderr is a fallback, not a second error that replaces a coded failure.
+            if process.terminationStatus != 0, !reportedStructuredFailure, !stderr.isEmpty {
                 await onEvent(.error(message: Self.displayMessage(forBackendError: stderr)))
             }
             await onFinish(.success(process.terminationStatus))
@@ -230,8 +236,11 @@ final class BackendClient: BackendRunning, @unchecked Sendable {
     private static func emitLine(
         _ line: String,
         onEvent: @escaping @Sendable @MainActor (BackendEvent) -> Void
-    ) {
-        if let event = event(from: line) { onEvent(event) }
+    ) -> Bool {
+        guard let event = event(from: line) else { return false }
+        onEvent(event)
+        if case let .error(_, code?) = event { return !code.isEmpty }
+        return false
     }
 
     private static func event(from line: String) -> BackendEvent? {
