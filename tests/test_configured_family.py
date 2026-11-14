@@ -101,6 +101,45 @@ def _family_syllabus(subject: str, board: str) -> Path:
     )
 
 
+def test_configured_rules_cannot_silently_ignore_a_misspelled_field(tmp_path):
+    payload = json.loads(_family_syllabus("mathematics", "aqa").read_text())
+    payload["papers"][0]["output_role"] = ["question_paper"]
+    path = tmp_path / "syllabus.json"
+    path.write_text(json.dumps(payload), encoding="utf-8")
+    with pytest.raises(ValueError, match="output_role"):
+        load_syllabus(path)
+
+
+def test_configured_topics_cannot_point_at_nonexistent_papers(tmp_path):
+    payload = json.loads(_family_syllabus("mathematics", "aqa").read_text())
+    payload["topics"][0]["papers"].append("typo")
+    path = tmp_path / "syllabus.json"
+    path.write_text(json.dumps(payload), encoding="utf-8")
+    with pytest.raises(ValueError, match="unknown paper"):
+        load_syllabus(path)
+
+
+def test_configured_option_override_controls_its_own_question(tmp_path):
+    payload = json.loads(_family_syllabus("mathematics", "aqa").read_text())
+    paper = payload["papers"][0]
+    section = paper["sections"][0]
+    first = section["questions"][0]
+    section["option_count"] = 2
+    section["question_overrides"] = {
+        "2": [
+            first | {"assessment_objectives": {"AO2": first["marks"]}},
+            *section["questions"][1:],
+        ]
+    }
+    path = tmp_path / "syllabus.json"
+    path.write_text(json.dumps(payload), encoding="utf-8")
+    syllabus = load_syllabus(path)
+    generated = build_paper(syllabus.rule(paper["id"]), syllabus, seed=7357)
+    first_option, second_option = generated.sections[0].options
+    assert first_option.questions[0].assessment_objectives == {"AO1": first["marks"]}
+    assert second_option.questions[0].assessment_objectives == {"AO2": first["marks"]}
+
+
 def test_cambridge_economics_preview_covers_all_official_components(
     tmp_path: Path,
 ) -> None:

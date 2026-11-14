@@ -2662,11 +2662,8 @@
     {
       "path": "Resources/configured-generators/generator/configuredgen/models.py",
       "classification": "maintained-source",
-      "status": "reviewed",
-      "reason": "Attributed prior complete-file EOF semantic review, not a fresh full read. Current 87-line source SHA and count match the explicit positive item nov7-entrypoint-eof-audit.json/files/6; exact provenance/ranges and limitations in tracked note. Complete selected entrypoint/model/date/syllabus leaf only. Active wrapper/standalone roles are distinguished in the cited row; no downstream runtime, official-date or syllabus-semantic certification. No execution, broad dependency, official-equivalence or whole-project-quality claim.",
-      "source_sha256": "2ab369fce8f42ddb439fea48460a847f276f90ead1dc970f6e256654b1b13e54",
-      "review_evidence": "docs/quality/attributed-eof-backfill-review-2026-11-07.md",
-      "review_evidence_sha256": "92d4635ed7b71056840a08929f060b7e4f7fa4a1476142c950761a291aff42a0"
+      "status": "pending",
+      "reason": "No file-level semantic implementation review recorded in this ledger."
     },
     {
       "path": "Resources/configured-generators/generator/configuredgen/render_pdf.py",
@@ -7377,6 +7374,12 @@
     },
     {
       "path": "tests/test_family_publication.py",
+      "classification": "test",
+      "status": "pending",
+      "reason": "No file-level semantic implementation review recorded in this ledger."
+    },
+    {
+      "path": "tests/test_family_registration.py",
       "classification": "test",
       "status": "pending",
       "reason": "No file-level semantic implementation review recorded in this ledger."
