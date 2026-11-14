@@ -166,6 +166,41 @@ def _digest(item: dict[str, object]) -> str:
     return digest
 
 
+def local_ollama_cached_sizes() -> dict[str, int]:
+    """Read verified local sizes in one metadata request; never pull or load."""
+    try:
+        entries = _model_metadata("http://127.0.0.1:11434", "tags")
+    except ResourceAdmissionError:
+        return {}
+    sizes: dict[str, int] = {}
+    seen: set[str] = set()
+    for entry in entries:
+        if not isinstance(entry, dict):
+            continue
+        try:
+            (name,) = _names(entry)
+        except ValueError:
+            # A conflicting alias can refer to an otherwise valid model.
+            return {}
+        if name in seen:
+            sizes.pop(name, None)
+            continue
+        seen.add(name)
+        if name.casefold().endswith((":cloud", "-cloud")) or any(
+            entry.get(key) not in (None, "") for key in ("remote_host", "remote_model")
+        ):
+            continue
+        size = entry.get("size")
+        if type(size) is not int or size <= 0:
+            continue
+        try:
+            _digest(entry)
+        except ValueError:
+            continue
+        sizes[name] = size
+    return sizes
+
+
 def _installed_model_state(base_url: str, model: str) -> tuple[int, bool]:
     try:
         candidates = _names({"name": model})
