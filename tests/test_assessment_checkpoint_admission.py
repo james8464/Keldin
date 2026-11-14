@@ -8,6 +8,7 @@ import threading
 import pytest
 from jsonschema import Draft202012Validator
 
+from Backend.Core import assessment_quality
 from Backend.Core.ai_assessment import (
     ASSESSMENT_REVIEW_VERSION,
     GenerationPolicy,
@@ -185,6 +186,59 @@ def test_cross_batch_duplicates_never_both_become_durable(tmp_path, mode):
         if isinstance(event, GenerationUpdate) and event.stage == "checkpoint"
     ]
     assert accepted and max(event.completed_units for event in accepted) == 1
+
+
+def test_serial_admission_never_rechecks_accepted_pairs(tmp_path, monkeypatch):
+    paper, rule, topics = fixture()
+    client = SchemaClient("serial", prompts={"0/0/1": ALTERNATIVE})
+    store = store_for(tmp_path / "job.json", paper, client)
+    calls = []
+    real_compare = assessment_quality._shingle_similarity
+
+    def compare(left, right):
+        calls.append((left, right))
+        return real_compare(left, right)
+
+    monkeypatch.setattr(assessment_quality, "_shingle_similarity", compare)
+    run(paper, rule, topics, client, store)
+    expected = (
+        assessment_quality._shingles(
+            assessment_quality.normalise_item_text(ALTERNATIVE), width=3
+        ),
+        assessment_quality._shingles(
+            assessment_quality.normalise_item_text(SHARED), width=3
+        ),
+    )
+    # Compare once when admitting item 2, and once in final verification.
+    assert calls.count(expected) == 2
+    assert all(store.load_item(key) is not None for key in ("0/0/0", "0/0/1"))
+
+
+@pytest.mark.parametrize(
+    ("initial", "update"),
+    [
+        ({"a": SHARED}, {"b": ALTERNATIVE, "c": ALTERNATIVE}),
+        ({"a": SHARED, "b": ALTERNATIVE}, {"a": ALTERNATIVE}),
+        ({"a": SHARED}, {"b": " "}),
+    ],
+)
+def test_incremental_admission_matches_full_check_and_keeps_prior_set(initial, update):
+    index = assessment_quality.ItemSimilarityIndex(threshold=0.84, context="paper")
+    index.admit(initial)
+    with pytest.raises(ValueError) as expected:
+        assessment_quality.assert_distinct_items(
+            {"id": identifier, "prompt": prompt}
+            for identifier, prompt in (initial | update).items()
+        )
+    with pytest.raises(ValueError) as actual:
+        index.admit(update)
+    assert str(actual.value) == str(expected.value)
+    index.admit({"d": "Calculate average variable cost."})
+    if "b" not in initial:
+        # A new item validated before a later failed item must not leak through.
+        index.admit({"e": ALTERNATIVE})
+    with pytest.raises(ValueError, match=r"items a and f are too similar"):
+        index.admit({"f": SHARED})
 
 
 @pytest.mark.parametrize("mode", ["serial", "local", "hosted"])

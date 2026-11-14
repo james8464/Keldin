@@ -169,11 +169,8 @@
     {
       "path": "Backend/Core/ai_assessment.py",
       "classification": "maintained-source",
-      "status": "reviewed",
-      "reason": "Explicit full-file or full baseline plus complete delta review of caller-owned checkpoint admission, persistence, retry and cancellation; attribution and limits recorded in the evidence.",
-      "source_sha256": "858d06800fed56bdde334f990c5bb746dac099099e41135362985ffb12bb556b",
-      "review_evidence": "docs/quality/assessment-checkpoint-admission-review-2026-11-02.md",
-      "review_evidence_sha256": "e85ea2628513021810543d013e846302c5a3384e86b20cc36d400c8cae2b9ca5"
+      "status": "pending",
+      "reason": "No file-level semantic implementation review recorded in this ledger."
     },
     {
       "path": "Backend/Core/answer_projection.py",
@@ -6166,11 +6163,8 @@
     {
       "path": "macOS/Keldin/State/RecentDocumentStore.swift",
       "classification": "maintained-source",
-      "status": "reviewed",
-      "reason": "Existing source-bound complete baseline plus entire reviewed delta for production files; new tests read in full. Bounded scope and release limits are in the linked evidence.",
-      "source_sha256": "6f4a1def0572d19d63e261a38147939f36134da72a82b255fbf280881f74f16c",
-      "review_evidence": "docs/quality/generation-failure-history-review.md",
-      "review_evidence_sha256": "32ed19810dedb46a67f49217135746afdde3af8f8151efa9ce4f79e2563e4d6d"
+      "status": "pending",
+      "reason": "No file-level semantic implementation review recorded in this ledger."
     },
     {
       "path": "macOS/Keldin/State/SettingsActionPresentation.swift",
@@ -6730,11 +6724,8 @@
     {
       "path": "tests/test_assessment_checkpoint_admission.py",
       "classification": "test",
-      "status": "reviewed",
-      "reason": "Explicit full-file or full baseline plus complete delta review of caller-owned checkpoint admission, persistence, retry and cancellation; attribution and limits recorded in the evidence.",
-      "source_sha256": "eaa127b410239ae1da203dd78bf118ff6d5b24dc50b44d8b1c32f774dd42deab",
-      "review_evidence": "docs/quality/assessment-checkpoint-admission-review-2026-11-02.md",
-      "review_evidence_sha256": "e85ea2628513021810543d013e846302c5a3384e86b20cc36d400c8cae2b9ca5"
+      "status": "pending",
+      "reason": "No file-level semantic implementation review recorded in this ledger."
     },
     {
       "path": "tests/test_assessment_checkpoints.py",

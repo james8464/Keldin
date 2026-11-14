@@ -4,6 +4,16 @@ import XCTest
 @testable import Keldin
 
 final class FrenchLLMAssessmentTests: XCTestCase {
+    func testHistoricalConfigurationCanStillDecodeWithoutAPrintSize() throws {
+        let legacy = #"{"boardID":"fr-national-nsi","paperID":"written-2027","provider":"ollama","model":"fixture","seed":42,"dryRun":false,"authoringVersion":"v36"}"#
+        let history = try JSONDecoder().decode(GenerationConfiguration.self, from: Data(legacy.utf8))
+        XCTAssertNil(history.frenchLargePrint)
+        var current = history
+        current.frenchLargePrint = true
+        let encoded = try JSONEncoder().encode(current)
+        XCTAssertEqual(try JSONDecoder().decode(GenerationConfiguration.self, from: encoded), current)
+    }
+
     func testRequestUsesSelectedProviderAndModelWithoutCatalogueFallbackOrSecrets() {
         for provider in AIProvider.allCases {
             let request = FrenchLLMAssessmentRequest(referenceIndex: URL(fileURLWithPath: "/refs.sqlite"),
@@ -22,12 +32,14 @@ final class FrenchLLMAssessmentTests: XCTestCase {
     func testPublicationRequiresActualModelProviderSeedAndExplicitReviewLimits() throws {
         let configuration = GenerationConfiguration(boardID: "fr-national-nsi", paperID: "written-2027",
             provider: "apple", model: "chosen-model", seed: 42, dryRun: false,
-            assessmentID: FrenchAssessmentRequest.assessmentID, authoringVersion: "v36")
+            assessmentID: FrenchAssessmentRequest.assessmentID, authoringVersion: "v36", frenchLargePrint: false)
         var publication: [String: Any] = [
             "schema_version": 1, "assessment": FrenchAssessmentRequest.assessmentID,
             "status": "unreviewed_draft", "generation_origin": "model_authored", "model_used": true,
             "teacher_review": "not_run", "empirical_calibration": "not_run",
+            "large_print": false,
             "identity": ["provider": "apple", "model": "chosen-model", "seed": 42,
+                         "large_print": false, "layout_policy": "fr-nsi-v36-code-layout-v1",
                          "prompt_version": FrenchLLMAssessmentRequest.promptVersion,
                          "print_policy": FrenchLLMAssessmentRequest.printPolicy,
                          "sql_source_policy": FrenchLLMAssessmentRequest.sqlSourcePolicy,
@@ -41,6 +53,19 @@ final class FrenchLLMAssessmentTests: XCTestCase {
             try FrenchLLMAssessmentRequest.validatePublication(at: file, configuration: configuration)
         }
         XCTAssertNoThrow(try validate(publication))
+        for invalidSize in [nil, true, 0] as [Any?] {
+            var changed = publication
+            changed["large_print"] = invalidSize
+            XCTAssertThrowsError(try validate(changed))
+        }
+        for (key, invalid) in [("large_print", true as Any), ("large_print", 0), ("layout_policy", "old")] {
+            var changed = publication
+            var identity = try XCTUnwrap(changed["identity"] as? [String: Any])
+            identity[key] = invalid
+            changed["identity"] = identity
+            XCTAssertThrowsError(try validate(changed), key)
+        }
+        try validate(publication)
         let artifacts = [GeneratedFile(role: "package_manifest", url: file)] + ["assessment_package", "question_paper", "mark_scheme"].map {
             GeneratedFile(role: $0, url: FileManager.default.temporaryDirectory.appendingPathComponent("FrenchLLM-\(UUID().uuidString)-\($0)"))
         }
@@ -170,6 +195,7 @@ final class FrenchLLMAssessmentTests: XCTestCase {
         let generation = try XCTUnwrap(backend.requests.last)
         XCTAssertEqual(generation.arguments.first, "generate-assessment")
         XCTAssertTrue(generation.arguments.contains("--large-print"))
+        XCTAssertEqual(app.generationCoordinator.activeJob?.configuration.frenchLargePrint, true)
         XCTAssertTrue(generation.arguments.contains("chosen-model"))
         XCTAssertEqual(generation.environment["KELDIN_API_KEY"], "fixture-secret")
         XCTAssertFalse(generation.arguments.contains("fixture-secret"))

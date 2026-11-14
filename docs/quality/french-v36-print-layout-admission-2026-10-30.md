@@ -16,6 +16,13 @@ New V36 author requests describe the actual requested print mode and conservativ
 
 New packages bind `fr-nsi-v36-code-layout-v1` and a strict Boolean `large_print` to their identity. Stored revalidation checks the bound mode. Legacy packages without either field retain their original reading rules, with no inferred enlarged-print compatibility. New runtime publication requires both fields and a match with the captured request.
 
+The Mac app also records the requested size with the job. Before export or
+cancelled-paper recovery, it checks the current layout policy and requires
+the manifest's print size to agree with both the assessment identity and the
+job. Older history entries still decode without a requested size. They do
+not imply a normal or enlarged request. The check uses the same manifest
+bytes for metadata and artifact validation.
+
 ReportLab retains literal tabs, while the existing PDF content validator expects eight-space tab expansion. Historical rendering is unchanged. New mode-bound author admission refuses tabs and requests spaces rather than rewriting indentation.
 
 ## Review and tests

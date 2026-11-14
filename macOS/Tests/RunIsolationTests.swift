@@ -1753,7 +1753,7 @@ final class RunIsolationTests: XCTestCase {
 
     @MainActor
     func testSavedFrenchCancellationRecoversOnlyTheOriginalValidatedPDFs() throws {
-        enum SavedState: CaseIterable { case intact, altered, missing, linked }
+        enum SavedState: CaseIterable { case intact, altered, missing, linked, wrongPrintSize }
         for savedState in SavedState.allCases {
             let backend = ControlledRunBackend()
             let history = try temporaryHistoryURL()
@@ -1770,10 +1770,13 @@ final class RunIsolationTests: XCTestCase {
             let bundle = "nsi-2027-v36-\(seed)-0123456789ab"
             let directory = root.appendingPathComponent(bundle, isDirectory: true)
             try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+            let publishedLarge = savedState == .wrongPrintSize
             let identity: [String: Any] = [
                 "provider": original.configuration.provider, "model": original.configuration.model, "seed": seed,
                 "prompt_version": FrenchLLMAssessmentRequest.promptVersion,
                 "print_policy": FrenchLLMAssessmentRequest.printPolicy,
+                "layout_policy": FrenchLLMAssessmentRequest.layoutPolicy,
+                "large_print": publishedLarge,
                 "sql_source_policy": FrenchLLMAssessmentRequest.sqlSourcePolicy,
                 "source_policy": FrenchLLMAssessmentRequest.sourcePolicy,
                 "review_recovery_policy": FrenchLLMAssessmentRequest.reviewRecoveryPolicy,
@@ -1796,11 +1799,12 @@ final class RunIsolationTests: XCTestCase {
                 "schema_version": 1, "assessment": FrenchAssessmentRequest.assessmentID,
                 "status": "unreviewed_draft", "generation_origin": "model_authored", "model_used": true,
                 "teacher_review": "not_run", "empirical_calibration": "not_run", "identity": identity, "artifacts": artifacts,
+                "large_print": publishedLarge,
             ]
             try JSONSerialization.data(withJSONObject: manifest).write(to: directory.appendingPathComponent("manifest.json"))
             let correction = directory.appendingPathComponent("corrige.pdf")
             switch savedState {
-            case .intact: break
+            case .intact, .wrongPrintSize: break
             case .altered: try Data("changed".utf8).write(to: correction)
             case .missing: try FileManager.default.removeItem(at: correction)
             case .linked:
