@@ -241,11 +241,8 @@
     {
       "path": "Backend/Core/assessment_quality.py",
       "classification": "maintained-source",
-      "status": "reviewed",
-      "reason": "Complete-file review within the documented French formatting and saved-data scope; remaining release and semantic-question checks are separate.",
-      "source_sha256": "1669264dee9d075be1dd3ace628eb7c0dde93753869ef29caef2bc3ba2dcf6b2",
-      "review_evidence": "docs/quality/french-format-and-data-review-2026-10-30.md",
-      "review_evidence_sha256": "96f39d5350cfc64500e7e273096925535fca6e62d8858c866db9f69e89f2889b"
+      "status": "pending",
+      "reason": "No file-level semantic implementation review recorded in this ledger."
     },
     {
       "path": "Backend/Core/benchmark.py",
@@ -1537,11 +1534,8 @@
     {
       "path": "Backend/Core/layout_conformance.py",
       "classification": "maintained-source",
-      "status": "reviewed",
-      "reason": "Preserves existing source-bound composite baseline review plus complete independently reviewed scoped CS1 question-content dispatch/unknown-policy delta and callers. Current685 lines, not a fresh whole-file read; measured reference24 retained and other roles remain scoped. Prior evidence docs/quality/business-source-and-marking-review.md at 06e603c846a5c676e1b045434cf45573610b3a986ee084130e7d3839dea41af8; prior source 69618b58de3b2df1da2fcaed673c99810c79efbd56c2a93b5f5f79c33e67e881. Evidence-note amendment records actual old-head frozen public HOLD and narrow resource follow-up; original scope/limits remain. Host regression is not repaired frozen-path qualification.",
-      "source_sha256": "0afa0d930ddba8de8352b2f9aa6cf0e7c3c4a1efa43fefd2d7fe20d38aa3f545",
-      "review_evidence": "docs/quality/cs1-on-screen-source-flow-review-2026-11-07.md",
-      "review_evidence_sha256": "f94a21c18976dbf3d0de8485886413e405512a674d6ffd21c3109e3a265a5636"
+      "status": "pending",
+      "reason": "No file-level semantic implementation review recorded in this ledger."
     },
     {
       "path": "Backend/Core/layout_master.py",
@@ -2366,10 +2360,10 @@
       "path": "Resources/computer-science/aqa/generator/cspapergen/generator.py",
       "classification": "maintained-source",
       "status": "reviewed",
-      "reason": "Exact complete baseline review plus the complete Q12.1 instruction delta. Scoped offline content and print checks, not model qualification.",
-      "source_sha256": "2472085411552446e00fc685a26e502ac3f8f4b8f8df36ff06952e3c4a97bc8d",
-      "review_evidence": "docs/quality/cs1-report-instructions-review-2026-11-10.md",
-      "review_evidence_sha256": "562d9c6e5d9f9b1cdbe4dbbf40846a98603b3a571919f3b4adf98220d3bcc947"
+      "reason": "Existing complete generator baseline plus prior report-contract review and exact recital of the entire current recursion-credit delta. Scoped PDF and answer-key parity does not qualify live paper content.",
+      "source_sha256": "a4891a59d79b85cd270784d985f68a62dda82ac413716d2aa36dcc68ec628393",
+      "review_evidence": "docs/quality/cs1-recursion-marking-review.md",
+      "review_evidence_sha256": "aa47454a171cc093df0ad962e3adf18e75dfb95f422539d07a76ae0384e985f8"
     },
     {
       "path": "Resources/computer-science/aqa/generator/cspapergen/models.py",
@@ -2509,8 +2503,11 @@
     {
       "path": "Resources/computer-science/aqa/generator/tests/test_notes.py",
       "classification": "test",
-      "status": "pending",
-      "reason": "No file-level semantic implementation review recorded in this ledger."
+      "status": "reviewed",
+      "reason": "Complete test review: original temporary PDFs, deterministic top-level discovery, preserved raw bytes, extracted content and isolated cache paths.",
+      "source_sha256": "53e135a4a679bbbeeddb6d3a268a9e9a740fa68665fb99c5b8882e3f7ab496cc",
+      "review_evidence": "docs/quality/computer-science-notes-test-fixtures.md",
+      "review_evidence_sha256": "bf799ae561db2714a69ef38ddc517482b7e001371a02d2035e59c4006cea4a44"
     },
     {
       "path": "Resources/computer-science/aqa/generator/tests/test_paper1.py",
@@ -3821,6 +3818,12 @@
       "reason": "Retained diagnostic/review evidence, not maintained executable implementation; exclusion does not certify its claims."
     },
     {
+      "path": "docs/quality/computer-science-notes-test-fixtures.md",
+      "classification": "historical-evidence",
+      "status": "excluded",
+      "reason": "Retained diagnostic/review evidence, not maintained executable implementation; exclusion does not certify its claims."
+    },
+    {
       "path": "docs/quality/concurrency-publication-implementation-review-2026-10-30.md",
       "classification": "historical-evidence",
       "status": "excluded",
@@ -3888,6 +3891,12 @@
     },
     {
       "path": "docs/quality/cs1-on-screen-source-flow-review-2026-11-07.md",
+      "classification": "historical-evidence",
+      "status": "excluded",
+      "reason": "Retained diagnostic/review evidence, not maintained executable implementation; exclusion does not certify its claims."
+    },
+    {
+      "path": "docs/quality/cs1-recursion-marking-review.md",
       "classification": "historical-evidence",
       "status": "excluded",
       "reason": "Retained diagnostic/review evidence, not maintained executable implementation; exclusion does not certify its claims."
@@ -7045,11 +7054,8 @@
     {
       "path": "tests/test_cli_publication_recovery.py",
       "classification": "test",
-      "status": "reviewed",
-      "reason": "Complete baseline EOF and final regression delta review; preserves rollback, target refusal and unrelated-file controls and adds real-handler postcommit protocol proof.",
-      "source_sha256": "8c9ae27c4d3c015677d59732e8042c496c0428961fe26c422ad3ecc783513c0a",
-      "review_evidence": "docs/quality/publication-cleanup-cancellation-review-2026-11-03.md",
-      "review_evidence_sha256": "aeb3ad1eb96869614b3f0f398f99d55952f6d59498185768d35ba513ba51e539"
+      "status": "pending",
+      "reason": "No file-level semantic implementation review recorded in this ledger."
     },
     {
       "path": "tests/test_closed_response_integrity.py",
@@ -7111,11 +7117,8 @@
     {
       "path": "tests/test_cs_declared_marking_policy.py",
       "classification": "test",
-      "status": "reviewed",
-      "reason": "Complete 105-line review. Explicit source-owned levels and point-only schemes have separate preservation controls.",
-      "source_sha256": "4ea873be3a3f6b60b341adeb38bba73dc74f0b675f727d5f3d23f0a34e3665aa",
-      "review_evidence": "docs/quality/implementation-audit-reconciliation-2026-11-10.md",
-      "review_evidence_sha256": "799d0c38f8fce9352aa3b7697bae3e7e9bd9ccf480cafc45c12e94e6d1582c10"
+      "status": "pending",
+      "reason": "No file-level semantic implementation review recorded in this ledger."
     },
     {
       "path": "tests/test_cs_delivery_chrome.py",
@@ -8497,11 +8500,8 @@
     {
       "path": "tests/test_layout_master.py",
       "classification": "test",
-      "status": "reviewed",
-      "reason": "Preserves prior complete430-line EOF test review plus complete independently reviewed narrow CS1-policy assertion delta. Current435 lines; all other policy dispatch controls retained, not a fresh whole-file read. Prior evidence docs/quality/reference-and-slot-boundary-review.md at ff98e4bb5e3ec2be7218c3f16bc6ecef8cc83426408de1a1a202fb7228c0ec6b; prior source 2d60006de9f0de5bb84994ff6fbba99c537bb4ed8040eb635ca40b17d4b1de0f. Evidence-note amendment records actual old-head frozen public HOLD and narrow resource follow-up; original scope/limits remain. Host regression is not repaired frozen-path qualification.",
-      "source_sha256": "cbdae7025ea867b0fb3376d45ceb224cc66bf55c8f0a7dbe075e3c4233b23935",
-      "review_evidence": "docs/quality/cs1-on-screen-source-flow-review-2026-11-07.md",
-      "review_evidence_sha256": "f94a21c18976dbf3d0de8485886413e405512a674d6ffd21c3109e3a265a5636"
+      "status": "pending",
+      "reason": "No file-level semantic implementation review recorded in this ledger."
     },
     {
       "path": "tests/test_level_of_response.py",

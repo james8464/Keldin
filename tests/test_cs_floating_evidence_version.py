@@ -118,6 +118,7 @@ def test_new_package_manifest_records_the_shared_numeric_integrity_version(
     monkeypatch.setattr(generation, "_sha256", lambda _: "b" * 64)
     assessment = tmp_path / "assessment.json"
     assessment.write_text("{}")
+    capability = generation.generator_capability("computer_science_ocr")
     path = generation._write_package_manifest(
         args=argparse.Namespace(
             subject="computer_science_ocr",
@@ -127,7 +128,8 @@ def test_new_package_manifest_records_the_shared_numeric_integrity_version(
             provider="ollama",
             model="fixture",
         ),
-        capability=generation.generator_capability("computer_science_ocr"),
+        capability=capability,
+        paper=capability.paper_for("1"),
         staging_dir=tmp_path,
         paths={"assessment_package": assessment},
         pdf_validation={},

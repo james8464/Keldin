@@ -39,6 +39,12 @@ an existing family until its prior acceptance fixtures still pass.
    subprocess imports and both dependency installers use the advertised
    registry paths. Do not add the family to pytest or CI by hand. Unadvertised
    modules are excluded from those default paths.
+   The backend reads each paper's output roles, release checks and
+   qualification into one read-only contract. The registry file format is
+   unchanged. Each paper must have exactly one output declaration; duplicate
+   IDs and roles, unmatched declarations and non-boolean checks are rejected
+   at load time. Use the same contract for output validation and the published
+   manifest so adding a paper does not introduce another metadata lookup table.
    If a family links a calibration report, add its evidence case to
    `tests/test_difficulty_calibration.py`. Keep any checks specific to the
    report's format or source, and do not treat structural checks as learner
@@ -71,6 +77,40 @@ time. A configured option uses its own question rules, so its credit can
 differ from another option without changing the printed tariff. Existing
 families still need their own reference evidence and live paper review.
 These checks do not substitute for those reviews or a full repository audit.
+
+### Remaining cleanup
+
+- Keep the shared runner responsible for validation, staging and publication.
+  The PDF checker uses one table to choose and scope content-aware pagination
+  by family, subject, paper and document role. The layout-master builder uses
+  the same table. Existing credit verifiers remain responsible for their own
+  answer rules; measured exact and range templates still use page-count checks.
+  Keep new question and marking rules in family modules, separate from PDF
+  layout.
+- Give future family adapters an explicit request interface. Migrate one
+  family at a time and compare seeded output, event order and checkpoint
+  recovery before removing the existing signature adapter.
+- Group tests by behaviour. Keep cheap validation failures in unit tests,
+  with at least one CLI and frozen-build check per shared path. Remove a test
+  only when its behaviour, failure modes and supported entry points have
+  another owner.
+- Profile the active generation path before tuning it. Record wall time and
+  peak memory for the same seed and options, separating PDF work from model
+  time. Before adding a cache, state its bound, lifetime and invalidation rule.
+
+### Paper history comparison
+
+The overlap check now builds token shingles once per item, retaining only
+the current paper and one historical package. It still compares the same
+pairs in the same order, uses the original weighted Jaccard score and keeps
+the same threshold and strict-versus-practice rules. It does not modify
+history. Tests cover exact scores, comparison counts and nearest matches.
+
+With 32 current items and 80 synthetic historical papers of 32 items each,
+median comparison time across three runs fell from 2.73 s to 0.40 s. All
+81,920 comparisons produced identical report fields. Peak process memory
+was roughly 22 MB in both runs. This measures the overlap check only; it
+does not measure inference or end-to-end generation.
 
 The admissions formats exercise different contract features:
 

@@ -2,12 +2,12 @@
 
 import argparse
 import json
+from collections import Counter
 from pathlib import Path
-from types import SimpleNamespace
 
 import pytest
 
-from Backend.Core import generation
+from Backend.Core import assessment_quality, generation
 from Backend.Core.assessment_quality import validate_package_novelty
 
 
@@ -111,6 +111,73 @@ def test_repeat_practice_keeps_comparing_after_a_historical_match(tmp_path):
     assert report["historic_comparisons"] == 2
     assert report["historical_overlap"] is True
     assert report["passed"] is False
+
+
+@pytest.mark.parametrize("width", [1, 2, 3, 5])
+@pytest.mark.parametrize(
+    ("left", "right"),
+    [
+        ("", "…"),
+        ("", PROMPT),
+        (PROMPT, PROMPT.replace("45", "105")),
+        ("a a a b a a", "b a a a a a c"),
+        ("Les coûts changent", "les coûts Changent."),
+        ("profit", "profit profit"),
+    ],
+)
+def test_similarity_matches_weighted_counter_definition(left, right, width):
+    def counts(prompt):
+        words = assessment_quality.normalise_item_text(prompt).split()
+        size = min(width, len(words))
+        return Counter(
+            tuple(words[index : index + size])
+            for index in range(len(words) - size + 1)
+            if size
+        )
+
+    first, second = counts(left), counts(right)
+    union = (first | second).total()
+    expected = (first & second).total() / union if union else 1.0
+    assert assessment_quality.content_similarity(left, right, width=width) == expected
+    assert assessment_quality.content_similarity(right, left, width=width) == expected
+
+
+def test_history_reuses_prompt_shingles_and_keeps_exact_evidence(tmp_path, monkeypatch):
+    current_prompts = [PROMPT, "Explain why variable costs change with output."]
+    historical_prompts = [PROMPT, "Explain why fixed costs stay the same."]
+    current = package(tmp_path / "current-assessment.json", current_prompts)
+    historic = package(tmp_path / "earlier-assessment.json", historical_prompts)
+    originals = {path: path.read_bytes() for path in (current, historic)}
+    prompts_seen = []
+    shingles = assessment_quality._shingles
+
+    def count_shingles(value, *, width):
+        prompts_seen.append(value)
+        return shingles(value, width=width)
+
+    monkeypatch.setattr(assessment_quality, "_shingles", count_shingles)
+    report = validate_package_novelty(
+        current, history_root=tmp_path, cross_generation_policy="repeat-practice-v1"
+    )
+    assert report == {
+        "algorithm": "weighted-token-shingle-jaccard-v1",
+        "threshold": 0.84,
+        "historic_comparisons": 4,
+        "nearest_match": {
+            "similarity": 1.0,
+            "current_item": "0",
+            "historic_item": "0",
+            "historic_package": historic.name,
+        },
+        "passed": False,
+        "history_complete": True,
+        "skipped_history_packages": 0,
+        "cross_generation_policy": "repeat-practice-v1",
+        "within_paper_passed": True,
+        "historical_overlap": True,
+    }
+    assert len(prompts_seen) == len(current_prompts) + len(historical_prompts)
+    assert {path: path.read_bytes() for path in originals} == originals
 
 
 def test_unknown_cross_generation_policy_fails_closed(tmp_path):
@@ -253,6 +320,7 @@ def test_manifest_preserves_unknown_history_evidence(tmp_path, monkeypatch):
     monkeypatch.setattr(generation, "_repository_commit", lambda: "a" * 40)
     monkeypatch.setattr(generation, "_generator_version", lambda _: "test")
     monkeypatch.setattr(generation, "_sha256", lambda _: "b" * 64)
+    capability = generation.generator_capability("accounting_aqa")
     path = generation._write_package_manifest(
         args=argparse.Namespace(
             subject="accounting_aqa",
@@ -262,7 +330,8 @@ def test_manifest_preserves_unknown_history_evidence(tmp_path, monkeypatch):
             provider="ollama",
             model="test",
         ),
-        capability=generation.generator_capability("accounting_aqa"),
+        capability=capability,
+        paper=capability.paper_for("2"),
         staging_dir=tmp_path,
         paths={"assessment_package": current},
         pdf_validation={},
@@ -278,6 +347,11 @@ def test_public_generation_explicitly_uses_repeat_practice(tmp_path, monkeypatch
     staging = tmp_path / "staging"
     staging.mkdir()
     current = package(staging / "current-assessment.json", [PROMPT])
+    documents = {"assessment_package": current}
+    for role in ("question_paper", "mark_scheme"):
+        path = staging / f"{role}.pdf"
+        path.touch()
+        documents[role] = path
     captured = {}
 
     def novelty(path, **kwargs):
@@ -287,6 +361,7 @@ def test_public_generation_explicitly_uses_repeat_practice(tmp_path, monkeypatch
     monkeypatch.setattr(generation, "validate_assessment_package", lambda *a, **k: {})
     monkeypatch.setattr(generation, "validate_package_novelty", novelty)
     monkeypatch.setattr(generation, "conform_generated_documents", lambda *a: {})
+    monkeypatch.setattr(generation, "validate_pdf_for_release", lambda *a, **k: {})
     manifest = staging / "manifest.json"
     manifest.write_text("{}", encoding="utf-8")
     monkeypatch.setattr(generation, "_write_package_manifest", lambda **k: manifest)
@@ -299,9 +374,9 @@ def test_public_generation_explicitly_uses_repeat_practice(tmp_path, monkeypatch
             provider="ollama",
             model="diagnostic",
         ),
-        capability=SimpleNamespace(outputs_for=lambda _: ["assessment_package"]),
+        capability=generation.generator_capability("accounting_aqa"),
         staging_dir=staging,
         output_dir=tmp_path,
-        paths={"assessment_package": current},
+        paths=documents,
     )
     assert captured["cross_generation_policy"] == "repeat-practice-v1"

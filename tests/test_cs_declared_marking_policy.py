@@ -70,6 +70,26 @@ def test_all_declared_points_questions_marks_and_reference_solutions_survive(
     assert "visited on entry" in text
 
 
+@pytest.mark.parametrize("seed", [20, 123, 270100])
+def test_recursive_call_credit_names_the_exact_arguments(seed, tmp_path):
+    blueprint, _ = build_paper1_blueprint(load_syllabus(), seed=seed)
+    question = next(q for q in blueprint.questions if q.number == 5)
+    part = question.parts[0]
+    start = int(re.search(r"for n = (\d+)", part.prompt).group(1))
+    calls = [f"value({start - 1})", f"value({start - 2})"]
+
+    assert part.marks == 2
+    assert part.marking.closed_answers == {
+        "first-call-n": [str(start - 1)],
+        "second-call-n": [str(start - 2)],
+    }
+    assert len(part.marking.points) == 2
+    for point, call in zip(part.marking.points, calls, strict=True):
+        assert call in point
+    scheme = rendered_text(blueprint, tmp_path / "recursion-scheme.pdf")
+    assert all(normalise(point) in scheme for point in part.marking.points)
+
+
 @pytest.mark.parametrize("paper", ["1", "2"])
 def test_explicit_declared_levels_are_preserved_without_invented_bands(paper, tmp_path):
     syllabus = load_syllabus()
