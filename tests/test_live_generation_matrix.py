@@ -104,6 +104,65 @@ def jobs():
     return matrix_jobs(json.loads(REGISTRY_PATH.read_text(encoding="utf-8")))
 
 
+def file_event_stream(files: dict[str, str]) -> str:
+    events = [
+        {"type": "file", "role": role, "path": path} for role, path in files.items()
+    ]
+    return "\n".join(map(json.dumps, [*events, {"type": "done"}])) + "\n"
+
+
+@pytest.mark.parametrize(
+    "wrong_evidence",
+    ["duplicate_role", "outside_job", "shared_file", "external_symlink"],
+)
+def test_matrix_refuses_file_events_not_owned_by_this_job(
+    tmp_path, monkeypatch, wrong_evidence
+):
+    job = jobs()[0]
+
+    def complete(command, *, run_dir, **_kwargs):
+        files = {}
+        for role in (*job.expected_roles, "package_manifest"):
+            path = run_dir / f"{role}.json"
+            path.write_text(json.dumps({"reference_demand": {"passed": True}}))
+            files[role] = str(path)
+        if wrong_evidence == "duplicate_role":
+            events = file_event_stream(files)
+            return BackendRun(
+                0, False, events.splitlines()[0] + "\n" + events, "", 1000
+            )
+        if wrong_evidence in {"outside_job", "external_symlink"}:
+            other_paper = tmp_path / "past-paper.json"
+            other_paper.write_text("{}", encoding="utf-8")
+            if wrong_evidence == "external_symlink":
+                alias = run_dir / "paper-alias.json"
+                alias.symlink_to(other_paper)
+                files["question_paper"] = str(alias)
+            else:
+                files["question_paper"] = str(other_paper)
+        else:
+            files["question_paper"] = files["mark_scheme"]
+        return BackendRun(0, False, file_event_stream(files), "", 1000)
+
+    monkeypatch.setattr("tools.live_generation_matrix.run_backend", complete)
+    report = run_matrix(
+        [job],
+        output_root=tmp_path,
+        command_prefix=["backend"],
+        model="gemma4:12b",
+        provider="ollama",
+        ollama_url="http://localhost:11434",
+        base_seed=42,
+        timeout_seconds=30,
+        dry_run=False,
+        resume=False,
+    )
+    (result,) = report["results"]
+    assert not result["generation_passed"]
+    assert not result["passed"]
+    assert result["errors"]
+
+
 def test_live_matrix_is_derived_from_every_advertised_registry_paper() -> None:
     value = jobs()
 
@@ -389,7 +448,7 @@ def test_resume_backfills_qualification_evidence_without_regenerating(
         )
         path.write_text(json.dumps(payload), encoding="utf-8")
         files[role] = str(path)
-    (run_dir / "events.jsonl").write_text('{"type":"done"}\n', encoding="utf-8")
+    (run_dir / "events.jsonl").write_text(file_event_stream(files), encoding="utf-8")
     previous = {
         "id": job.id,
         "family_id": job.family_id,
@@ -437,6 +496,15 @@ def test_resume_backfills_qualification_evidence_without_regenerating(
     manifest = Path(report["results"][0]["qualification_manifest"])
     assert manifest.is_file()
     assert (tmp_path / "qualification-run-manifest.json").is_file()
+    substituted = run_dir / "substituted.json"
+    substituted.write_text("{}", encoding="utf-8")
+    previous["files"]["question_paper"] = str(substituted)
+    previous["artifact_sha256"]["question_paper"] = _sha256(substituted)
+    result_path.write_text(json.dumps(previous), encoding="utf-8")
+    assert (
+        _resumable_result(result_path, request_identity=previous["request_identity"])
+        is None
+    )
 
 
 @pytest.mark.parametrize(
@@ -453,7 +521,7 @@ def test_resume_never_reuses_a_different_generation_request(
         path = run_dir / f"{role}.json"
         path.write_text(json.dumps({"reference_demand": {"passed": True}}))
         files[role] = str(path)
-    (run_dir / "events.jsonl").write_text('{"type":"done"}\n')
+    (run_dir / "events.jsonl").write_text(file_event_stream(files), encoding="utf-8")
     previous = {
         "id": job.id,
         "family_id": job.family_id,

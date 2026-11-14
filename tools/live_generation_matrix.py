@@ -110,6 +110,7 @@ def run_matrix(
             or _packaged_apple_system_helper(Path(command_prefix[0])) is None
         ):
             raise ValueError("Apple Intelligence requires an executable bundled helper")
+    output_root = output_root.resolve()
     output_root.mkdir(parents=True, exist_ok=True)
     results: list[dict[str, Any]] = []
     started = time.time()
@@ -237,12 +238,8 @@ def run_matrix(
         (run_dir / "stderr.log").write_text(stderr, encoding="utf-8")
 
         events = _events(stdout)
-        file_events = {
-            str(event.get("role")): Path(str(event.get("path")))
-            for event in events
-            if event.get("type") == "file"
-        }
         expected = set(job.expected_roles) | {"package_manifest"}
+        file_events, artifact_error = _generation_files(events, run_dir, expected)
         missing_roles = sorted(expected - file_events.keys())
         missing_files = sorted(
             role for role, path in file_events.items() if not path.is_file()
@@ -257,12 +254,15 @@ def run_matrix(
         protocol_error = _completion_protocol_error(events)
         if return_code == 0 and protocol_error and not error_messages:
             error_messages.append(protocol_error)
+        if artifact_error:
+            error_messages.append(artifact_error)
         generation_passed = (
             return_code == 0
             and not timed_out
             and not missing_roles
             and not missing_files
             and protocol_error is None
+            and artifact_error is None
         )
         current_identity = _request_identity(
             job,
@@ -502,6 +502,35 @@ def _completion_protocol_error(events: list[dict[str, Any]]) -> str | None:
     return None
 
 
+def _generation_files(
+    events: list[dict[str, Any]], run_dir: Path, expected: set[str]
+) -> tuple[dict[str, Path], str | None]:
+    """Collect only unique, declared files belonging to the current paper run."""
+    files: dict[str, Path] = {}
+    resolved_paths: set[Path] = set()
+    try:
+        directory = run_dir.resolve(strict=True)
+        for event in events:
+            if event.get("type") != "file":
+                continue
+            role, value = event.get("role"), event.get("path")
+            if not isinstance(role, str) or role not in expected or role in files:
+                return {}, "backend emitted an unexpected or repeated artifact role"
+            if not isinstance(value, str) or not Path(value).is_absolute():
+                return {}, "backend emitted an invalid artifact location"
+            path = Path(value)
+            resolved = path.resolve()
+            if not resolved.is_relative_to(directory) or resolved == directory:
+                return {}, "backend emitted an artifact outside this paper run"
+            if resolved in resolved_paths:
+                return {}, "backend reused an artifact for more than one role"
+            files[role] = path
+            resolved_paths.add(resolved)
+    except (OSError, RuntimeError, ValueError):
+        return {}, "backend artifact locations could not be verified"
+    return files, None
+
+
 def _request_identity(
     job: MatrixJob,
     *,
@@ -642,7 +671,7 @@ def _resumable_result(
         return None
     try:
         result = json.loads(path.read_text(encoding="utf-8"))
-    except (json.JSONDecodeError, OSError):
+    except (OSError, ValueError):
         return None
     if not isinstance(result, dict) or result.get("passed") is not True:
         return None
@@ -670,25 +699,28 @@ def _resumable_result(
     hashes = result.get("artifact_sha256")
     if (
         not isinstance(files, dict)
-        or not expected.issubset(files)
+        or set(files) != expected
         or not isinstance(hashes, dict)
+        or set(hashes) != expected
     ):
         return None
+    events_path = path.parent / "events.jsonl"
     try:
+        event_data = events_path.read_bytes()
+        if hashlib.sha256(event_data).hexdigest() != result.get("events_sha256"):
+            return None
+        events = _events(event_data.decode("utf-8"))
+        if _completion_protocol_error(events):
+            return None
+        event_files, error = _generation_files(events, path.parent, expected)
+        if error or {role: str(value) for role, value in event_files.items()} != files:
+            return None
         if any(
-            not Path(value).is_file() or _sha256(Path(value)) != hashes.get(role)
-            for role, value in files.items()
+            not value.is_file() or _sha256(value) != hashes[role]
+            for role, value in event_files.items()
         ):
             return None
-    except (OSError, TypeError, ValueError):
-        return None
-    events_path = path.parent / "events.jsonl"
-    if not events_path.is_file() or _sha256(events_path) != result.get("events_sha256"):
-        return None
-    try:
-        if _completion_protocol_error(_events(events_path.read_text(encoding="utf-8"))):
-            return None
-    except (OSError, UnicodeError):
+    except (OSError, ValueError):
         return None
     demand = _read_package_manifest(files.get("assessment_package")).get(
         "reference_demand"
@@ -799,7 +831,7 @@ def _write_qualification_manifest(
         evidence=evidence,
         reviewer_identity_class="automation",
         tool_versions={
-            "live-generation-matrix": "2",
+            "live-generation-matrix": "3",
             "keldin-backend": str(backend.get("version", BACKEND_VERSION)),
         },
         created_at=datetime.now(UTC),
