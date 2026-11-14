@@ -660,7 +660,7 @@
     "semantic_hash": ""
   },
   "Resources/computer-science/aqa/generator/cspapergen/notes.py": {
-    "mtime": 1794655878.8214908,
+    "mtime": 1794656525.947782,
     "ast_hash": "2e51e107abc55c86d57f6b0f88f8ec23",
     "semantic_hash": ""
   },
@@ -4755,8 +4755,8 @@
     "semantic_hash": ""
   },
   "Backend/Core/france/llm_pipeline.py": {
-    "mtime": 1794387687.4659667,
-    "ast_hash": "0e4a722c921b981aa27cc97e859c4213",
+    "mtime": 1794656525.9103215,
+    "ast_hash": "866b9304c7e2449b0fbe3f8635cd7aea",
     "semantic_hash": ""
   },
   "Backend/Core/france/llm_runtime.py": {
@@ -4805,8 +4805,8 @@
     "semantic_hash": ""
   },
   "tests/test_french_llm_pipeline.py": {
-    "mtime": 1794380802.0251062,
-    "ast_hash": "c7953e90cf3dda7630c480a3aeeb23cd",
+    "mtime": 1794656525.9370716,
+    "ast_hash": "7f59decc1e412b947d2ca7d66f4b9e4b",
     "semantic_hash": ""
   },
   "tests/test_french_llm_runtime.py": {
@@ -6200,7 +6200,7 @@
     "semantic_hash": ""
   },
   "tests/test_cs_notes_cache_integrity.py": {
-    "mtime": 1794655888.6274407,
+    "mtime": 1794656525.947989,
     "ast_hash": "cb7d52b036693bc304f72f2dc45e8ef4",
     "semantic_hash": ""
   },
