@@ -10,12 +10,13 @@ Keychain access limits and the manual import action.
 The editable app icon is `macOS/Keldin/AppIcon.icon`, an Icon Composer
 document with seven separate page shapes.
 
-## French NSI / Occitanie prototype
+## French NSI prototype
 
 An isolated French Terminale NSI written-practice workflow is under development.
 See [architecture and usage](docs/french-baccalaureat.md),
-[current engineering audit and paper comparison](docs/quality/keldin-engineering-and-french-audit-2026-10-26.md)
-and the [Occitanie pilot](docs/occitanie-project.md).
+[engineering audit and paper comparison](docs/quality/keldin-engineering-and-french-audit-2026-10-26.md).
+The past competition activity is archived in the [Occitanie project record](docs/occitanie-project.md).
+It is no longer included in the app. Existing PDFs remain available in Documents.
 The public V36 route creates model-authored drafts with the provider and model
 selected in Settings: Ollama, local MLX, OpenAI, Anthropic or DeepSeek. Hosted
 providers require consent and your own API credits. Apple Intelligence's

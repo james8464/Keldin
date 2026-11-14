@@ -1,5 +1,14 @@
 # Occitanie: original French NSI practice papers
 
+**Archive.** The competition activity is no longer included in Keldin. This
+page retains the project record and the dated status notes below. To recreate
+the independent activity from a source checkout, with the project dependencies
+installed, run:
+
+```sh
+python -m Backend.Core.france.occitanie_case_study --output DIRECTORY
+```
+
 Last updated: 2026-10-28. This is an evidence/status record, not a claim of
 educational approval. No teacher, school, Région, examiner or Ministry endorsement
 has been obtained. No prize application has been submitted.
