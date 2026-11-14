@@ -60,10 +60,6 @@ enum GenerationPresentation {
         switch message {
         case "Keldin is preparing the selected local model.":
             return localized("Keldin is preparing the selected local model.", language: language)
-        case "Préparation de l'extrait public d'Occitanie", "Préparation de l’extrait public d’Occitanie":
-            return localized("Preparing the Occitanie case study", language: language)
-        case "Création de l'activité annulée", "Création de l’activité annulée":
-            return localized("Occitanie case study cancelled.", language: language)
         case "Mise en page et vérification du document":
             return localized("Formatting and checking the document", language: language)
         case "Apple MLX is decoding two tasks together.":
@@ -164,12 +160,6 @@ enum GenerationPresentation {
     static func completion(_ message: String, language: String = "system") -> String {
         if message == "Brouillon NSI généré par le modèle. Consultez les avertissements avant utilisation." {
             return localized("NSI draft created by the model. Read the warnings before use.", language: language)
-        }
-        if [
-            "Activité Occitanie créée. Document indépendant, sans note d'examen.",
-            "Activité Occitanie créée. Document indépendant, sans note d’examen.",
-        ].contains(message) {
-            return localized("Occitanie case study created. Separate activity, without an exam mark.", language: language)
         }
         guard message == "Sujet d'entraînement créé. Barème indicatif, difficulté et durée non calibrées." else {
             return message

@@ -131,6 +131,7 @@ PYINSTALLER_ARGS=(
   --paths "$ROOT_DIR"
   --hidden-import fitz
   --hidden-import keldin_edexcel.cli
+  --exclude-module Backend.Core.france.occitanie_case_study
   --collect-data pymupdf
   --collect-all mlx
   --collect-all mlx_lm
@@ -148,7 +149,7 @@ PYINSTALLER_ARGS=(
   --add-data "$ROOT_DIR/Resources/reference-demand-profiles.json:Resources"
   --add-data "$ROOT_DIR/Resources/level-of-response-policies.json:Resources"
   --add-data "$ROOT_DIR/Resources/board-profiles:Resources/board-profiles"
-  --add-data "$ROOT_DIR/Resources/france:Resources/france"
+  --add-data "$ROOT_DIR/Resources/france/nsi:Resources/france/nsi"
   --add-data "$ROOT_DIR/Backend/Core/fonts:Backend/Core/fonts"
 )
 
@@ -156,7 +157,7 @@ PYINSTALLER_ARGS=(
 # their source modules. Keep those sources, without caches or local evidence.
 while IFS= read -r -d '' french_source; do
   PYINSTALLER_ARGS+=(--add-data "$french_source:Backend/Core/france")
-done < <(find "$ROOT_DIR/Backend/Core/france" -maxdepth 1 -type f -name '*.py' -print0 | sort -z)
+done < <(find "$ROOT_DIR/Backend/Core/france" -maxdepth 1 -type f -name '*.py' ! -name occitanie_case_study.py -print0 | sort -z)
 
 while IFS= read -r python_path; do
   PYINSTALLER_ARGS+=(--paths "$ROOT_DIR/Resources/$python_path")

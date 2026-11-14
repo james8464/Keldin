@@ -86,7 +86,7 @@ def test_public_french_request_uses_model_without_family_fallback_and_verifies_i
     request = (ROOT / "Domain/FrenchLLMAssessmentRequest.swift").read_text()
     application = (ROOT / "State/ApplicationCoordinator.swift").read_text()
     public = application.split("func generateFrenchPaper", 1)[1].split(
-        "func generateOccitanieActivity", 1
+        "func savedFrenchFamilies", 1
     )[0]
     for flag in ('"--provider"', '"--model"', '"--authoring-version", "v36"'):
         assert flag in request

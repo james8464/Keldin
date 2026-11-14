@@ -650,34 +650,6 @@ final class ApplicationCoordinator: ObservableObject {
         } catch { finishRun(.failure(error), from: session) }
     }
 
-    func generateOccitanieActivity() {
-        guard !isRunning, !benchmarkCoordinator.isRunning, !isImportingPreviousData else { return }
-        progressEntries.removeAll()
-        lastQualityReport = nil
-        lastFrenchDraftQualityReport = nil
-        generationProgress = nil
-        status = InterfaceText.resolve("Preparing the Occitanie case study", language: presentationLanguage)
-        let working = generationRecordsFolder.appendingPathComponent(UUID().uuidString, isDirectory: true)
-        let session = beginRunSession(
-            intent: .occitanieActivity,
-            documents: RunDocuments(
-                frameworkID: "occitanie-nsi-case-study",
-                subject: "Étude de cas Occitanie", paper: "Activité indépendante, sans note d’examen",
-                workingFolder: working
-            ), model: ""
-        )
-        do {
-            let process = try backend.run(arguments: ["generate-occitanie-case-study", "--output", working.path], environment: [:]) { [weak self] event in
-                self?.apply(event, from: session)
-            } onFinish: { [weak self] result in
-                self?.finishRun(result, from: session)
-            }
-            if activeRun?.id == session { activeRun?.process = process }
-        } catch {
-            finishRun(.failure(error), from: session)
-        }
-    }
-
     /// Catalogue use survives the configurable job-history limit and output moves.
     func savedFrenchFamilies() throws -> [Int] {
         guard !defaults.bool(forKey: KeldinMigration.frenchFamilyImportFailedKey) else {
@@ -1832,8 +1804,6 @@ final class ApplicationCoordinator: ObservableObject {
         switch run.intent {
         case .paper:
             finishGeneration(result, run: run)
-        case .occitanieActivity:
-            finishOccitanieActivity(result, run: run)
         case .referencePreparation, .reviewRecord:
             finishMaintenance(result, run: run)
         case .modelPull:
@@ -1868,34 +1838,6 @@ final class ApplicationCoordinator: ObservableObject {
         pendingMLXSetupRetryTarget = run.retryTarget
         status = InterfaceText.resolve("Model download size checked", language: presentationLanguage)
         showMLXSetupConfirmation = true
-    }
-
-    private func finishOccitanieActivity(_ result: Result<Int32, Error>, run: BackendRun) {
-        guard case .success(0) = result, run.backendErrorMessage == nil else {
-            finishMaintenance(result, run: run)
-            return
-        }
-        do {
-            guard let working = run.documents.workingFolder else { throw CocoaError(.fileReadInvalidFileName) }
-            let source = working.appendingPathComponent("occitanie-nsi-etude-de-cas").standardizedFileURL
-            let expected = ["question_paper": "occitanie-nsi-activite.pdf", "mark_scheme": "occitanie-nsi-correction.pdf"]
-            guard currentGenerationFiles.count == expected.count,
-                  Set(currentGenerationFiles.map(\.role)) == Set(expected.keys),
-                  currentGenerationFiles.allSatisfy({
-                      $0.url.deletingLastPathComponent().standardizedFileURL == source
-                          && $0.url.lastPathComponent == expected[$0.role]
-                  }) else { throw CocoaError(.fileReadCorruptFile) }
-            try publishUKGeneratedFiles(from: source, to: outputFolder)
-            generationProgress = 1
-            persistRecentDocuments()
-            if let activity = currentGenerationFiles.first(where: { $0.role == "question_paper" }) {
-                previewedFileID = activity.id
-                sidebarSelection = .documents
-            }
-        } catch {
-            setError(InterfaceText.resolve("The case study could not be saved. Try again or choose another output folder.", language: presentationLanguage))
-            progressEntries.append(ProgressEntry(stage: "publication", message: error.localizedDescription))
-        }
     }
 
     private func finishMaintenance(_ result: Result<Int32, Error>, run: BackendRun) {
@@ -2138,8 +2080,8 @@ final class ApplicationCoordinator: ObservableObject {
             generatedFiles = latestDocumentVersions(jobArtifacts)
             return true
         }
-        // Independent activities have no exam job identity. Keep their document
-        // records alongside the authoritative artifacts from full-paper jobs.
+        // Preserve saved Occitanie PDFs from releases that offered the activity.
+        // They have no exam job identity and cannot be recovered from job history.
         let relocated = documents.map { KeldinMigration.relocatedArtifact($0, defaults: defaults) }
         let independent = relocated.filter { $0.subject == "Étude de cas Occitanie" && $0.paper == "Activité indépendante, sans note d’examen" }
         guard !jobArtifacts.isEmpty else {
@@ -2331,11 +2273,11 @@ private enum RunningOperation {
 }
 
 private enum BackendRunIntent {
-    case paper, occitanieActivity, referencePreparation, reviewRecord, modelPull, mlxSetup, mlxDownloadInfo
+    case paper, referencePreparation, reviewRecord, modelPull, mlxSetup, mlxDownloadInfo
 
     var operation: RunningOperation {
         switch self {
-        case .paper, .occitanieActivity: .generation
+        case .paper: .generation
         case .referencePreparation, .reviewRecord, .mlxDownloadInfo: .none
         case .modelPull: .modelPull
         case .mlxSetup: .mlxSetup

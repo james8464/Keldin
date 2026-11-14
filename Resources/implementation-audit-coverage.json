@@ -6034,11 +6034,8 @@
     {
       "path": "macOS/Keldin/Features/Generation/FrenchAssessmentWorkspace.swift",
       "classification": "maintained-source",
-      "status": "reviewed",
-      "reason": "Complete-file EOF implementation review by release_gap_audit within the documented scope; exact source identity checked after integration. Dependencies, runtime acceptance and whole-project completion remain separate.",
-      "source_sha256": "e28f1a94f13b7e72d00ce75f549439c0892310e918c7438e1fc3cfb32d5f29cd",
-      "review_evidence": "docs/quality/native-interface-file-reviews-2026-11-02.md",
-      "review_evidence_sha256": "4665323a90eb980561527f316487a28a58b13867782b9f9d50847d66b6c390fd"
+      "status": "pending",
+      "reason": "No file-level semantic implementation review recorded in this ledger."
     },
     {
       "path": "macOS/Keldin/Features/Generation/GenerationGuidanceViews.swift",
@@ -6562,11 +6559,8 @@
     {
       "path": "macOS/scripts/build_backend.sh",
       "classification": "maintained-source",
-      "status": "reviewed",
-      "reason": "Root read original 230-line EOF and every repair; independent review checked explicit failure propagation and font payload identity. Actual signed build remains a separate release gate.",
-      "source_sha256": "bbe9d298c278b156ade7e31884d3ea9132ff1ccdd5780e579043be8be4e86d83",
-      "review_evidence": "docs/quality/model-download-and-packaging-input-review-2026-11-02.md",
-      "review_evidence_sha256": "9f13e6fbd83877c17dbad7659d266ce11619458437938f95242ecd585565908e"
+      "status": "pending",
+      "reason": "No file-level semantic implementation review recorded in this ledger."
     },
     {
       "path": "macOS/scripts/clean.sh",
