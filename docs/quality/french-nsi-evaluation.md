@@ -222,13 +222,21 @@ selecting a French recommendation; correctness and French NSI teacher judgement
 outweigh speed. Then use ten new whole-paper seeds. Quantisation changes need
 fresh evidence. Missing hardware is untested, never an inferred pass.
 
-The executable protocol is `tools/run_french_nsi_qualification.command`. It runs
-ten complete papers per model, giving thirty exercises per configuration. A global
-lock prevents duplicate campaigns. Accepted checkpoints are reused only when the
-implementation hash, reference-index hash, model digest and seed match. Failed
-attempts remain failures unless an explicit reviewed retry is requested.
+The historical integrity runner, `tools/run_french_nsi_qualification.command`,
+pins V32. Its application-owned papers exercise rendering and checkpoint integrity;
+its model labels do not represent live inference. Do not use this runner to qualify
+the current French route.
 
-An accepted run is resumed only when its manifest fingerprint, assessment identity
+For current live evidence, run a signed backend's `generate-assessment` command
+with `--assessment fr-bac-general-nsi-written-2027 --authoring-version v36` and
+an explicit supported provider, pinned model, seed and read-only reference index.
+Use a fresh output directory. Keep the backend binary hash, exit status, event log
+and any resulting package and PDF hashes. A cancellation or refusal, even after
+an authoring progress event, is not a completed paper. Compare any completed
+subject and correction to held-out official papers and apply the rubric below
+before recording a live quality pass.
+
+The historical runner resumes an accepted run only when its manifest fingerprint, assessment identity
 and every recorded artifact hash still match. If accepted evidence is missing or
 changed, the runner stops before contacting the model; investigate and preserve
 the directory rather than silently replacing the paper.
