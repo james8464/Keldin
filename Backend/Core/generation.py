@@ -116,6 +116,11 @@ def handle_generate(args: argparse.Namespace) -> int:
                     receipt_available = True
                 except OSError:
                     pass
+            emit_progress(
+                "Checking documents before saving",
+                stage="checking_documents",
+                progress=0.97,
+            )
             published = finalize_generated_documents(
                 args=args,
                 capability=capability,

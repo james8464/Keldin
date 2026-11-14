@@ -299,6 +299,22 @@ def test_economics_dry_run_generates_expected_files(tmp_path: Path) -> None:
     assert all("progress" in event for event in events if event["type"] == "progress")
     assert not (tmp_path / "paper-1-audit.json").exists()
     assert events[-1]["type"] == "done"
+    checking = next(
+        index
+        for index, event in enumerate(events)
+        if event.get("stage") == "checking_documents"
+    )
+    complete = [
+        index
+        for index, event in enumerate(events)
+        if event["type"] == "progress" and event.get("progress") == 1.0
+    ]
+    file_indices = [
+        index for index, event in enumerate(events) if event["type"] == "file"
+    ]
+    assert checking < min(file_indices)
+    assert complete == [len(events) - 2]
+    assert max(file_indices) < complete[0]
     manifest = json.loads(files["package_manifest"].read_text(encoding="utf-8"))
     assert manifest["schema_version"] == 2
     assert manifest["generator"]["content_mode"] == "ai-assisted"

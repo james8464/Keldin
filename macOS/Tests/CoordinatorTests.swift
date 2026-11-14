@@ -160,6 +160,21 @@ final class CoordinatorTests: XCTestCase {
     }
 
     @MainActor
+    func testDocumentCheckingProgressDoesNotClaimCompletion() {
+        let message = "Checking documents before saving"
+        XCTAssertEqual(GenerationPresentation.progress(message, language: "en"), message)
+        XCTAssertEqual(
+            GenerationPresentation.progress(message, language: "fr"),
+            "Vérification des documents avant enregistrement"
+        )
+        let model = isolatedApplication()
+        model.apply(.progress(stage: "checking_documents", message: message, progress: 0.97))
+        XCTAssertEqual(model.generationProgress, 0.97)
+        XCTAssertEqual(model.progressEntries.last?.stage, "checking_documents")
+        XCTAssertTrue(model.generatedFiles.isEmpty)
+    }
+
+    @MainActor
     func testMLXBatchProgressUsesPlainLocalizedCopyAndKeepsDiagnostics() {
         for (stage, message, english, french) in [
             ("provider_batch", "Apple MLX is decoding two tasks together.",

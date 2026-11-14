@@ -36,6 +36,14 @@ def test_legacy_status_messages_do_not_move_progress_backwards(capsys):
     assert json.loads(capsys.readouterr().out)["progress"] == prior
 
 
+def test_family_done_does_not_report_publication(capsys):
+    progress = progress_emitter()
+    progress("Rendering mark scheme")
+    capsys.readouterr()
+    progress("Done")
+    assert capsys.readouterr().out == ""
+
+
 @pytest.mark.parametrize("counts", ["0/3", "4/3", "1/0"])
 def test_invalid_review_counts_do_not_invent_progress(capsys, counts):
     progress = progress_emitter()

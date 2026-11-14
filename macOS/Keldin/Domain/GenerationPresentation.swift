@@ -62,6 +62,8 @@ enum GenerationPresentation {
             return localized("Keldin is preparing the selected local model.", language: language)
         case "Mise en page et vérification du document":
             return localized("Formatting and checking the document", language: language)
+        case "Checking documents before saving":
+            return localized("Checking documents before saving", language: language)
         case "Apple MLX is decoding two tasks together.":
             return localized("Apple MLX is working on two tasks.", language: language)
         case "Apple MLX is using serial decoding for this model or prompt pair.":

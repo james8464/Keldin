@@ -487,11 +487,8 @@
     {
       "path": "Backend/Core/events.py",
       "classification": "maintained-source",
-      "status": "reviewed",
-      "reason": "Root read complete current source through EOF; bounded dependencies and qualification limits are documented.",
-      "source_sha256": "b0397269b8fd17aed06db7d3e6623b673a2d7d316d788882f98cbfe18c3f1c27",
-      "review_evidence": "docs/quality/model-download-and-packaging-input-review-2026-11-02.md",
-      "review_evidence_sha256": "9f13e6fbd83877c17dbad7659d266ce11619458437938f95242ecd585565908e"
+      "status": "pending",
+      "reason": "No file-level semantic implementation review recorded in this ledger."
     },
     {
       "path": "Backend/Core/exam_blueprints.py",
