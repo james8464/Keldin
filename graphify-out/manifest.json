@@ -4020,7 +4020,7 @@
     "semantic_hash": ""
   },
   "Resources/implementation-audit-coverage.json": {
-    "mtime": 1794663289.9405293,
+    "mtime": 1794664003.4051778,
     "ast_hash": "d6e84a9ace0991def3116dd6bdd675d9",
     "semantic_hash": ""
   },
@@ -4830,8 +4830,8 @@
     "semantic_hash": ""
   },
   "tests/test_native_model_quality_guidance.py": {
-    "mtime": 1793671369.457223,
-    "ast_hash": "ce67dd0799367d599fefe6d40641c804",
+    "mtime": 1794664644.9645011,
+    "ast_hash": "0ec1fb21c393c7008e7d8909916fe4ed",
     "semantic_hash": ""
   },
   "tools/french_model_capability.py": {
@@ -6235,8 +6235,8 @@
     "semantic_hash": ""
   },
   "tests/test_french_postrename_cleanup.py": {
-    "mtime": 1794663025.142802,
-    "ast_hash": "990cf30ce3cd0c5990b34f4653df711c",
+    "mtime": 1794664644.9652712,
+    "ast_hash": "f79c6061c5bcf525d4edeb62e5654b94",
     "semantic_hash": ""
   },
   "docs/quality/cs1-on-screen-source-flow-review-2026-11-07.md": {

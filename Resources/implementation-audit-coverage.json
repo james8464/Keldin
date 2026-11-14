@@ -8608,11 +8608,8 @@
     {
       "path": "tests/test_native_model_quality_guidance.py",
       "classification": "test",
-      "status": "reviewed",
-      "reason": "Complete 174-line source-contract test file read through EOF; bounded warning scope, retained catalogue entries and memory/status presentation contracts reviewed. Static checks do not establish native runtime behavior or paper quality.",
-      "source_sha256": "3d2b2cf4fdde6dfa00f988d10fe4e243838c33bd0815e8e068d9f47251d188e9",
-      "review_evidence": "docs/quality/edexcel-mark-scheme-cell-wrapping-2026-11-03.md",
-      "review_evidence_sha256": "1802aa5724a2ca0b24d29b950273519f06009f09f88fe095e4193c2a58dd9ea4"
+      "status": "pending",
+      "reason": "No file-level semantic implementation review recorded in this ledger."
     },
     {
       "path": "tests/test_native_status_contrast.py",

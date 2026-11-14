@@ -85,7 +85,8 @@ def test_model_quality_guidance_is_separate_from_memory_suggestions():
     settings = (APP / "Features/Settings/SettingsPane.swift").read_text()
     assert 'Text("Memory fit")' in workspace
     assert 'Text("Recommended")' not in workspace
-    assert 'LabeledContent("Memory-fit suggestion")' in settings
+    assert 'LabeledContent("Suggestion based on total memory")' in settings
+    assert 'LabeledContent("Estimated to fit now"' in settings
     assert 'Label("Recommended model selected"' not in settings
 
 
