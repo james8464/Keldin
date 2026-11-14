@@ -9,6 +9,8 @@ enum AppDefaults {
     static let deepSeekModel = "deepseek-flash"
     static let deepSeekModels = ["deepseek-flash", "deepseek-v4-pro"]
     static let deepSeekConsentVersion = "deepseek-french-references-v1"
+    static let openAIConsentVersion = "openai-generation-v1"
+    static let anthropicConsentVersion = "anthropic-generation-v1"
     static let appleModel = "mlx-community/Llama-3.2-3B-Instruct-4bit"
     static let ollamaURL = "http://localhost:11434"
     static let benchmarkDurationSeconds = 30.0
@@ -92,6 +94,8 @@ enum AppDefaults {
 enum AppStorageKey {
     static let aiProvider = "aiProvider"
     static let hostedAIConsentAccepted = "hostedAIConsentAccepted"
+    static let openAIConsentVersion = "openAIConsentVersion"
+    static let anthropicConsentVersion = "anthropicConsentVersion"
     static let deepSeekConsentVersion = "deepSeekConsentVersion"
     static let ollamaModel = "ollamaModel"
     static let openAIModel = "openAIModel"

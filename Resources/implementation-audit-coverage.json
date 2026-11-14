@@ -5668,11 +5668,8 @@
     {
       "path": "macOS/Keldin/Application/AppConfiguration.swift",
       "classification": "maintained-source",
-      "status": "reviewed",
-      "reason": "All 141 lines. Defaults, storage names, home-path abbreviation, output-folder choices and application links were inspected with bounded startup and bookmark callers. No concrete defect was established. Permission, disk and every-user behaviour are not certified.",
-      "source_sha256": "75e53a74d0870ac0e69cfaf20bad0706a421c3e832135845437c06bfeee31859",
-      "review_evidence": "docs/quality/implementation-audit-reconciliation-2026-11-10.md",
-      "review_evidence_sha256": "799d0c38f8fce9352aa3b7697bae3e7e9bd9ccf480cafc45c12e94e6d1582c10"
+      "status": "pending",
+      "reason": "No file-level semantic implementation review recorded in this ledger."
     },
     {
       "path": "macOS/Keldin/Application/KeldinApp.swift",

@@ -1,6 +1,8 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "OpenAI receives generation prompts, selected reference context, draft questions and review requests at api.openai.com. Requests use your API credits. Keldin stores your key in Keychain and sends it to OpenAI for authentication.": {"localizations":{"fr":{"stringUnit":{"state":"translated","value":"OpenAI reçoit les consignes de génération, des éléments des références sélectionnées, les brouillons de questions et les demandes de vérification sur api.openai.com. Les requêtes utilisent vos crédits API. Keldin conserve votre clé dans le Trousseau et l’envoie à OpenAI pour l’authentification."}}}},
+    "Anthropic receives generation prompts, selected reference context, draft questions and review requests at api.anthropic.com. Requests use your API credits. Keldin stores your key in Keychain and sends it to Anthropic for authentication.": {"localizations":{"fr":{"stringUnit":{"state":"translated","value":"Anthropic reçoit les consignes de génération, des éléments des références sélectionnées, les brouillons de questions et les demandes de vérification sur api.anthropic.com. Les requêtes utilisent vos crédits API. Keldin conserve votre clé dans le Trousseau et l’envoie à Anthropic pour l’authentification."}}}},
     "Check this Mac": {"localizations":{"fr":{"stringUnit":{"state":"translated","value":"Vérifier ce Mac"}}}},
     "Checking memory and disk space…": {"localizations":{"fr":{"stringUnit":{"state":"translated","value":"Vérification de la mémoire et de l’espace disque…"}}}},
     "Estimated to fit now": {"localizations":{"fr":{"stringUnit":{"state":"translated","value":"Compatible selon l’estimation actuelle"}}}},

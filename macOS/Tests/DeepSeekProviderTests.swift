@@ -34,6 +34,31 @@ final class DeepSeekProviderTests: XCTestCase {
     }
 
     @MainActor
+    func testLegacyHostedConsentDoesNotApproveEitherDestination() {
+        let defaults = isolatedDefaults()
+        defaults.set(true, forKey: AppStorageKey.hostedAIConsentAccepted)
+        let backend = ControlledRunBackend()
+        let app = isolatedApplication(defaults: defaults, backend: backend)
+        XCTAssertFalse(app.hasHostedAIConsent(for: .openAI))
+        XCTAssertFalse(app.hasHostedAIConsent(for: .anthropic))
+    }
+
+    @MainActor
+    func testAcceptingOpenAIDoesNotApproveAnthropic() {
+        let backend = ControlledRunBackend()
+        let app = isolatedApplication(defaults: isolatedDefaults(), backend: backend)
+        app.selectAIProvider(.openAI)
+        app.acceptHostedAIConsent()
+        XCTAssertTrue(app.hasHostedAIConsent(for: .openAI))
+        XCTAssertFalse(app.hasHostedAIConsent(for: .anthropic))
+        app.selectAIProvider(.anthropic)
+        XCTAssertTrue(app.showHostedAIConsent)
+        app.cancelHostedAIConsent()
+        XCTAssertEqual(app.aiProvider, .openAI)
+        XCTAssertTrue(backend.requests.isEmpty)
+    }
+
+    @MainActor
     func testDeepSeekConsentIsVersionedAndNeverBorrowedFromOtherProviders() {
         let defaults = isolatedDefaults()
         defaults.set(true, forKey: AppStorageKey.hostedAIConsentAccepted)

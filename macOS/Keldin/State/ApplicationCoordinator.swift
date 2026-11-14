@@ -257,10 +257,8 @@ final class ApplicationCoordinator: ObservableObject {
     }
 
     func hasHostedAIConsent(for provider: AIProvider) -> Bool {
-        if provider == .deepSeek {
-            return defaults.string(forKey: AppStorageKey.deepSeekConsentVersion) == AppDefaults.deepSeekConsentVersion
-        }
-        return defaults.bool(forKey: AppStorageKey.hostedAIConsentAccepted)
+        guard let consent = hostedConsentRecord(for: provider) else { return false }
+        return defaults.string(forKey: consent.key) == consent.version
     }
 
     var pendingHostedDisclosureResource: LocalizedStringResource {
@@ -268,10 +266,17 @@ final class ApplicationCoordinator: ObservableObject {
     }
 
     private func recordHostedAIConsent(for provider: AIProvider) {
-        if provider == .deepSeek {
-            defaults.set(AppDefaults.deepSeekConsentVersion, forKey: AppStorageKey.deepSeekConsentVersion)
-        } else {
-            defaults.set(true, forKey: AppStorageKey.hostedAIConsentAccepted)
+        guard let consent = hostedConsentRecord(for: provider) else { return }
+        defaults.set(consent.version, forKey: consent.key)
+    }
+
+    private func hostedConsentRecord(for provider: AIProvider) -> (key: String, version: String)? {
+        // The previous shared approval did not identify a destination.
+        switch provider {
+        case .openAI: (AppStorageKey.openAIConsentVersion, AppDefaults.openAIConsentVersion)
+        case .anthropic: (AppStorageKey.anthropicConsentVersion, AppDefaults.anthropicConsentVersion)
+        case .deepSeek: (AppStorageKey.deepSeekConsentVersion, AppDefaults.deepSeekConsentVersion)
+        case .ollama, .apple, .appleIntelligence: nil
         }
     }
 
