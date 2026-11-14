@@ -26,7 +26,7 @@ struct WelcomeSheet: View {
 
             VStack(alignment: .leading, spacing: 18) {
                 WelcomeRow(systemImage: "text.book.closed", title: "Choose a subject", message: "Choose the subject and assessment you want to practise.")
-                WelcomeRow(systemImage: "cpu", title: "Use the recommended model", message: "Keldin recommends \(application.ollamaRecommendation.model) for this Mac; other models can produce different results.")
+                WelcomeRow(systemImage: "cpu", title: "Check local model fit", message: "If you use Ollama, choose Check this Mac in Settings to see which models are estimated to fit.")
                 WelcomeRow(systemImage: "doc.badge.arrow.up", title: "Create both documents", message: "The question paper and mark scheme are saved together.")
                 WelcomeRow(systemImage: "doc.richtext", title: "Preview and review", message: "Inspect every generated PDF in Documents and return to any configuration from History.")
             }

@@ -2,6 +2,8 @@
   "sourceLanguage": "en",
   "strings": {
     "Check this Mac": {"localizations":{"fr":{"stringUnit":{"state":"translated","value":"Vérifier ce Mac"}}}},
+    "Check local model fit": {"localizations":{"fr":{"stringUnit":{"state":"translated","value":"Vérifier la compatibilité des modèles locaux"}}}},
+    "If you use Ollama, choose Check this Mac in Settings to see which models are estimated to fit.": {"localizations":{"fr":{"stringUnit":{"state":"translated","value":"Si vous utilisez Ollama, choisissez « Vérifier ce Mac » dans les réglages pour voir quels modèles semblent compatibles."}}}},
     "Checking memory and disk space…": {"localizations":{"fr":{"stringUnit":{"state":"translated","value":"Vérification de la mémoire et de l’espace disque…"}}}},
     "Estimated to fit now": {"localizations":{"fr":{"stringUnit":{"state":"translated","value":"Compatible selon l’estimation actuelle"}}}},
     "This is a memory and disk estimate, not a paper-quality check.": {"localizations":{"fr":{"stringUnit":{"state":"translated","value":"Cette estimation porte sur la mémoire et le stockage, pas sur la qualité des sujets."}}}},
