@@ -17,6 +17,8 @@ final class DocumentRecoveryInteractiveTests: XCTestCase {
             ($0, NSDictionary(dictionary: UserDefaults.standard.persistentDomain(forName: $0) ?? [:]))
         })
         let panelFolderKey = "NSOSPLastRootDirectory"
+        let goToFolderFrameKey = "NSWindow Frame GoToSheet"
+        let pickerKeys = [panelFolderKey, goToFolderFrameKey]
         let panelFolderBefore = standardBefore[hostDomain]?[panelFolderKey]
         let suite = "Keldin.DocumentRecovery.\(UUID().uuidString)"
         let defaults = try XCTUnwrap(UserDefaults(suiteName: suite))
@@ -41,31 +43,38 @@ final class DocumentRecoveryInteractiveTests: XCTestCase {
             window.contentView = nil
             window.close()
             let panelFolderNow = UserDefaults.standard.persistentDomain(forName: hostDomain)?[panelFolderKey]
-            let previous = NSDictionary(dictionary: panelFolderBefore.map { [panelFolderKey: $0] } ?? [:])
-            let current = NSDictionary(dictionary: panelFolderNow.map { [panelFolderKey: $0] } ?? [:])
-            if previous != current {
-                let otherKeysUnchanged = standardBefore.allSatisfy { domain, original in
-                    guard let before = original.mutableCopy() as? NSMutableDictionary else { return false }
-                    let after = NSMutableDictionary(dictionary: UserDefaults.standard.persistentDomain(forName: domain) ?? [:])
-                    before.removeObject(forKey: panelFolderKey)
-                    after.removeObject(forKey: panelFolderKey)
-                    return before == after
+            let bookmarkChanged = (panelFolderBefore as? NSObject) != (panelFolderNow as? NSObject)
+            let otherKeysUnchanged = standardBefore.allSatisfy { domain, original in
+                let after = UserDefaults.standard.persistentDomain(forName: domain) ?? [:]
+                return changedPreferenceKeys(original, after).isSubset(of: domain == hostDomain ? Set(pickerKeys) : [])
+            }
+            var stale = false
+            let restored = (panelFolderNow as? Data).flatMap {
+                try? URL(resolvingBookmarkData: $0, options: [.withoutUI, .withoutMounting],
+                    relativeTo: nil, bookmarkDataIsStale: &stale)
+            }
+            let pickerUsedOwnedFolder = restored?.resolvingSymlinksInPath().standardizedFileURL
+                == folder.resolvingSymlinksInPath().standardizedFileURL
+            if otherKeysUnchanged && (!bookmarkChanged || pickerUsedOwnedFolder) {
+                // AppKit also persists the frame of Go to Folder. Restore only
+                // the preferences owned by this fixture's picker interaction.
+                for key in pickerKeys {
+                    if let previous = standardBefore[hostDomain]?[key] {
+                        UserDefaults.standard.set(previous, forKey: key)
+                    } else {
+                        UserDefaults.standard.removeObject(forKey: key)
+                    }
                 }
-                var stale = false
-                if otherKeysUnchanged, let bookmark = panelFolderNow as? Data,
-                   let restored = try? URL(resolvingBookmarkData: bookmark,
-                    options: [.withoutUI, .withoutMounting], relativeTo: nil, bookmarkDataIsStale: &stale),
-                   restored.resolvingSymlinksInPath().standardizedFileURL == folder.resolvingSymlinksInPath().standardizedFileURL {
-                    if let panelFolderBefore { UserDefaults.standard.set(panelFolderBefore, forKey: panelFolderKey) }
-                    else { UserDefaults.standard.removeObject(forKey: panelFolderKey) }
-                    UserDefaults.standard.synchronize()
-                } else { XCTFail("Refused cleanup of unrelated or unresolvable picker preference state.") }
+                UserDefaults.standard.synchronize()
+            } else {
+                XCTFail("Refused cleanup of unrelated or unresolvable picker preference state.")
             }
             defaults.removePersistentDomain(forName: suite)
             try? FileManager.default.removeItem(at: folder)
             for (domain, original) in standardBefore {
-                XCTAssertEqual(original, NSDictionary(dictionary:
-                    UserDefaults.standard.persistentDomain(forName: domain) ?? [:]))
+                let after = UserDefaults.standard.persistentDomain(forName: domain) ?? [:]
+                let changed = changedPreferenceKeys(original, after)
+                XCTAssertTrue(changed.isEmpty, "Changed preference keys: \(changed.sorted())")
             }
         }
         controller.update(file: GeneratedFile(role: "question_paper", url: expected), provenance: nil)
@@ -87,6 +96,12 @@ final class DocumentRecoveryInteractiveTests: XCTestCase {
         XCTAssertEqual(try Data(contentsOf: other), otherBytes)
         XCTAssertEqual(try Data(contentsOf: sentinel), sentinelBytes)
         XCTAssertEqual(defaults.data(forKey: AppStorageKey.outputFolderBookmark), outputGrant)
+    }
+
+    private func changedPreferenceKeys(_ original: NSDictionary, _ current: [String: Any]) -> Set<String> {
+        Set(original.allKeys.compactMap { $0 as? String }).union(current.keys).filter { key in
+            (original[key] as? NSObject) != (current[key] as? NSObject)
+        }
     }
 
     @MainActor
