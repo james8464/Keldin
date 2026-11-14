@@ -107,6 +107,13 @@ checks every integration surface and executes a fixed-seed preview before a
 family can be advertised. Plugin identifiers are resolved through allow-lists;
 manifest strings can never import an arbitrary file or module path.
 
+An adapter declares each primary PDF by role and filename before rendering.
+Use a distinct role and a distinct basename per file, including on macOS
+volumes that ignore case. The shared runner reserves the assessment package
+name. Supporting files are written separately and checked against the same
+rules before they join the primary PDFs. A bad declaration cannot replace
+a previously saved paper.
+
 The bundle script expands every registry package into explicit PyInstaller
 hidden imports. Its internal `bundle-check` command then imports all declared
 entry points and verifies every syllabus asset inside the completed helper.

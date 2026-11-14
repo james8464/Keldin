@@ -4,10 +4,12 @@ import subprocess
 import sys
 from copy import deepcopy
 from pathlib import Path
+from shutil import copyfile
 
 import pymupdf
 import pytest
 from aqaaccountgen.cli import generate_package
+from aqaaccountgen.marking_policy import RETIREMENT_TABLE_KEY
 from aqaaccountgen.render_pdf import render_mark_scheme
 
 from Backend.Core.assessment_package import _extract_items
@@ -15,16 +17,36 @@ from Backend.Core.exam_blueprints import GeneratedPaper
 from Backend.Core.layout_conformance import conform_generated_documents
 from Backend.Core.layout_master import LayoutConformanceError
 
+_CAPITAL_HEADINGS = [
+    "Date",
+    "Details",
+    "Alex £",
+    "Morgan £",
+    "Date",
+    "Details",
+    "Alex £",
+    "Morgan £",
+]
 
-@pytest.fixture
-def paths(tmp_path):
+
+@pytest.fixture(scope="module")
+def baseline_paths(tmp_path_factory):
     return generate_package(
         paper="1",
-        output_dir=tmp_path,
+        output_dir=tmp_path_factory.mktemp("accounting-scheme"),
         seed=270100,
         dry_run=True,
         syllabus_path=Path("Resources/accounting/aqa/generator/data/syllabus.json"),
     )
+
+
+@pytest.fixture
+def paths(tmp_path, baseline_paths):
+    # Every mutation gets its own files without rerendering the same seed.
+    return {
+        role: Path(copyfile(source, tmp_path / source.name))
+        for role, source in baseline_paths.items()
+    }
 
 
 def test_compact_accounting_scheme_has_an_explicit_printed_credit_policy(paths):
@@ -36,6 +58,66 @@ def test_compact_accounting_scheme_has_an_explicit_printed_credit_policy(paths):
     assert report["checked_credit_statements"] > 40
 
 
+def test_income_statement_print_exposes_both_interest_periods(paths):
+    with pymupdf.open(paths["question_paper"]) as pdf:
+        case = " ".join(pdf[11].get_text().split())
+        task = " ".join(pdf[12].get_text().split())
+    with pymupdf.open(paths["mark_scheme"]) as pdf:
+        solution = " ".join(pdf[12].get_text().split())
+        workings = " ".join(pdf[14].get_text().split())
+    assert "year ended 31 December" in case and "year ended 31 December" in task
+    assert "year ended 31 December" in solution
+    assert "was outstanding on 1 January and repaid in full on 31 October" in case
+    assert "was issued on 1 September" in case
+    assert "6% × 4/12" in workings and "8% × 10/12" in workings
+
+
+def test_partnership_solution_balances_and_brings_capital_down(paths):
+    with pymupdf.open(paths["mark_scheme"]) as pdf:
+        table = _table(pdf, 17, _CAPITAL_HEADINGS).extract()
+    carried = next(row for row in table if row[1] == "Balance c/d")
+    assert carried[0] == "31 Aug"
+    totals, opening = table[-2:]
+    assert totals[2:4] == totals[6:8]
+    assert opening[:6] == ["", "", "", "", "1 Sep", "Balance b/d"]
+    assert opening[6:8] == carried[2:4]
+
+
+def test_partnership_close_date_is_verified_not_just_its_credit(paths):
+    with pymupdf.open(paths["mark_scheme"]) as pdf:
+        table = _table(pdf, 17, _CAPITAL_HEADINGS)
+        _replace_cell(pdf[17], table.rows[3].cells[0], "31 Dec")
+        pdf.saveIncr()
+    with pytest.raises(
+        LayoutConformanceError, match=r"printed awards differ for 15\.1"
+    ):
+        conform_generated_documents("accounting_aqa", "1", paths)
+
+
+def test_historical_partnership_table_still_replays(paths):
+    package_path = paths["assessment_package"]
+    package = json.loads(package_path.read_text(encoding="utf-8"))
+    blueprint = package["blueprint"]
+    question = next(
+        question
+        for section in blueprint["sections"]
+        for option in section["options"]
+        for question in option["questions"]
+        if question["rule_id"] == "partnership_1"
+    )
+    question["authoring_context"].pop(RETIREMENT_TABLE_KEY)
+    package["items"] = _extract_items(
+        blueprint, subject=package["subject"], paper_number="1"
+    )
+    package_path.write_text(json.dumps(package), encoding="utf-8")
+    render_mark_scheme(GeneratedPaper.model_validate(blueprint), paths["mark_scheme"])
+    with pymupdf.open(paths["mark_scheme"]) as pdf:
+        rows = _table(pdf, 17, _CAPITAL_HEADINGS).extract()
+        assert len(rows) == 4
+        assert rows[-1][:2] == ["31 Dec", "Balance c/d"]
+    conform_generated_documents("accounting_aqa", "1", paths)
+
+
 @pytest.mark.parametrize(
     "mutation",
     [
@@ -43,6 +125,7 @@ def test_compact_accounting_scheme_has_an_explicit_printed_credit_policy(paths):
         "missing-page",
         "missing-credit",
         "policy",
+        "retirement-policy",
         "items",
         "missing-package",
     ],
@@ -50,15 +133,20 @@ def test_compact_accounting_scheme_has_an_explicit_printed_credit_policy(paths):
 def test_compact_accounting_scheme_refuses_incomplete_or_forged_credit(paths, mutation):
     if mutation == "missing-package":
         paths.pop("assessment_package")
-    elif mutation in {"policy", "items"}:
+    elif mutation in {"policy", "retirement-policy", "items"}:
         path = paths["assessment_package"]
         data = json.loads(path.read_text(encoding="utf-8"))
         if mutation == "items":
             data["items"].pop()
-        else:
+        elif mutation == "policy":
             data["blueprint"]["sections"][0]["options"][0]["questions"][10][
                 "authoring_context"
             ]["accounting_marking_policy"] = "unknown"
+        else:
+            data["blueprint"]["sections"][1]["options"][0]["questions"][2][
+                "authoring_context"
+            ][RETIREMENT_TABLE_KEY] = "unknown"
+        if mutation != "items":
             data["items"] = _extract_items(
                 data["blueprint"], subject=data["subject"], paper_number="1"
             )

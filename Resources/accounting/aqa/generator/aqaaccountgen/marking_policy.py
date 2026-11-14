@@ -8,6 +8,19 @@ from typing import Literal, TypedDict
 from Backend.Core.exam_blueprints import GeneratedQuestion, MarkSchemePoint
 
 MARKING_POLICY_ID = "aqa-accounting-explicit-credit-v1"
+RETIREMENT_TABLE_KEY = "partnership_capital_table"
+RETIREMENT_TABLE_POLICY = "retirement-period-v1"
+
+
+def use_retirement_period_table(question: GeneratedQuestion) -> bool:
+    context = question.authoring_context
+    if RETIREMENT_TABLE_KEY not in context:
+        return False
+    if context[RETIREMENT_TABLE_KEY] != RETIREMENT_TABLE_POLICY:
+        raise ValueError("Unknown partnership capital table policy")
+    return True
+
+
 POINT_COUNTS = {
     "statement_extract": 7,
     "ledger_calculation": 5,

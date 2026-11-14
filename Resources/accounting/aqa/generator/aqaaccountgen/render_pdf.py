@@ -41,6 +41,7 @@ from aqaaccountgen.marking_policy import (
     printed_level_rows,
     printed_mcq_rows,
     reason_level_rows,
+    use_retirement_period_table,
 )
 from aqaaccountgen.scheme_policy import (
     GENERAL_GUIDANCE,
@@ -790,7 +791,7 @@ def _completed_income_statement_scheme(
             [
                 _scheme_question_heading(question),
                 Paragraph(
-                    f"<b>{option.title}</b><br/>Income statement for the year ended",
+                    f"<b>{option.title}</b><br/>Income statement for the year ended {case.YEAR_END}",
                     STYLES["centre_bold"],
                 ),
                 Spacer(1, 3 * mm),
@@ -873,13 +874,13 @@ def _income_statement_finishing_scheme(
                 ],
                 [
                     "New debenture",
-                    "6% × 4/12",
+                    case.NEW_DEBENTURE_TERMS.calculation,
                     f"{case.new_debenture_interest:,}",
                     "Check",
                 ],
                 [
                     "Earlier debenture",
-                    "8% × 10/12",
+                    case.EARLIER_DEBENTURE_TERMS.calculation,
                     f"{case.earlier_debenture_interest:,}",
                     "Check",
                 ],
@@ -1060,6 +1061,7 @@ def _completed_capital_accounts_scheme(
     write_off = case.goodwill_write_off
     withdrawn = case.cash_withdrawn
     closing = case.target_capital
+    retirement_period = use_retirement_period_table(question)
     rows = [
         [
             "31 Aug",
@@ -1082,7 +1084,7 @@ def _completed_capital_accounts_scheme(
             f"{credit['Morgan']:,}",
         ],
         [
-            "31 Dec",
+            "31 Aug" if retirement_period else "31 Dec",
             "Balance c/d",
             f"{closing['Alex']:,}",
             f"{closing['Morgan']:,}",
@@ -1092,6 +1094,32 @@ def _completed_capital_accounts_scheme(
             "",
         ],
     ]
+    if retirement_period:
+        totals = {partner: opening[partner] + credit[partner] for partner in closing}
+        rows.extend(
+            [
+                [
+                    "",
+                    "Total",
+                    f"{totals['Alex']:,}",
+                    f"{totals['Morgan']:,}",
+                    "",
+                    "Total",
+                    f"{totals['Alex']:,}",
+                    f"{totals['Morgan']:,}",
+                ],
+                [
+                    "",
+                    "",
+                    "",
+                    "",
+                    "1 Sep",
+                    "Balance b/d",
+                    f"{closing['Alex']:,}",
+                    f"{closing['Morgan']:,}",
+                ],
+            ]
+        )
     return [
         _scheme_question_heading(question),
         Paragraph("Partners' Capital Accounts", STYLES["centre_bold"]),
@@ -1823,7 +1851,7 @@ def _paper_one_section_b_pages(
             _question_table(question_14_1),
             Spacer(1, 3 * mm),
             Paragraph(
-                f"<b>{option.title}</b><br/>Income statement for the year ended",
+                f"<b>{option.title}</b><br/>Income statement for the year ended {IncomeStatementCase.YEAR_END}",
                 STYLES["centre_bold"],
             ),
             AnswerLines(25),
@@ -1913,14 +1941,7 @@ def _company_statement_case(option: GeneratedOption) -> Table:
         ),
     ]
     additional = [
-        (
-            f"A £{case.new_debenture:,}, 6% debenture was issued four months before the year end. "
-            "No finance cost has yet been recorded."
-        ),
-        (
-            f"An earlier £{case.earlier_debenture:,}, 8% debenture was repaid in full "
-            "two months before the year end. No finance cost has yet been recorded."
-        ),
+        *case.debenture_terms(),
         (
             f"The current-year taxation charge is £{case.current_tax_charge:,}. "
             "No entry has yet been made for this charge."
@@ -1932,7 +1953,7 @@ def _company_statement_case(option: GeneratedOption) -> Table:
             [
                 Paragraph(
                     f"The accountant for {option.title} has provided information for "
-                    "the preparation of the income statement for the year.",
+                    f"the preparation of the income statement for the year ended {case.YEAR_END}.",
                     STYLES["body"],
                 )
             ],
@@ -1985,7 +2006,8 @@ def _partnership_case(option: GeneratedOption) -> Table:
     text = (
         "Alex, Morgan and Riley have been in partnership for several years. Riley "
         "retired on 31 August. The partners keep separate capital and current "
-        "accounts.<br/><br/>"
+        "accounts. Prepare the capital accounts up to the date of retirement. "
+        "There were no other changes to capital before that date.<br/><br/>"
         f"Their capital balances on 1 January were Alex £{capital['Alex']:,}, "
         f"Morgan £{capital['Morgan']:,} and Riley £{capital['Riley']:,}. Profits and "
         f"losses had been shared {old_ratio['Alex']}:{old_ratio['Morgan']}:"

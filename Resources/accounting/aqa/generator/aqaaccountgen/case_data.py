@@ -2,6 +2,42 @@ from __future__ import annotations
 
 from dataclasses import dataclass, replace
 from decimal import ROUND_HALF_UP, Decimal
+from typing import ClassVar, NamedTuple
+
+
+class _InterestPeriod(NamedTuple):
+    rate_percent: int
+    first_month: int
+    last_month: int
+
+    @property
+    def months(self) -> int:
+        return self.last_month - self.first_month + 1
+
+    @property
+    def calculation(self) -> str:
+        return f"{self.rate_percent}% × {self.months}/12"
+
+    def interest(self, principal: int) -> int:
+        return _round_pounds(
+            Decimal(principal) * self.rate_percent * self.months / 1200
+        )
+
+
+_MONTHS = (
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December",
+)
 
 
 def _nearest_hundred(value: float) -> int:
@@ -489,6 +525,10 @@ class ShareholderCase:
 # Complete, internally consistent source for the Paper 1 company statement.
 @dataclass(frozen=True)
 class IncomeStatementCase:
+    YEAR_END: ClassVar[str] = "31 December"
+    NEW_DEBENTURE_TERMS: ClassVar[_InterestPeriod] = _InterestPeriod(6, 9, 12)
+    EARLIER_DEBENTURE_TERMS: ClassVar[_InterestPeriod] = _InterestPeriod(8, 1, 10)
+
     business: str
     administration_expenses: int
     cost_of_sales: int
@@ -504,6 +544,19 @@ class IncomeStatementCase:
     supplier_invoice: int
     new_debenture: int
     earlier_debenture: int
+
+    def debenture_terms(self) -> tuple[str, str]:
+        new = self.NEW_DEBENTURE_TERMS
+        earlier = self.EARLIER_DEBENTURE_TERMS
+        return (
+            f"A £{self.new_debenture:,}, {new.rate_percent}% debenture was issued "
+            f"on 1 {_MONTHS[new.first_month - 1]}. "
+            "No finance cost has yet been recorded.",
+            f"An earlier £{self.earlier_debenture:,}, {earlier.rate_percent}% "
+            f"debenture was outstanding on 1 {_MONTHS[earlier.first_month - 1]} "
+            f"and repaid in full on 31 {_MONTHS[earlier.last_month - 1]}. "
+            "No finance cost has yet been recorded.",
+        )
 
     @classmethod
     def from_chart_values(
@@ -558,11 +611,11 @@ class IncomeStatementCase:
 
     @property
     def new_debenture_interest(self) -> int:
-        return _round_pounds(Decimal(self.new_debenture) * 6 / 100 * 4 / 12)
+        return self.NEW_DEBENTURE_TERMS.interest(self.new_debenture)
 
     @property
     def earlier_debenture_interest(self) -> int:
-        return _round_pounds(Decimal(self.earlier_debenture) * 8 / 100 * 10 / 12)
+        return self.EARLIER_DEBENTURE_TERMS.interest(self.earlier_debenture)
 
     @property
     def finance_cost(self) -> int:
@@ -633,9 +686,10 @@ class IncomeStatementCase:
                 "in warehouse expenses."
             ),
             (
-                f"Debenture interest: {_gbp(self.new_debenture)} × 6% × 4/12 "
+                f"Debenture interest: {_gbp(self.new_debenture)} × "
+                f"{self.NEW_DEBENTURE_TERMS.calculation} "
                 f"= {_gbp(new_interest)} and {_gbp(self.earlier_debenture)} × "
-                f"8% × 10/12 = {_gbp(earlier_interest)}."
+                f"{self.EARLIER_DEBENTURE_TERMS.calculation} = {_gbp(earlier_interest)}."
             ),
             f"Total finance cost: {_gbp(self.finance_cost)}.",
             f"Profit before tax: {_gbp(self.profit_before_tax)}.",
@@ -651,8 +705,8 @@ class IncomeStatementCase:
             "preserve_prompt": True,
             "preserve_mark_scheme": True,
             "task_scope": (
-                "Prepare only the income statement for the year ended from the "
-                "supplied trial-balance amounts and adjustments."
+                f"Prepare only the income statement for the year ended {self.YEAR_END} "
+                "from the supplied trial-balance amounts and adjustments."
             ),
             "required_prompt_terms": ["income statement"],
             "source_data": {
@@ -678,10 +732,10 @@ class IncomeStatementCase:
             },
             "adjustment_policy": {
                 "irrecoverable_debt_percent": 90,
-                "new_debenture_rate_percent": 6,
-                "new_debenture_months": 4,
-                "earlier_debenture_rate_percent": 8,
-                "earlier_debenture_months": 10,
+                "new_debenture_rate_percent": self.NEW_DEBENTURE_TERMS.rate_percent,
+                "new_debenture_months": self.NEW_DEBENTURE_TERMS.months,
+                "earlier_debenture_rate_percent": self.EARLIER_DEBENTURE_TERMS.rate_percent,
+                "earlier_debenture_months": self.EARLIER_DEBENTURE_TERMS.months,
                 "round_each_adjustment_to_nearest_pound": True,
             },
             "adjustments": {
