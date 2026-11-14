@@ -7,6 +7,7 @@ import math
 from dataclasses import dataclass
 from functools import lru_cache
 from itertools import pairwise
+from pathlib import Path
 from typing import Any
 
 from Backend.Core.paths import REPO_ROOT
@@ -116,10 +117,10 @@ def handle_local_model_guidance(args: Any) -> int:
         physical = _checked_physical_memory()
         available = _headroom_snapshot(physical)
         # The app bundle and the default Ollama cache can be on different volumes.
-        from pathlib import Path
-
         cache = Path.home() / ".ollama" / "models"
-        disk = shutil.disk_usage(cache if cache.is_dir() else Path.home()).free
+        disk = shutil.disk_usage(
+            next(path for path in (cache, *cache.parents) if path.is_dir())
+        ).free
     except (ResourceAdmissionError, OSError):
         emit(
             "model_guidance",

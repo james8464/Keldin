@@ -201,6 +201,28 @@ def test_help_formats_dynamic_values_from_selected_language() -> None:
     assert "private var currentMemoryResource: LocalizedStringResource" in help_view
 
 
+def test_guidance_checks_cache_parent_volume_when_models_folder_is_missing(
+    tmp_path, monkeypatch
+):
+    from Backend.Core import ollama_admission
+    from Backend.Core.model_recommendations import handle_local_model_guidance
+
+    cache_parent = tmp_path / ".ollama"
+    cache_parent.mkdir()
+    monkeypatch.setattr(Path, "home", lambda: tmp_path)
+    monkeypatch.setattr(ollama_admission, "_checked_physical_memory", lambda: 18 << 30)
+    monkeypatch.setattr(ollama_admission, "_headroom_snapshot", lambda _: 8 << 30)
+    paths = []
+
+    def disk_usage(path):
+        paths.append(path)
+        return SimpleNamespace(free=1 << 30)
+
+    monkeypatch.setattr("shutil.disk_usage", disk_usage)
+    assert handle_local_model_guidance(None) == 0
+    assert paths == [cache_parent]
+
+
 def test_live_guidance_does_not_offer_models_when_pressure_is_unknown(monkeypatch):
     from Backend.Core import ollama_admission
     from Backend.Core.model_recommendations import handle_local_model_guidance
