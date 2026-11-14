@@ -6,6 +6,49 @@ from pathlib import Path
 
 import pytest
 from cspapergen import notes
+from reportlab.pdfgen.canvas import Canvas
+
+
+@pytest.mark.parametrize("existing_empty_cache", [False, True])
+def test_valid_notes_are_extracted_without_pdftotext(
+    tmp_path, monkeypatch, existing_empty_cache
+):
+    source = tmp_path / "source"
+    source.mkdir()
+    pdf = source / "5.1. Number Systems.pdf"
+    text = "Binary numbers represent values using two digits."
+    canvas = Canvas(str(pdf))
+    canvas.drawString(54, 740, text)
+    canvas.save()
+
+    def missing_extractor(*_args, **_kwargs):
+        raise FileNotFoundError("pdftotext")
+
+    monkeypatch.setattr(notes.subprocess, "run", missing_extractor)
+    cache = tmp_path / "cache"
+    if existing_empty_cache:
+        (cache / "raw").mkdir(parents=True)
+        (cache / "text").mkdir()
+        (cache / "raw" / pdf.name).write_bytes(pdf.read_bytes())
+        (cache / "text" / f"{pdf.stem}.txt").touch()
+    assert notes.cache_notes(source, cache).text_count == 1
+    assert notes.note_context_for_topic("4.5", "Number systems", cache).strip() == text
+
+
+def test_blank_pdf_does_not_count_as_extracted_text(tmp_path, monkeypatch):
+    source = tmp_path / "source"
+    source.mkdir()
+    canvas = Canvas(str(source / "5.1.pdf"))
+    canvas.showPage()
+    canvas.save()
+
+    def missing_extractor(*_args, **_kwargs):
+        raise FileNotFoundError("pdftotext")
+
+    monkeypatch.setattr(notes.subprocess, "run", missing_extractor)
+    cache = tmp_path / "cache"
+    assert notes.cache_notes(source, cache).text_count == 0
+    assert (cache / "text" / "5.1.txt").read_bytes() == b""
 
 
 @pytest.fixture

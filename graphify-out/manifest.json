@@ -660,8 +660,8 @@
     "semantic_hash": ""
   },
   "Resources/computer-science/aqa/generator/cspapergen/notes.py": {
-    "mtime": 1794344517.651566,
-    "ast_hash": "85b9f3526d49a6fb0f76be672422f0da",
+    "mtime": 1794659918.9401813,
+    "ast_hash": "2e51e107abc55c86d57f6b0f88f8ec23",
     "semantic_hash": ""
   },
   "Resources/computer-science/aqa/generator/cspapergen/objective_calibration.py": {
@@ -4020,8 +4020,8 @@
     "semantic_hash": ""
   },
   "Resources/implementation-audit-coverage.json": {
-    "mtime": 1794397945.7117944,
-    "ast_hash": "ca019391d488ff7e5037e2e33b0c078b",
+    "mtime": 1794659918.9410403,
+    "ast_hash": "840dc951d2692c6d5aaf49e2221463dc",
     "semantic_hash": ""
   },
   "macOS/Keldin/Services/PDFDocumentAccess.swift": {
@@ -6200,8 +6200,8 @@
     "semantic_hash": ""
   },
   "tests/test_cs_notes_cache_integrity.py": {
-    "mtime": 1794344517.6959562,
-    "ast_hash": "a904df33e9f18d02e373ffb077288cf5",
+    "mtime": 1794659918.9658127,
+    "ast_hash": "cb7d52b036693bc304f72f2dc45e8ef4",
     "semantic_hash": ""
   },
   "docs/quality/attributed-eof-backfill-review-2026-11-07.md": {

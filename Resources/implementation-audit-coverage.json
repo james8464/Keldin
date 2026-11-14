@@ -2380,11 +2380,8 @@
     {
       "path": "Resources/computer-science/aqa/generator/cspapergen/notes.py",
       "classification": "maintained-source",
-      "status": "reviewed",
-      "reason": "Current 138-line optional-notes repair reviewed: complete initial module/test EOF plus final narrow InterruptedError cancellation delta and exact pins independently checked; composite review attribution, not an invented fresh final-file EOF. Earlier interruption miss/HOLD remains explicit in note. Offline fake/tempfile 11-pass/2-optional-data-skip checks are execution evidence, not the source-review basis. No normal-native failure, model/PDF quality, cross-file atomicity or concurrent-writer guarantee.",
-      "source_sha256": "09d5b7817df75f320aab81f2f9678d3e68985bb023428bfd4a353bae78b59dff",
-      "review_evidence": "docs/quality/cs-notes-cache-integrity-review-2026-11-07.md",
-      "review_evidence_sha256": "507e482695053b66aed875a0ca1b320dcf1ce9d9cdf95241dff1937dec094974"
+      "status": "pending",
+      "reason": "No file-level semantic implementation review recorded in this ledger."
     },
     {
       "path": "Resources/computer-science/aqa/generator/cspapergen/objective_calibration.py",
@@ -7165,11 +7162,8 @@
     {
       "path": "tests/test_cs_notes_cache_integrity.py",
       "classification": "test",
-      "status": "reviewed",
-      "reason": "Current 189-line optional-notes repair reviewed: complete initial module/test EOF plus final narrow InterruptedError cancellation delta and exact pins independently checked; composite review attribution, not an invented fresh final-file EOF. Earlier interruption miss/HOLD remains explicit in note. Offline fake/tempfile 11-pass/2-optional-data-skip checks are execution evidence, not the source-review basis. No normal-native failure, model/PDF quality, cross-file atomicity or concurrent-writer guarantee.",
-      "source_sha256": "3d8b3b9eca6dcc0d2453a1bf6a914f8ff65293d96536c4f62eaa849708cc1370",
-      "review_evidence": "docs/quality/cs-notes-cache-integrity-review-2026-11-07.md",
-      "review_evidence_sha256": "507e482695053b66aed875a0ca1b320dcf1ce9d9cdf95241dff1937dec094974"
+      "status": "pending",
+      "reason": "No file-level semantic implementation review recorded in this ledger."
     },
     {
       "path": "tests/test_cs_paper1_on_screen_flow.py",
