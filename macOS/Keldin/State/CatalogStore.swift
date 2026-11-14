@@ -133,6 +133,7 @@ final class CatalogStore {
         case .documents: value = "documents"
         case .history: value = "history"
         case .frenchBaccalaureat: value = "france:nsi"
+        case .admissionsTests: value = "admissions-tests"
         case nil: value = ""
         }
         defaults.set(value, forKey: AppStorageKey.sidebarSelection)
@@ -147,6 +148,7 @@ final class CatalogStore {
         case "documents": return .documents
         case "history": return .history
         case "france:nsi": return .frenchBaccalaureat
+        case "admissions-tests": return .admissionsTests
         case let value? where value.hasPrefix("board:"):
             let id = String(value.dropFirst("board:".count))
             return ExamCatalog.board(id: id).map { .board($0.id) }

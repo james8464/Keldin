@@ -374,8 +374,14 @@ private struct AISettingsTab: View {
                 SecureField("API key", text: $application.deepSeekAPIKey)
                 Text("Your key is stored in Keychain.")
                     .foregroundStyle(.secondary)
-                Text("DeepSeek is available for French NSI drafts only. Paper quality remains unverified. API requests use your paid credits.")
-                    .foregroundStyle(.secondary)
+                Group {
+                    if application.distributionMode.canGenerateFrenchNSI {
+                        Text("DeepSeek is available for French NSI drafts only. Paper quality remains unverified. API requests use your paid credits.")
+                    } else {
+                        Text("DeepSeek generation is unavailable in this build while French NSI is under review.")
+                    }
+                }
+                .foregroundStyle(.secondary)
             }
 
         case .apple:

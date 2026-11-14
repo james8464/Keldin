@@ -149,7 +149,13 @@ private struct HelpTopicPage: View {
                 case .creatingAPaper:
                     creatingAPaper
                 case .frenchBaccalaureat:
-                    frenchBaccalaureat
+                    if application.distributionMode.canGenerateFrenchNSI {
+                        frenchBaccalaureat
+                    } else {
+                        Text("French NSI generation is coming soon.")
+                        Text("We’re still checking the questions, corrections and printable papers. Saved papers remain available in Documents.")
+                            .foregroundStyle(.secondary)
+                    }
                 case .checkingQuality:
                     checkingQuality
                 case .privacy:

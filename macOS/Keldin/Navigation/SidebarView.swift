@@ -83,6 +83,12 @@ private struct CatalogSidebarSections: View {
                 }
             }
 
+            Section("Admissions") {
+                NavigationLink(value: SidebarItem.admissionsTests) {
+                    Label("Admissions Tests", systemImage: "checklist")
+                }
+            }
+
             Section("France") {
                 NavigationLink(value: SidebarItem.frenchBaccalaureat) {
                     Label("Baccalauréat · NSI", systemImage: "graduationcap")
