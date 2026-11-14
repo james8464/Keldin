@@ -9,6 +9,8 @@ import tempfile
 from dataclasses import dataclass
 from pathlib import Path
 
+import pymupdf
+
 from Backend.Core.legacy_migration import LEGACY_APP_FOLDER, copy_missing_tree
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
@@ -48,6 +50,7 @@ def cache_notes(
         if (
             changed
             or not text_path.exists()
+            or text_path.stat().st_size == 0
             or text_path.stat().st_mtime < copied.stat().st_mtime
         ):
             # Propagated extraction failures/cancellation preserve the old pair.
@@ -129,7 +132,19 @@ def _extract_text(pdf: Path, text_path: Path) -> None:
     except InterruptedError:
         raise
     except (OSError, subprocess.CalledProcessError):
-        text_path.write_text("", encoding="utf-8")
+        # Poppler is optional on end-user Macs; PyMuPDF ships with the app.
+        try:
+            with (
+                pymupdf.open(pdf) as document,
+                text_path.open("w", encoding="utf-8") as output,
+            ):
+                for page in document:
+                    text = page.get_text(sort=True)
+                    if text.strip():
+                        output.write(text)
+                        output.write("\n")
+        except (pymupdf.FileDataError, pymupdf.EmptyFileError):
+            text_path.write_text("", encoding="utf-8")
 
 
 def _migrate_cache(cache_dir: Path) -> None:
