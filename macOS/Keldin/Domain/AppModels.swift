@@ -1149,7 +1149,7 @@ struct CustomAssessmentSourceMetadata: Decodable, Equatable {
         (1...80).contains(pageCount)
             && sha256.utf8.count == 64
             && sha256.utf8.allSatisfy { (48...57).contains($0) || (97...102).contains($0) }
-            && pagesWithoutText.count < pageCount
+            && pagesWithoutText.count <= pageCount
             && pagesWithoutText == Array(Set(pagesWithoutText)).sorted()
             && pagesWithoutText.allSatisfy { (1...pageCount).contains($0) }
     }

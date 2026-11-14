@@ -74,7 +74,10 @@ struct CustomAssessmentPreview: View {
                             } label: {
                                 Text("Pages in \(result.name)")
                             }
-                            if !result.metadata.pagesWithoutText.isEmpty {
+                            if result.metadata.pagesWithoutText.count == result.metadata.pageCount {
+                                Text("No extractable text. Visual review is needed before using this source.")
+                                    .foregroundStyle(.secondary)
+                            } else if !result.metadata.pagesWithoutText.isEmpty {
                                 Text("Pages without extractable text: \(result.metadata.pagesWithoutText.map { $0.formatted() }.joined(separator: ", "))")
                                     .foregroundStyle(.secondary)
                             }

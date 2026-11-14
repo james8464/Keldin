@@ -91,6 +91,24 @@ def test_document_text_is_only_data() -> None:
     assert evidence[2].pages[0].text.strip() == phrase
 
 
+def test_distinct_scan_sources_are_inspectable_without_text() -> None:
+    scans = []
+    for color in ((1, 0, 0), (0, 1, 0), (0, 0, 1)):
+        with pymupdf.open() as document:
+            page = document.new_page(width=72, height=72)
+            page.draw_rect(pymupdf.Rect(10, 10, 62, 62), fill=color)
+            image = page.get_pixmap()
+        with pymupdf.open() as document:
+            page = document.new_page(width=72, height=72)
+            page.insert_image(page.rect, pixmap=image)
+            scans.append(LocalSource("question-paper", document.tobytes()))
+    evidence = build_custom_evidence(scans)
+    assert len(evidence) == 3
+    assert all(doc.pages[0].text == "" for doc in evidence)
+    with pytest.raises(ValueError, match="Duplicate"):
+        build_custom_evidence([scans[0], scans[0], scans[1]])
+
+
 @pytest.mark.parametrize(
     ("limit", "value", "message"),
     [

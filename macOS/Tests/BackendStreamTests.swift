@@ -53,9 +53,10 @@ final class BackendStreamTests: XCTestCase {
         }
         XCTAssertEqual(result.map(\.sha256), hashes)
         XCTAssertEqual(result.map(\.pagesWithoutText), [[2], [2], [2]])
+        XCTAssertNoThrow(try BackendEvent(jsonLine: json.replacingOccurrences(of: "[2]", with: "[1,2]")))
         for malformed in [
             json.replacingOccurrences(of: "[2]", with: "[3]"),
-            json.replacingOccurrences(of: "[2]", with: "[1,2]"),
+            json.replacingOccurrences(of: "[2]", with: "[2,2]"),
             json.replacingOccurrences(of: hashes[1], with: hashes[0]),
             json.replacingOccurrences(of: "question-paper", with: "syllabus"),
         ] {

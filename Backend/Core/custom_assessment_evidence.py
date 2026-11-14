@@ -93,16 +93,21 @@ def _extract_pages(content: bytes, remaining: int) -> tuple[LocalPageEvidence, .
             if document.page_count > MAX_PAGES_PER_SOURCE:
                 raise ValueError("A source exceeds the page limit")
             pages = []
+            has_visual_content = False
             for number, page in enumerate(document, start=1):
                 text = page.get_text("text", sort=True).strip()
                 remaining -= len(text)
                 if len(text) > MAX_PAGE_CHARACTERS or remaining < 0:
                     raise ValueError("Source text exceeds the import limit")
                 pages.append(LocalPageEvidence(number, text))
+                if not text and not has_visual_content:
+                    has_visual_content = bool(
+                        page.get_image_info() or page.get_drawings()
+                    )
     except (pymupdf.FileDataError, RuntimeError) as error:
         raise ValueError("Each source must be a readable PDF") from error
-    if not any(page.text for page in pages):
-        raise ValueError("A source has no extractable text; use a text PDF")
+    if not has_visual_content and not any(page.text for page in pages):
+        raise ValueError("A source has no extractable text or visual content")
     return tuple(pages)
 
 
@@ -136,7 +141,7 @@ def build_custom_evidence(
             raise ValueError("Duplicate assessment source")
         pages = _extract_pages(source.content, remaining)
         remaining -= sum(len(page.text) for page in pages)
-        if source.role == "question-paper":
+        if source.role == "question-paper" and any(page.text for page in pages):
             normalized = unicodedata.normalize(
                 "NFKC", " ".join(page.text for page in pages)
             ).casefold()
