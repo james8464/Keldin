@@ -4,6 +4,15 @@ import XCTest
 @testable import Keldin
 
 final class StorageLocalizationTests: XCTestCase {
+    func testRecentDocumentCountUsesEnglishAndFrenchPluralRules() {
+        let cases = [(0, "0 documents", "0 document"), (1, "1 document", "1 document"), (2, "2 documents", "2 documents")]
+        for (count, english, french) in cases {
+            let label: LocalizedStringResource = "\(count) documents"
+            XCTAssertEqual(InterfaceText.resolve(label, language: "en"), english)
+            XCTAssertEqual(InterfaceText.resolve(label, language: "fr"), french)
+        }
+    }
+
     func testPrivacyStatusResourcesFollowTheSelectedLanguage() {
         let cases: [(LocalizedStringResource, String, String)] = [
             (DistributionMode.direct.titleResource, "Direct Download", "Téléchargement direct"),

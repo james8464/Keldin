@@ -329,7 +329,27 @@
         }
       }
     },
-    "%lld documents": {},
+    "%lld documents": {
+      "comment": "Number of PDFs in the Recent Documents section.",
+      "localizations": {
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {"stringUnit":{"state":"translated","value":"%lld document"}},
+              "other": {"stringUnit":{"state":"translated","value":"%lld documents"}}
+            }
+          }
+        },
+        "fr": {
+          "variations": {
+            "plural": {
+              "one": {"stringUnit":{"state":"translated","value":"%lld document"}},
+              "other": {"stringUnit":{"state":"translated","value":"%lld documents"}}
+            }
+          }
+        }
+      }
+    },
     "%lld of %lld": {
       "localizations": {
         "fr": {
