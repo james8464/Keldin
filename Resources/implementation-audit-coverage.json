@@ -374,6 +374,12 @@
       "reason": "No file-level semantic implementation review recorded in this ledger."
     },
     {
+      "path": "Backend/Core/custom_assessment_visual.py",
+      "classification": "maintained-source",
+      "status": "pending",
+      "reason": "No file-level semantic implementation review recorded in this ledger."
+    },
+    {
       "path": "Backend/Core/document_dsl/__init__.py",
       "classification": "maintained-source",
       "status": "reviewed",
@@ -7215,6 +7221,12 @@
     },
     {
       "path": "tests/test_custom_assessment_evidence.py",
+      "classification": "test",
+      "status": "pending",
+      "reason": "No file-level semantic implementation review recorded in this ledger."
+    },
+    {
+      "path": "tests/test_custom_assessment_visual.py",
       "classification": "test",
       "status": "pending",
       "reason": "No file-level semantic implementation review recorded in this ledger."
