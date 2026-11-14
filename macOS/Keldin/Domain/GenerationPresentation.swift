@@ -122,6 +122,9 @@ enum GenerationPresentation {
         if code == "local_memory_unavailable" {
             return localized("Local generation couldn't start within the memory checks. Choose a smaller model, close memory-heavy apps, or use a remote provider.", language: language)
         }
+        if code == "french_model_context_unavailable" {
+            return localized("Keldin couldn't confirm that the full exercise fits the model's context window. Try a different model or provider in Settings. No paper was saved.", language: language)
+        }
         if message.hasPrefix("Les cinq familles disponibles sont trop proches des sujets précédents.") {
             return localized("None of the five paper families is sufficiently different from your saved papers. No new paper was created.", language: language)
         }
@@ -139,7 +142,7 @@ enum GenerationPresentation {
         if isGenerationQualityFailure(message, code: code) { return .qualityChecksFailed }
         switch code {
         case "mlx_setup_required": return .modelSetupRequired
-        case "french_generation_failed": return .frenchPaperFailed
+        case "french_generation_failed", "french_model_context_unavailable": return .frenchPaperFailed
         default: return .generationFailed
         }
     }

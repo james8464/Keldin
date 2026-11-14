@@ -5857,11 +5857,8 @@
     {
       "path": "macOS/Keldin/Domain/PaperQualityGuidance.swift",
       "classification": "maintained-source",
-      "status": "reviewed",
-      "reason": "Complete 129-line file read through EOF after the bounded Accounting false-acceptance notice; provider/model identity and existing report-status semantics reviewed. Native execution and whole-project completion remain separate.",
-      "source_sha256": "4e40ab2f800785a400b0319f32e013cf42d6e1cf802132e327b89f1932988225",
-      "review_evidence": "docs/quality/edexcel-mark-scheme-cell-wrapping-2026-11-03.md",
-      "review_evidence_sha256": "1802aa5724a2ca0b24d29b950273519f06009f09f88fe095e4193c2a58dd9ea4"
+      "status": "pending",
+      "reason": "No file-level semantic implementation review recorded in this ledger."
     },
     {
       "path": "macOS/Keldin/Domain/WorkNotification.swift",

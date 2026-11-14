@@ -36,6 +36,21 @@ final class FailurePresentationTests: XCTestCase {
         XCTAssertEqual(InterfaceText.resolve(resource, language: "fr"), "Les détails de l’échec n’ont pas été enregistrés pour cette tentative.")
     }
 
+    func testFrenchContextRefusalUsesSelectedLanguageAndOffersRecovery() {
+        let raw = "Capacité du contexte non vérifiée ou insuffisante pour cet exercice."
+        let code = "french_model_context_unavailable"
+        XCTAssertEqual(
+            GenerationPresentation.error(raw, code: code, language: "en"),
+            "Keldin couldn't confirm that the full exercise fits the model's context window. Try a different model or provider in Settings. No paper was saved."
+        )
+        XCTAssertEqual(
+            GenerationPresentation.error(raw, code: code, language: "fr"),
+            "Keldin n’a pas pu vérifier que l’exercice entier tient dans la fenêtre de contexte du modèle. Essayez un autre modèle ou fournisseur dans Réglages. Aucun sujet n’a été enregistré."
+        )
+        XCTAssertEqual(GenerationPresentation.error(raw, code: "french_generation_failed", language: "en"), raw)
+        XCTAssertEqual(GenerationPresentation.failureKind(for: raw, code: code), .frenchPaperFailed)
+    }
+
     func testFailureKindsUseTheExistingNarrowQualityClassification() {
         let quality = "question 01 failed independent solution reconciliation: answer mismatch"
         XCTAssertEqual(GenerationPresentation.failureKind(for: quality, code: "generation_failed"), .qualityChecksFailed)

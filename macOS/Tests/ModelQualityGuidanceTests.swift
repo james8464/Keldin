@@ -13,11 +13,12 @@ final class ModelQualityGuidanceTests: XCTestCase {
         XCTAssertEqual(guidance.fittingModels, ["small:model"])
     }
 
-    func testAppleSystemCalculationEvidenceDoesNotApplyToOtherModelsOrMLX() {
+    func testAppleSystemPaperEvidenceDoesNotApplyToOtherModelsOrMLX() {
         let advice = ModelQualityAdvice.forModel(provider: .appleIntelligence, model: "apple-system-on-device")
-        XCTAssertEqual(advice, .systemCalculationFailed)
-        XCTAssertEqual(InterfaceText.resolve(advice.detail, language: "en"), "This Apple on-device model failed an unaided accounting calculation test. Check generated answers and marks; some drafts may be refused.")
-        XCTAssertEqual(InterfaceText.resolve(advice.detail, language: "fr"), "Ce modèle Apple sur l’appareil a échoué à un calcul de comptabilité sans aide. Vérifiez les réponses et les barèmes générés ; certains brouillons peuvent être refusés.")
+        XCTAssertEqual(InterfaceText.resolve(advice.title, language: "en"), "Full-paper checks did not pass")
+        XCTAssertEqual(InterfaceText.resolve(advice.title, language: "fr"), "Les sujets complets n’ont pas passé les contrôles")
+        XCTAssertEqual(InterfaceText.resolve(advice.detail, language: "en"), "In one test run, none of the 21 UK paper and topic bank routes passed with Apple Intelligence. For a full paper, try another model or provider in Settings.")
+        XCTAssertEqual(InterfaceText.resolve(advice.detail, language: "fr"), "Lors d’un test avec Apple Intelligence, aucun des 21 parcours de création de sujets et de banques de questions britanniques n’a passé les contrôles. Pour créer un sujet complet, essayez un autre modèle ou fournisseur dans Réglages.")
         XCTAssertEqual(ModelQualityAdvice.forModel(provider: .appleIntelligence, model: "future-system-model"), .unverified)
         XCTAssertEqual(ModelQualityAdvice.forModel(provider: .apple, model: "apple-system-on-device"), .unverified)
         XCTAssertEqual(ModelQualityAdvice.forModel(provider: .apple, model: "mlx-community/Llama-3.2-3B-Instruct-4bit"), .answerChecksFailed)

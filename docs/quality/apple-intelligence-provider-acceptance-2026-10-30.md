@@ -201,3 +201,27 @@ coverage. No cloud model was called, and the failed FIFO result remains failed.
 The prior installed bundle and obsolete generated build/preview copies were
 deleted after replacement verification at the user's request. No app archive was
 kept. Source, current reports and user papers/history were preserved.
+
+## Full UK matrix follow-up, 14 November 2026
+
+One serial run on macOS 27.0.1 used the signed direct bundle from PR #239
+(`d7ce24bba55291648d83993dcf42f83a898ab1c2`), Apple Intelligence
+`apple-system-on-device`, and base seed 26080100. It attempted all 21 UK
+routes, including three Computer Science topic banks. All 21 ended with a
+failed check; zero timed out and no paper was published. This is one run
+on one OS build, not a prediction for a future Apple model release.
+
+Failure causes include malformed output, wrong answers, insufficient marking
+coverage and reviewer refusals. The first AQA Economics calculations in
+Papers 1 and 2 were independently rebuilt: the unrounded percentages were
+consistent with the required one-decimal results, despite the model review
+rejecting them. Guided formatting passed the original schema in a separate
+synthetic Accounting task, but the model selected the wrong book of prime
+entry. Formatting alone is not grounds to weaken the acceptance checks.
+
+The private run report is retained in the MLX worktree at
+`tmp/nov14-main239-apple-system-matrix.sEg49z/matrix-report.json`,
+SHA-256 `c8fbea67deae09b1676f94ef352438f00cf69f32696dcf7c2603caa2f07441e9`.
+This result applies to the Apple on-device provider, not MLX, hosted providers
+or future system models. Complete French NSI remains outside this adapter's
+capability. No change to routing, prompts, validation or publication is implied.
