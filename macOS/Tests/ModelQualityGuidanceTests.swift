@@ -3,6 +3,16 @@ import XCTest
 @testable import Keldin
 
 final class ModelQualityGuidanceTests: XCTestCase {
+    func testMacGuidanceDecodesWithoutOverwritingDiscoveredModels() throws {
+        let event = try BackendEvent(jsonLine: """
+        {"type":"model_guidance","conditions_verified":true,"recommendations":[{"model":"large:model","estimated_fit_now":false},{"model":"small:model","estimated_fit_now":true}]}
+        """)
+        guard case let .localModelGuidance(guidance) = event else {
+            return XCTFail("Expected local model guidance")
+        }
+        XCTAssertEqual(guidance.fittingModels, ["small:model"])
+    }
+
     func testAppleSystemCalculationEvidenceDoesNotApplyToOtherModelsOrMLX() {
         let advice = ModelQualityAdvice.forModel(provider: .appleIntelligence, model: "apple-system-on-device")
         XCTAssertEqual(advice, .systemCalculationFailed)

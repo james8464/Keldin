@@ -1,6 +1,14 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Check this Mac": {"localizations":{"fr":{"stringUnit":{"state":"translated","value":"Vérifier ce Mac"}}}},
+    "Checking memory and disk space…": {"localizations":{"fr":{"stringUnit":{"state":"translated","value":"Vérification de la mémoire et de l’espace disque…"}}}},
+    "Estimated to fit now": {"localizations":{"fr":{"stringUnit":{"state":"translated","value":"Compatible selon l’estimation actuelle"}}}},
+    "This is a memory and disk estimate, not a paper-quality check.": {"localizations":{"fr":{"stringUnit":{"state":"translated","value":"Cette estimation porte sur la mémoire et le stockage, pas sur la qualité des sujets."}}}},
+    "None of the checked local models is estimated to fit right now.": {"localizations":{"fr":{"stringUnit":{"state":"translated","value":"D’après l’estimation, aucun des modèles locaux examinés ne convient actuellement."}}}},
+    "Current memory and disk space could not be verified.": {"localizations":{"fr":{"stringUnit":{"state":"translated","value":"Impossible de vérifier la mémoire et l’espace disque disponibles."}}}},
+    "We recommend a cloud model for full papers. Check the provider’s usage limits and pricing before generating.": {"localizations":{"fr":{"stringUnit":{"state":"translated","value":"Nous recommandons un modèle distant pour les sujets complets. Vérifiez les quotas et les tarifs du fournisseur avant de lancer la création."}}}},
+    "Suggestion based on total memory": {"localizations":{"fr":{"stringUnit":{"state":"translated","value":"Suggestion selon la mémoire totale"}}}},
     "Local generation couldn't start within the memory checks. Choose a smaller model, close memory-heavy apps, or use a remote provider.": {"localizations":{"fr":{"stringUnit":{"state":"translated","value":"La création locale n’a pas pu démarrer après les vérifications de mémoire. Choisissez un modèle plus petit, fermez les apps gourmandes en mémoire ou utilisez un moteur distant."}}}},
     "Failure details": {"localizations":{"fr":{"stringUnit":{"state":"translated","value":"Détails de l’échec"}}}},
     "French assessment": {"localizations":{"fr":{"stringUnit":{"state":"translated","value":"Sujet français"}}}},

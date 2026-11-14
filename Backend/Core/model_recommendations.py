@@ -7,6 +7,7 @@ import math
 from dataclasses import dataclass
 from functools import lru_cache
 from itertools import pairwise
+from pathlib import Path
 from typing import Any
 
 from Backend.Core.paths import REPO_ROOT
@@ -99,6 +100,65 @@ def parse_model_recommendations(
 
 def default_ollama_model() -> str:
     return model_recommendations().default_model
+
+
+def handle_local_model_guidance(args: Any) -> int:
+    """Report current cold-load estimates without downloading or starting a model."""
+    import shutil
+
+    from Backend.Core.events import emit
+    from Backend.Core.ollama_admission import (
+        ResourceAdmissionError,
+        _checked_physical_memory,
+        _headroom_snapshot,
+    )
+
+    try:
+        physical = _checked_physical_memory()
+        available = _headroom_snapshot(physical)
+        # The app bundle and the default Ollama cache can be on different volumes.
+        cache = Path.home() / ".ollama" / "models"
+        disk = shutil.disk_usage(
+            next(path for path in (cache, *cache.parents) if path.is_dir())
+        ).free
+    except (ResourceAdmissionError, OSError):
+        emit(
+            "model_guidance",
+            prefer_cloud=True,
+            conditions_verified=False,
+            recommendations=[],
+        )
+        return 0
+    gib = 1 << 30
+    budget = min(available, physical - max(4 * gib, (physical + 3) // 4))
+    payload = json.loads(MODEL_RECOMMENDATIONS_PATH.read_text(encoding="utf-8"))
+    candidates = [
+        (row["model"], math.ceil(row["download_size_gb"] * 10**9))
+        for row in reversed(payload["tiers"])
+    ]
+    candidates.append(("qwen3.5:4b-q4_K_M", 3_400_000_000))
+    rows = []
+    for model, size in candidates:
+        required = size + max(2 * gib, (size + 3) // 4)
+        rows.append(
+            {
+                "model": model,
+                "estimated_download_bytes": size,
+                "estimated_required_memory_bytes": required,
+                "estimated_fit_now": required <= budget and size + gib <= disk,
+                "quality_verified": False,
+            }
+        )
+    emit(
+        "model_guidance",
+        prefer_cloud=True,
+        conditions_verified=True,
+        physical_memory_bytes=physical,
+        available_memory_bytes=available,
+        free_disk_bytes=disk,
+        recommendations=rows,
+    )
+    return 0
 
 
 def _memory_boundary(value: object, name: str) -> float:

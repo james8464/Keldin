@@ -2,6 +2,20 @@
 
 import Foundation
 
+struct LocalModelGuidance: Decodable, Equatable, Sendable {
+    struct Recommendation: Decodable, Equatable, Sendable {
+        let model: String
+        let estimatedFitNow: Bool
+    }
+
+    let conditionsVerified: Bool
+    let recommendations: [Recommendation]
+
+    var fittingModels: [String] {
+        conditionsVerified ? recommendations.filter(\.estimatedFitNow).map(\.model) : []
+    }
+}
+
 struct OllamaModelRecommendation: Identifiable, Hashable, Decodable {
     let id: String
     let minimumMemoryGB: Double
