@@ -6490,11 +6490,8 @@
     {
       "path": "macOS/Tests/ModelQualityGuidanceTests.swift",
       "classification": "test",
-      "status": "reviewed",
-      "reason": "Complete 90-line native test file read through EOF; exact provider/model boundaries, localizations and isolated temporary report fixtures reviewed. Native test execution is not claimed by this review.",
-      "source_sha256": "5f4b90fccdf45fbf80b72a1cfb9436694415c2fb9841919f68d1db2ecf400cc0",
-      "review_evidence": "docs/quality/edexcel-mark-scheme-cell-wrapping-2026-11-03.md",
-      "review_evidence_sha256": "1802aa5724a2ca0b24d29b950273519f06009f09f88fe095e4193c2a58dd9ea4"
+      "status": "pending",
+      "reason": "No file-level semantic implementation review recorded in this ledger."
     },
     {
       "path": "macOS/Tests/NativeInterfaceAuditTests.swift",

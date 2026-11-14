@@ -250,7 +250,7 @@ private struct AISettingsTab: View {
                     Text("We recommend a cloud model for full papers. Check the provider’s usage limits and pricing before generating.")
                         .foregroundStyle(.secondary)
                 }
-                LabeledContent("Memory-fit suggestion") {
+                LabeledContent("Suggestion based on total memory") {
                     VStack(alignment: .trailing, spacing: 2) {
                         Text(application.ollamaRecommendation.model)
                         Text(application.ollamaRecommendation.downloadResource(locale: locale))
