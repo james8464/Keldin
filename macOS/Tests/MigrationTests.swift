@@ -355,7 +355,6 @@ final class MigrationTests: XCTestCase {
         XCTAssertTrue(application.recentDocumentStore.records.contains { $0.id == record.id })
         application.generate()
         application.generateFrenchFixture(largePrint: false)
-        application.generateOccitanieActivity()
         application.prepareFrenchReferences()
         application.requestMLXDownloadInfo()
         application.confirmMLXSetup()

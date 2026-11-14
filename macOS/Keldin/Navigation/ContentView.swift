@@ -63,6 +63,12 @@ struct ContentView: View {
                         }
                         .formStyle(.grouped)
                         .navigationTitle("Admissions Tests")
+                    case .customAssessmentPreview:
+                        #if DEBUG
+                        CustomAssessmentPreview()
+                        #else
+                        ContentUnavailableView("Custom papers are not available in this build.", systemImage: "doc.badge.plus")
+                        #endif
                     case .documents:
                         DocumentPreviewView(
                             files: application.generatedFiles,

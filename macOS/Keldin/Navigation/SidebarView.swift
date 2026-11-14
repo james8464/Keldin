@@ -65,6 +65,11 @@ private struct CatalogSidebarSections: View {
                 NavigationLink(value: SidebarItem.benchmark) {
                     Label("Mac Benchmark", systemImage: "gauge.with.dots.needle.67percent")
                 }
+                #if DEBUG
+                NavigationLink(value: SidebarItem.customAssessmentPreview) {
+                    Label("Custom Paper Preview", systemImage: "doc.badge.plus")
+                }
+                #endif
             }
 
             if !store.favoriteIDs.isEmpty {

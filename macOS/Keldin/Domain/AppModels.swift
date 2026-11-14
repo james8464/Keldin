@@ -378,6 +378,7 @@ enum CatalogLoadError: LocalizedError {
 enum SidebarItem: Hashable {
     case board(String)
     case frenchBaccalaureat
+    case customAssessmentPreview
     case admissionsTests
     case benchmark
     case documents
@@ -1140,6 +1141,64 @@ struct MLXDownloadInfo: Equatable {
     }
 }
 
+struct CustomAssessmentSourceMetadata: Decodable, Equatable {
+    enum Role: String, Decodable {
+        case questionPaper = "question-paper"
+        case markScheme = "mark-scheme"
+        case syllabus
+        case expectedContent = "expected-content"
+    }
+
+    let role: Role
+    let sha256: String
+    let pageCount: Int
+    let pagesWithoutText: [Int]
+
+    var isValid: Bool {
+        (1...80).contains(pageCount)
+            && sha256.utf8.count == 64
+            && sha256.utf8.allSatisfy { (48...57).contains($0) || (97...102).contains($0) }
+            && pagesWithoutText.count <= pageCount
+            && pagesWithoutText == Array(Set(pagesWithoutText)).sorted()
+            && pagesWithoutText.allSatisfy { (1...pageCount).contains($0) }
+    }
+}
+
+struct CustomPageLayoutObservation: Decodable, Equatable {
+    struct Layout: Decodable, Equatable {
+        let heading: String
+        let columns: Int
+        let questionMarkers: [String]
+        let responseSpace: [String]
+        let figures: [String]
+
+        var isValid: Bool {
+            heading.unicodeScalars.count <= 160
+                && (1...4).contains(columns)
+                && questionMarkers.count <= 40
+                && questionMarkers.allSatisfy { (1...24).contains($0.unicodeScalars.count) }
+                && responseSpace.count <= 40
+                && responseSpace.allSatisfy { ["ruled lines", "dotted lines", "box", "blank", "none"].contains($0) }
+                && figures.count <= 24
+                && figures.allSatisfy { ["table", "graph", "diagram", "image", "other"].contains($0) }
+        }
+    }
+
+    let role: CustomAssessmentSourceMetadata.Role
+    let sha256: String
+    let page: Int
+    let model: String
+    let layout: Layout
+
+    var isValid: Bool {
+        (1...80).contains(page)
+            && sha256.utf8.count == 64
+            && sha256.utf8.allSatisfy { (48...57).contains($0) || (97...102).contains($0) }
+            && model.range(of: #"\A[A-Za-z0-9][A-Za-z0-9_.-]{0,95}:[A-Za-z0-9_.-]{1,80}\z"#, options: .regularExpression) != nil
+            && layout.isValid
+    }
+}
+
 enum BackendEvent: Equatable {
     case hello(protocolVersion: Int, backendVersion: String, capabilities: [String])
     case progress(stage: String?, message: String, progress: Double?)
@@ -1151,6 +1210,8 @@ enum BackendEvent: Equatable {
     case ollamaStatus(installed: Bool, running: Bool, command: String?, message: String?)
     case mlxDownloadInfo(MLXDownloadInfo)
     case localModelGuidance(LocalModelGuidance)
+    case customAssessmentSources([CustomAssessmentSourceMetadata])
+    case customPageLayout(CustomPageLayoutObservation)
     case benchmarkMetric(BenchmarkMetric)
     case benchmarkSample(BenchmarkSample)
     case benchmarkDone(BenchmarkVerdict)
@@ -1160,6 +1221,28 @@ enum BackendEvent: Equatable {
         let payload = try JSONDecoder().decode(BackendEventPayload.self, from: data)
 
         switch payload.type {
+        case "custom_assessment_sources":
+            struct CustomSourcesPayload: Decodable {
+                let sources: [CustomAssessmentSourceMetadata]
+            }
+            let decoder = JSONDecoder()
+            decoder.keyDecodingStrategy = .convertFromSnakeCase
+            let sources = try decoder.decode(CustomSourcesPayload.self, from: data).sources
+            guard (3...12).contains(sources.count),
+                  sources.filter({ $0.role == .questionPaper }).count >= 3,
+                  Set(sources.map(\.sha256)).count == sources.count,
+                  sources.allSatisfy(\.isValid) else {
+                throw DecodingError.dataCorrupted(.init(codingPath: [], debugDescription: "Invalid custom assessment source metadata."))
+            }
+            self = .customAssessmentSources(sources)
+        case "custom_page_layout":
+            let decoder = JSONDecoder()
+            decoder.keyDecodingStrategy = .convertFromSnakeCase
+            let result = try decoder.decode(CustomPageLayoutObservation.self, from: data)
+            guard result.isValid else {
+                throw DecodingError.dataCorrupted(.init(codingPath: [], debugDescription: "Invalid page layout observation."))
+            }
+            self = .customPageLayout(result)
         case "model_guidance":
             let decoder = JSONDecoder()
             decoder.keyDecodingStrategy = .convertFromSnakeCase

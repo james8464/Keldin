@@ -362,6 +362,30 @@
       "review_evidence_sha256": "c472b24feceb968224a9a24e3d19c1aa0187ed66cee254f050567baa498e57e7"
     },
     {
+      "path": "Backend/Core/custom_assessment_contract.py",
+      "classification": "maintained-source",
+      "status": "pending",
+      "reason": "No file-level semantic implementation review recorded in this ledger."
+    },
+    {
+      "path": "Backend/Core/custom_assessment_evidence.py",
+      "classification": "maintained-source",
+      "status": "pending",
+      "reason": "No file-level semantic implementation review recorded in this ledger."
+    },
+    {
+      "path": "Backend/Core/custom_assessment_vision.py",
+      "classification": "maintained-source",
+      "status": "pending",
+      "reason": "No file-level semantic implementation review recorded in this ledger."
+    },
+    {
+      "path": "Backend/Core/custom_assessment_visual.py",
+      "classification": "maintained-source",
+      "status": "pending",
+      "reason": "No file-level semantic implementation review recorded in this ledger."
+    },
+    {
       "path": "Backend/Core/document_dsl/__init__.py",
       "classification": "maintained-source",
       "status": "reviewed",
@@ -6032,13 +6056,16 @@
       "review_evidence_sha256": "32ed19810dedb46a67f49217135746afdde3af8f8151efa9ce4f79e2563e4d6d"
     },
     {
+      "path": "macOS/Keldin/Features/Generation/CustomAssessmentPreview.swift",
+      "classification": "maintained-source",
+      "status": "pending",
+      "reason": "No file-level semantic implementation review recorded in this ledger."
+    },
+    {
       "path": "macOS/Keldin/Features/Generation/FrenchAssessmentWorkspace.swift",
       "classification": "maintained-source",
-      "status": "reviewed",
-      "reason": "Complete-file EOF implementation review by release_gap_audit within the documented scope; exact source identity checked after integration. Dependencies, runtime acceptance and whole-project completion remain separate.",
-      "source_sha256": "e28f1a94f13b7e72d00ce75f549439c0892310e918c7438e1fc3cfb32d5f29cd",
-      "review_evidence": "docs/quality/native-interface-file-reviews-2026-11-02.md",
-      "review_evidence_sha256": "4665323a90eb980561527f316487a28a58b13867782b9f9d50847d66b6c390fd"
+      "status": "pending",
+      "reason": "No file-level semantic implementation review recorded in this ledger."
     },
     {
       "path": "macOS/Keldin/Features/Generation/GenerationGuidanceViews.swift",
@@ -6183,6 +6210,12 @@
       "source_sha256": "bd7328d56be9e49432428164dc2be4223240b216efb847d6d1675412204994e0",
       "review_evidence": "docs/quality/owned-helper-cancellation-review.md",
       "review_evidence_sha256": "52f259dd6ffadbd34a0557bd7cd7cc5af7b3234dda3117649ad6bf97089a5c34"
+    },
+    {
+      "path": "macOS/Keldin/Services/CustomAssessmentInspection.swift",
+      "classification": "maintained-source",
+      "status": "pending",
+      "reason": "No file-level semantic implementation review recorded in this ledger."
     },
     {
       "path": "macOS/Keldin/Services/PDFDocumentAccess.swift",
@@ -6364,11 +6397,8 @@
     {
       "path": "macOS/Tests/DocumentRecoveryInteractiveTests.swift",
       "classification": "test",
-      "status": "reviewed",
-      "reason": "Complete 228-line opt-in fixture review, including guarded cleanup of only the owned OS picker-folder preference. Real Cancel/wrong/exact picker rerun passed against its captured baseline; first failed isolation trial retained. Isolated controller storage, not full Documents-view or sandbox coverage.",
-      "source_sha256": "59a9ad5fdca5a6e8a29257ea25c853f93fbee6809da9d0051cfceec414fab3c0",
-      "review_evidence": "docs/quality/document-recovery-interaction-review.md",
-      "review_evidence_sha256": "a264bec8f23192237e9c8c07adae5345156238b4fc87c656c63ad6aa1f451c0c"
+      "status": "pending",
+      "reason": "No file-level semantic implementation review recorded in this ledger."
     },
     {
       "path": "macOS/Tests/FailureHistoryTests.swift",
@@ -6562,11 +6592,8 @@
     {
       "path": "macOS/scripts/build_backend.sh",
       "classification": "maintained-source",
-      "status": "reviewed",
-      "reason": "Root read original 230-line EOF and every repair; independent review checked explicit failure propagation and font payload identity. Actual signed build remains a separate release gate.",
-      "source_sha256": "bbe9d298c278b156ade7e31884d3ea9132ff1ccdd5780e579043be8be4e86d83",
-      "review_evidence": "docs/quality/model-download-and-packaging-input-review-2026-11-02.md",
-      "review_evidence_sha256": "9f13e6fbd83877c17dbad7659d266ce11619458437938f95242ecd585565908e"
+      "status": "pending",
+      "reason": "No file-level semantic implementation review recorded in this ledger."
     },
     {
       "path": "macOS/scripts/clean.sh",
@@ -7182,6 +7209,30 @@
       "source_sha256": "a334c53011454b2b611350f3e1e1f32dd19540d47a175152ebdd397263e13d32",
       "review_evidence": "docs/quality/release-safety-tooling-review-2026-10-29.md",
       "review_evidence_sha256": "749f4a81589a0670a4310ea244f7052d0cfe012c1860b159aced7dc2bc3e6896"
+    },
+    {
+      "path": "tests/test_custom_assessment_contract.py",
+      "classification": "test",
+      "status": "pending",
+      "reason": "No file-level semantic implementation review recorded in this ledger."
+    },
+    {
+      "path": "tests/test_custom_assessment_evidence.py",
+      "classification": "test",
+      "status": "pending",
+      "reason": "No file-level semantic implementation review recorded in this ledger."
+    },
+    {
+      "path": "tests/test_custom_assessment_vision.py",
+      "classification": "test",
+      "status": "pending",
+      "reason": "No file-level semantic implementation review recorded in this ledger."
+    },
+    {
+      "path": "tests/test_custom_assessment_visual.py",
+      "classification": "test",
+      "status": "pending",
+      "reason": "No file-level semantic implementation review recorded in this ledger."
     },
     {
       "path": "tests/test_deepseek_json_instructions.py",

@@ -4,6 +4,7 @@ import argparse
 import json
 import re
 import signal
+from pathlib import Path
 
 import pymupdf
 import pytest
@@ -12,7 +13,7 @@ from Backend.Core.cli import build_parser
 from Backend.Core.france import occitanie_case_study as case
 
 
-def test_native_status_mapping_tracks_actual_cli_event_messages(tmp_path, monkeypatch):
+def test_archive_reports_success_and_cancellation(tmp_path, monkeypatch):
     messages = []
     monkeypatch.setattr(
         case, "emit_progress", lambda message, **_: messages.append(message)
@@ -36,15 +37,12 @@ def test_native_status_mapping_tracks_actual_cli_event_messages(tmp_path, monkey
     assert (
         case.handle_generate_case_study(argparse.Namespace(output=str(tmp_path))) == 130
     )
-    assert len(set(messages)) == 3
-    native = (
-        case.Path(__file__).resolve().parents[1]
-        / "macOS/Keldin/Domain/GenerationPresentation.swift"
-    ).read_text()
-    for message in set(messages):
-        assert message in native, (
-            f"The native status map is missing the CLI message: {message}"
-        )
+    assert messages == [
+        "Préparation de l'extrait public d'Occitanie",
+        "Activité Occitanie créée. Document indépendant, sans note d'examen.",
+        "Préparation de l'extrait public d'Occitanie",
+        "Création de l'activité annulée",
+    ]
 
 
 def test_curated_values_and_licence_are_source_pinned():
@@ -141,11 +139,21 @@ def test_printed_python_solutions_execute_on_the_pinned_rows():
 
 
 def test_cli_has_no_model_or_seed_requirement():
-    args = build_parser().parse_args(
-        ["generate-occitanie-case-study", "--output", "/tmp/case-fixture"]
-    )
-    assert args.handler is case.handle_generate_case_study
+    args = case.build_case_study_parser().parse_args(["--output", "/tmp/case-fixture"])
+    assert args.output == Path("/tmp/case-fixture")
     assert not hasattr(args, "model") and not hasattr(args, "seed")
+
+
+def test_activity_is_not_registered_in_the_mac_backend_or_workspace():
+    assert "generate-occitanie-case-study" not in build_parser().format_help()
+    root = Path(__file__).resolve().parents[1]
+    view = root / "macOS/Keldin/Features/Generation/FrenchAssessmentWorkspace.swift"
+    assert "Occitanie" not in view.read_text(encoding="utf-8")
+    script = (root / "macOS/scripts/build_backend.sh").read_text(encoding="utf-8")
+    assert "--exclude-module Backend.Core.france.occitanie_case_study" in script
+    assert "! -name occitanie_case_study.py" in script
+    assert '--add-data "$ROOT_DIR/Resources/france:Resources/france"' not in script
+    assert '--add-data "$ROOT_DIR/Resources/france/nsi:Resources/france/nsi"' in script
 
 
 def test_existing_activity_is_not_overwritten(tmp_path):
@@ -237,6 +245,21 @@ def test_generation_exports_only_two_verified_pdfs(tmp_path):
     assert sorted(
         path.suffix for path in (tmp_path / case.OUTPUT_FOLDER).iterdir()
     ) == [".pdf", ".pdf"]
+
+
+def test_sql_lookup_rows_are_printed_before_questions_in_the_worksheet(tmp_path):
+    documents = case.generate_case_study(tmp_path)
+    with pymupdf.open(documents["question_paper"]) as pdf:
+        assert len(pdf) == 3
+        text = pdf[2].get_text()
+        source, separator, _ = text.partition("6. Écrire une requête")
+        assert separator
+        assert "Départements utilisés dans la relation DEPARTEMENT" in source
+        assert re.search(
+            r"30\s+Gard\s+31\s+Haute Garonne\s+34\s+Hérault\s+46\s+Lot", source
+        )
+        assert "SELECT " not in text
+        assert "nom du lycée\nnom du département" not in text
 
 
 def test_cli_emits_only_success_files_after_pair_publication(tmp_path, monkeypatch):

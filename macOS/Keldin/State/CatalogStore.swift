@@ -133,6 +133,7 @@ final class CatalogStore {
         case .documents: value = "documents"
         case .history: value = "history"
         case .frenchBaccalaureat: value = "france:nsi"
+        case .customAssessmentPreview: return
         case .admissionsTests: value = "admissions-tests"
         case nil: value = ""
         }

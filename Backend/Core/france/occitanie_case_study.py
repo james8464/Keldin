@@ -337,6 +337,14 @@ def _render(
         if space:
             story.append(Spacer(1, space))
 
+    def department_lookup():
+        prose("Départements utilisés dans la relation DEPARTEMENT", heading)
+        table(
+            ["Code (texte)", "Nom issu de la source"],
+            answers["departments"],
+            [110, 300],
+        )
+
     prose("NSI : étude de cas Occitanie", title)
     prose(
         "Correction proposée"
@@ -384,12 +392,7 @@ def _render(
         prose(
             "La sélection retient trois établissements dans chacune de quatre communes, sans tirage représentatif. Un résultat calculé ici porte seulement sur ces douze lignes. La source concerne 2025-2026 : elle ne décrit pas nécessairement la situation actuelle."
         )
-        prose("Départements utilisés dans la relation DEPARTEMENT", heading)
-        table(
-            ["Code (texte)", "Nom issu de la source"],
-            answers["departments"],
-            [110, 300],
-        )
+        department_lookup()
     story.append(PageBreak())
     prose("Traitements Python", title)
     prose(
@@ -444,6 +447,8 @@ def _render(
         "Clés primaires : DEPARTEMENT.code et LYCEE.codeetab. Clé étrangère : LYCEE.code_departement référence DEPARTEMENT.code.",
         small,
     )
+    if not correction:
+        department_lookup()
     question(
         6,
         "Écrire une requête donnant le nom et la commune des établissements du Lot (code 46) avec internat. Trier par codeetab.",
@@ -620,3 +625,13 @@ def handle_generate_case_study(args: argparse.Namespace) -> int:
         return 1
     finally:
         signal.signal(signal.SIGTERM, previous)
+
+
+def build_case_study_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--output", type=Path, required=True)
+    return parser
+
+
+if __name__ == "__main__":
+    raise SystemExit(handle_generate_case_study(build_case_study_parser().parse_args()))
