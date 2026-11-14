@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import re
 from dataclasses import dataclass
 from functools import lru_cache
 from pathlib import Path
@@ -31,6 +32,18 @@ class PaperQualification:
 
 
 @dataclass(frozen=True)
+class CheckpointNamespace:
+    identity_key: str
+    version: str
+
+    def apply(self, path: Path) -> Path:
+        prefix = f"{self.version}."
+        return (
+            path if path.name.startswith(prefix) else path.with_name(prefix + path.name)
+        )
+
+
+@dataclass(frozen=True)
 class GeneratorCapability:
     manifest_version: int
     id: str
@@ -51,6 +64,7 @@ class GeneratorCapability:
     outputs_by_paper: dict[str, tuple[str, ...]]
     evidence_by_paper: dict[str, dict[str, bool]]
     qualification_by_paper: dict[str, PaperQualification]
+    checkpoint_namespace: CheckpointNamespace | None = None
 
     @property
     def uses_ai(self) -> bool:
@@ -199,7 +213,24 @@ def _capability(raw: dict[str, Any]) -> GeneratorCapability:
         outputs_by_paper=outputs,
         evidence_by_paper=evidence,
         qualification_by_paper=qualification,
+        checkpoint_namespace=_checkpoint_namespace(raw),
     )
+
+
+def _checkpoint_namespace(raw: dict[str, Any]) -> CheckpointNamespace | None:
+    if "checkpoint_namespace" not in raw:
+        return None
+    value = raw["checkpoint_namespace"]
+    if isinstance(value, dict) and set(value) == {"identity_key", "version"}:
+        key, version = value["identity_key"], value["version"]
+        if (
+            isinstance(key, str)
+            and re.fullmatch(r"[a-z][a-z0-9_]{0,47}_source_binding_version", key)
+            and isinstance(version, str)
+            and re.fullmatch(r"[a-z0-9][a-z0-9-]{0,47}", version)
+        ):
+            return CheckpointNamespace(key, version)
+    raise ValueError(f"{raw['id']} has an invalid checkpoint namespace")
 
 
 def _paper_qualification(raw: dict[str, Any]) -> PaperQualification:

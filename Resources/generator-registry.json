@@ -976,6 +976,10 @@
       "app_subject": "economics",
       "app_board": "edexcel-a",
       "backend_subject": "economics",
+      "checkpoint_namespace": {
+        "identity_key": "economics_source_binding_version",
+        "version": "edexcel-instance-v2"
+      },
       "resource_path": "economics/edexcel-a",
       "python_path": "economics/edexcel-a/generator",
       "package": "pastpapergen",

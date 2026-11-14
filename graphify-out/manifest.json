@@ -155,8 +155,8 @@
     "semantic_hash": ""
   },
   "Backend/Core/family_adapter.py": {
-    "mtime": 1793958116.2478364,
-    "ast_hash": "f4cabb7d6bdae23a43bd9d9599f01141",
+    "mtime": 1794678925.2441046,
+    "ast_hash": "fb569c2eab20cc01a37d452ccb19a31b",
     "semantic_hash": ""
   },
   "Backend/Core/fonts/__init__.py": {
@@ -220,8 +220,8 @@
     "semantic_hash": ""
   },
   "Backend/Core/generation.py": {
-    "mtime": 1794013419.2899404,
-    "ast_hash": "ec77091f54ebd0998c9969213900ab9d",
+    "mtime": 1794678882.0113907,
+    "ast_hash": "dd9f60bdaa5e7d3eeb359b28725734e4",
     "semantic_hash": ""
   },
   "Backend/Core/generation_date.py": {
@@ -235,8 +235,8 @@
     "semantic_hash": ""
   },
   "Backend/Core/generator_registry.py": {
-    "mtime": 1793652934.0909522,
-    "ast_hash": "ac5e3c9c176360e1303b836bc917e352",
+    "mtime": 1794678882.011408,
+    "ast_hash": "985e7eb909f721645fe7de109396520b",
     "semantic_hash": ""
   },
   "Backend/Core/independent_solver.py": {
@@ -445,8 +445,8 @@
     "semantic_hash": ""
   },
   "Backend/Core/subjects/economics_contracts.py": {
-    "mtime": 1793990813.888734,
-    "ast_hash": "79fa2be29ef2cfed246a203e81244fcc",
+    "mtime": 1794678881.865773,
+    "ast_hash": "7dd6fb05255f1b4b369cf181fd9c4d93",
     "semantic_hash": ""
   },
   "Backend/Core/subjects/essay.py": {
@@ -945,8 +945,8 @@
     "semantic_hash": ""
   },
   "Resources/economics/edexcel-a/generator/pastpapergen/cli.py": {
-    "mtime": 1793990813.8898327,
-    "ast_hash": "0fad6ff5b117a9045d29fa9f2d2c483e",
+    "mtime": 1794678882.0113902,
+    "ast_hash": "57d9792f97584494f23513ae4c4614f6",
     "semantic_hash": ""
   },
   "Resources/economics/edexcel-a/generator/pastpapergen/credit_contracts.py": {
@@ -1185,13 +1185,13 @@
     "semantic_hash": ""
   },
   "Resources/generator-capability.schema.json": {
-    "mtime": 1793543731.621238,
-    "ast_hash": "6bfdfa8fdd107d58427aa1f6657a2214",
+    "mtime": 1794678881.866856,
+    "ast_hash": "0489cbfd5a72aab56c4b0f54f0f6bf88",
     "semantic_hash": ""
   },
   "Resources/generator-registry.json": {
-    "mtime": 1793543731.6215398,
-    "ast_hash": "017333398fb9cc457575a584370999d6",
+    "mtime": 1794678881.8664505,
+    "ast_hash": "6e921d30bed03a646811ff5fcabbc6a1",
     "semantic_hash": ""
   },
   "Resources/layout-master-runtime.json": {
@@ -1525,8 +1525,8 @@
     "semantic_hash": "b97261947c71219f6a29b0d220df62c5"
   },
   "tests/test_generator_registry.py": {
-    "mtime": 1793652934.12732,
-    "ast_hash": "ed08d78bfe12de8505b935d0b4dceaf2",
+    "mtime": 1794678882.0114017,
+    "ast_hash": "188b259ef78adfa814e53ff760dd5f45",
     "semantic_hash": ""
   },
   "tests/test_generator_render_transactions.py": {
@@ -4020,8 +4020,8 @@
     "semantic_hash": ""
   },
   "Resources/implementation-audit-coverage.json": {
-    "mtime": 1794678563.9056826,
-    "ast_hash": "7fb5d3925557b34c32776c35ffe06aa0",
+    "mtime": 1794678952.0337193,
+    "ast_hash": "07a26484b4a6e6721af0e0914e17d9b6",
     "semantic_hash": ""
   },
   "macOS/Keldin/Services/PDFDocumentAccess.swift": {
@@ -5805,8 +5805,8 @@
     "semantic_hash": ""
   },
   "tests/test_family_publication.py": {
-    "mtime": 1793958101.1991117,
-    "ast_hash": "046ba31892b0cfd4de20c26c0c0d9f76",
+    "mtime": 1794678916.9287922,
+    "ast_hash": "7ff32cc0957a46cb67a5082d1512a605",
     "semantic_hash": ""
   },
   "tests/test_french_graph_clearance_policy.py": {
@@ -6325,8 +6325,8 @@
     "semantic_hash": ""
   },
   "docs/quality/assessment-extension-design.md": {
-    "mtime": 1794672198.8768418,
-    "ast_hash": "46c06ec60bb43a0daa0b5ef6b7d7b525",
+    "mtime": 1794678951.7555966,
+    "ast_hash": "2b803e2ed59a57022257dd68f16545ff",
     "semantic_hash": ""
   },
   "Backend/Core/custom_assessment_contract.py": {

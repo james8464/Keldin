@@ -28,6 +28,33 @@ Use typed subject-specific validation where correctness depends on domain
 rules, such as a mathematical answer or an accounting ledger. Do not migrate
 an existing family until its prior acceptance fixtures still pass.
 
+### Implementation and review order
+
+1. Put paper IDs, supported providers, required output roles and syllabus
+   resources in the family registry. A family with versioned source recovery
+   may also declare a `checkpoint_namespace`: its identity key and version
+   belong to the family. The shared runner should not branch on a subject ID.
+   Preserve existing checkpoint names and identities during a refactor.
+2. Keep paper-specific values in rules and source data. Keep calculations,
+   credited answers and subject validators in the subject module, separate
+   from PDF layout and AI transport. Prefer an existing family adapter to a
+   new generation pipeline. Add a hook only when multiple callers actually
+   need the same extension point.
+3. Use the common staging and publication pipeline. Validate each preview
+   PDF after tagging, including supporting PDFs, before moving the set into
+   the destination. A release receipt must name the exact artifacts emitted
+   for that paper. Preview success says nothing about model-authored content.
+4. Before replacing two tests with one, list the behaviours each protects.
+   Combine equivalent cases, but retain distinct failure and compatibility
+   checks. Compare seeded outputs and recovery paths before and after a
+   migration. Measure fewer operations directly, and measure time and peak
+   memory on the same workload before claiming a performance gain.
+
+The first refactor covers the checkpoint boundary, preview inspection and
+artifact receipts. It is not a full repository review. Next, validate the
+extension path with a small configured family and advance the published
+live-paper evidence separately from the software checks.
+
 The admissions formats exercise different contract features:
 
 - [TMUA](https://esat-tmua.ac.uk/about-the-tests/tmua-test/): two timed maths
