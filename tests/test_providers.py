@@ -374,15 +374,22 @@ def test_apple_rejects_missing_or_extra_batch_items(
         )
 
 
-@pytest.mark.parametrize("duplicate", [False, True])
+@pytest.mark.parametrize("outcome", ["valid", "invalid", "decoder_error"])
 @pytest.mark.parametrize("chat", [False, True])
 @pytest.mark.parametrize("budget", [None, 14000])
 def test_apple_structured_decoder_caches_adapter_not_generation_state(
-    monkeypatch, duplicate, chat, budget
+    monkeypatch, outcome, chat, budget
 ):
     calls = []
     adapters = []
     templates = []
+    cache_clears = []
+    mlx = ModuleType("mlx")
+    core = ModuleType("mlx.core")
+    core.clear_cache = lambda: cache_clears.append(True)
+    mlx.core = core
+    monkeypatch.setitem(sys.modules, "mlx", mlx)
+    monkeypatch.setitem(sys.modules, "mlx.core", core)
 
     class Tokenizer:
         has_chat_template = chat
@@ -406,7 +413,11 @@ def test_apple_structured_decoder_caches_adapter_not_generation_state(
         def generate(prompt, output_type, **kwargs):
             assert generate.type_adapter.has_chat_template is False
             calls.append((prompt, output_type, kwargs))
-            return '{"answer":["ready","ready"]}' if duplicate else '{"answer":"ready"}'
+            if outcome == "decoder_error":
+                raise RuntimeError("decoder failed")
+            if outcome == "invalid":
+                return '{"answer":["ready","ready"]}'
+            return '{"answer":"ready"}'
 
         generate.type_adapter = SimpleNamespace(has_chat_template=True)
         return generate
@@ -428,10 +439,16 @@ def test_apple_structured_decoder_caches_adapter_not_generation_state(
     client = HostedLLMClient(provider="apple", model="test", api_key="")
     client._apple_tokenizer = Tokenizer()
     schema = {"type": "object", "required": ["answer"]}
-    if duplicate:
+    if outcome == "decoder_error":
+        with pytest.raises(RuntimeError, match="decoder failed"):
+            client._mlx_structured_response("prompt", schema, budget)
+        assert cache_clears == [True]
+        return
+    if outcome == "invalid":
         schema["properties"] = {"answer": {"type": "array", "uniqueItems": True}}
         with pytest.raises(ValueError, match="required output schema"):
             client._mlx_structured_response("prompt", schema, budget)
+        assert cache_clears == [True]
         return
     for _ in range(2):
         assert (
@@ -440,11 +457,17 @@ def test_apple_structured_decoder_caches_adapter_not_generation_state(
         )
     assert len(adapters) == 1
     assert len(calls) == 2
+    assert cache_clears == [True, True]
     assert len(templates) == (2 if chat else 0)
     assert calls[0] == (
         "formatted conversation" if chat else "unformatted prompt",
         {"schema": schema},
-        {"backend": "llguidance", "max_tokens": budget or 4096, "verbose": False},
+        {
+            "backend": "llguidance",
+            "max_tokens": budget or 4096,
+            "prefill_step_size": 512,
+            "verbose": False,
+        },
     )
 
 

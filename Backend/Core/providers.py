@@ -654,6 +654,7 @@ class HostedLLMClient:
 
         try:
             import llguidance
+            import mlx.core as mx
             import outlines
             from jsonschema import Draft202012Validator, ValidationError
             from outlines.types import JsonSchema
@@ -680,13 +681,20 @@ class HostedLLMClient:
             raise ValueError(
                 f"MLX cannot constrain this response format: {grammar_error}"
             )
-        response = self._apple_structured_model(
-            _mlx_json_prompt(self._apple_tokenizer, prompt),
-            JsonSchema(decoder_schema),
-            backend="llguidance",
-            max_tokens=budget,
-            verbose=False,
-        )
+        try:
+            response = self._apple_structured_model(
+                _mlx_json_prompt(self._apple_tokenizer, prompt),
+                JsonSchema(decoder_schema),
+                backend="llguidance",
+                max_tokens=budget,
+                # Bound transient prefill allocations without truncating output.
+                prefill_step_size=512,
+                verbose=False,
+            )
+        finally:
+            # Retain live model weights, but return unused allocator buffers
+            # before authoring, solving or review starts another response.
+            mx.clear_cache()
         if len(response.encode("utf-8")) > 1_048_576:
             raise ValueError("Model response exceeded the 1 MB JSON limit.")
         parsed = json.loads(response, object_pairs_hook=_unique_json_fields)
