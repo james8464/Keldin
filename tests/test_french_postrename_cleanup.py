@@ -88,6 +88,10 @@ def publication(request, tmp_path, monkeypatch):
         monkeypatch.setattr(
             subject, "_model_snapshot", lambda _args: "fixture-snapshot"
         )
+        monkeypatch.setattr(
+            "Backend.Core.ollama_admission.require_local_ollama_capacity",
+            lambda *_args: None,
+        )
         monkeypatch.setattr(subject, "HostedLLMClient", lambda **_kwargs: object())
         monkeypatch.setattr(
             subject,

@@ -134,6 +134,12 @@ def handle_generate_llm_assessment(args) -> int:
         reference_hash = _file_hash(args.reference_index)
         source_hash = implementation_identity()
         model_snapshot = _model_snapshot(args)
+        if args.provider == "ollama":
+            from Backend.Core.ollama_admission import require_local_ollama_capacity
+
+            # The endpoint has been validated. Refuse before starting authoring
+            # or creating recovery records; the provider checks again at dispatch.
+            require_local_ollama_capacity(args.ollama_url, args.model)
         output.mkdir(parents=True, exist_ok=True)
         client = FrenchGenerationBudget(provider_client)
         if args.provider in {"openai", "anthropic", "deepseek"}:
