@@ -169,6 +169,11 @@ Only after all checks pass does `os.replace` atomically move every artifact into
 the selected folder. A failure removes staging output and leaves no partial
 paper.
 
+Family rendering completion does not complete the bridge job. While the
+bridge validates and publishes documents, the app shows “Checking documents
+before saving.” The backend sends file records before reporting 100% and
+completion.
+
 Reference-defined sparse leaves are explicit contracts, not threshold
 exceptions. For example, Edexcel Economics Paper 2 retains its measured blank
 final mark-scheme page; the same blank page fails validation for any other

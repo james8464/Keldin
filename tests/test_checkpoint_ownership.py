@@ -652,6 +652,8 @@ def test_actual_json_protocol_finishes_after_checkpoint_maintenance(
         assert result == 130
         assert not destination.exists()
         assert not any(event["type"] in {"file", "done"} for event in events)
+        assert all(event.get("progress", 0) < 1.0 for event in events)
+        assert events[-2]["stage"] == "checking_documents"
         assert events[-1]["stage"] == "cancel"
         return
     assert result == 0

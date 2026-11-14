@@ -128,11 +128,14 @@ def progress_emitter() -> Callable[[str | GenerationUpdate], None]:
         "Rendering question paper": 0.88,
         "Rendering source booklet": 0.92,
         "Rendering mark scheme": 0.96,
-        "Done": 1.0,
     }
 
     def callback(message: str | GenerationUpdate) -> None:
         nonlocal last_progress
+        # The family finished staging, but the bridge still owns publication.
+        # Standalone family CLIs use their own callback and keep their "Done".
+        if message == "Done":
+            return
         if isinstance(message, GenerationUpdate):
             item_progress = 0.08 + message.progress * 0.70
             last_progress = max(last_progress, item_progress)
