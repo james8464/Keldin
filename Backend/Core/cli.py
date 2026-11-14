@@ -44,6 +44,18 @@ def build_parser() -> argparse.ArgumentParser:
     )
     custom_sources.set_defaults(handler=handle_custom_assessment_sources)
 
+    custom_page = subparsers.add_parser(
+        "inspect-custom-page-layout",
+        help="Analyze one selected PDF page with local Ollama",
+    )
+    custom_page.add_argument(
+        "--source", nargs=2, metavar=("ROLE", "PDF"), required=True
+    )
+    custom_page.add_argument("--sha256", required=True)
+    custom_page.add_argument("--page", type=int, required=True)
+    custom_page.add_argument("--model", required=True)
+    custom_page.set_defaults(handler=handle_custom_page_layout)
+
     guidance = subparsers.add_parser("local-model-guidance")
     guidance.set_defaults(handler=handle_local_model_guidance)
 
@@ -214,6 +226,36 @@ def handle_framework_generate(args: argparse.Namespace) -> int:
     from Backend.Core.france.runtime import handle_generate_assessment
 
     return handle_generate_assessment(args)
+
+
+def handle_custom_page_layout(args: argparse.Namespace) -> int:
+    from hashlib import sha256
+
+    from Backend.Core.custom_assessment_evidence import read_custom_source
+    from Backend.Core.custom_assessment_vision import analyze_custom_source_page
+    from Backend.Core.ollama_admission import ResourceAdmissionError
+
+    role, filename = args.source
+    try:
+        source = read_custom_source(role, Path(filename))
+        if sha256(source.content).hexdigest() != args.sha256:
+            raise ValueError("The source has changed. Inspect the PDF again.")
+        observation = analyze_custom_source_page(source, args.page, model=args.model)
+    except ResourceAdmissionError as error:
+        emit("error", code=error.code, message=str(error))
+        return 1
+    except ValueError as error:
+        emit("error", code="custom_layout_rejected", message=str(error))
+        return 1
+    emit(
+        "custom_page_layout",
+        role=observation.role,
+        sha256=observation.document_sha256,
+        page=observation.page,
+        model=observation.model,
+        layout=observation.layout,
+    )
+    return 0
 
 
 def handle_french_references(args: argparse.Namespace) -> int:

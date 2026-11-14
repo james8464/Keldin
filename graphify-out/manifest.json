@@ -60,8 +60,8 @@
     "semantic_hash": ""
   },
   "Backend/Core/cli.py": {
-    "mtime": 1794670639.878898,
-    "ast_hash": "c88ed3fd17dae4caaac6726ecb45f0f5",
+    "mtime": 1794671578.3391373,
+    "ast_hash": "1864a33fb488a407139ce992a305b5c6",
     "semantic_hash": ""
   },
   "Backend/Core/computer_science_audit.py": {
@@ -1245,8 +1245,8 @@
     "semantic_hash": "9089fa356046b0e497da7729dfba8605"
   },
   "Resources/repository-inventory.json": {
-    "mtime": 1794670698.1228218,
-    "ast_hash": "cca94c7593426a7d6a579cc716e8af22",
+    "mtime": 1794671595.9897833,
+    "ast_hash": "30622b91f316c6f0d7108d0d738d3316",
     "semantic_hash": ""
   },
   "bridge.py": {
@@ -4020,8 +4020,8 @@
     "semantic_hash": ""
   },
   "Resources/implementation-audit-coverage.json": {
-    "mtime": 1794670790.039789,
-    "ast_hash": "209965bd8c662460a4fe7bb6172704ef",
+    "mtime": 1794671596.2089174,
+    "ast_hash": "55d73e5f3a1f840766e24ffa3ef7f38c",
     "semantic_hash": ""
   },
   "macOS/Keldin/Services/PDFDocumentAccess.swift": {
@@ -6325,8 +6325,8 @@
     "semantic_hash": ""
   },
   "Backend/Core/custom_assessment_evidence.py": {
-    "mtime": 1794671246.957799,
-    "ast_hash": "c7e7e0188ebde3184fbf1043e020671d",
+    "mtime": 1794671578.339036,
+    "ast_hash": "875b70a3c5cfa6359ce4c8f57c66e5d6",
     "semantic_hash": ""
   },
   "tests/test_custom_assessment_evidence.py": {
@@ -6362,6 +6362,16 @@
   "tests/test_custom_assessment_visual.py": {
     "mtime": 1794670691.2959142,
     "ast_hash": "9a4d9f8412ef5cc31db21589dcc7479d",
+    "semantic_hash": ""
+  },
+  "Backend/Core/custom_assessment_vision.py": {
+    "mtime": 1794671542.600719,
+    "ast_hash": "81952a5c6562c46d168997855ab041cb",
+    "semantic_hash": ""
+  },
+  "tests/test_custom_assessment_vision.py": {
+    "mtime": 1794671595.8017604,
+    "ast_hash": "3ec1777a68089aec0c2b0402a4bff16b",
     "semantic_hash": ""
   }
 }

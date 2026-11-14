@@ -56,26 +56,39 @@ def inspect_custom_files(
     sources = []
     remaining = MAX_TOTAL_BYTES
     for number, (role, path) in enumerate(selections, start=1):
-        try:
-            with open(path, "rb", opener=_open_source) as stream:
-                metadata = os.fstat(stream.fileno())
-                if not stat.S_ISREG(metadata.st_mode):
-                    raise OSError("Not a regular file")
-                limit = min(MAX_SOURCE_BYTES, remaining)
-                if metadata.st_size > limit:
-                    raise ValueError(f"Source {number} exceeds the import size limit")
-                content = stream.read(limit + 1)
-        except OSError:
-            raise ValueError(
-                f"Could not read source {number}. Choose the file again."
-            ) from None
-        if len(content) > limit or len(content) != metadata.st_size:
-            raise ValueError(
-                f"Source {number} changed during import. Choose the file again."
-            )
-        sources.append(LocalSource(cast(SourceRole, role), content))
-        remaining -= len(content)
+        source = read_custom_source(
+            role, path, source_number=number, remaining=remaining
+        )
+        sources.append(source)
+        remaining -= len(source.content)
     return build_custom_evidence(sources)
+
+
+def read_custom_source(
+    role: str, path: Path, *, source_number: int = 1, remaining: int = MAX_SOURCE_BYTES
+) -> LocalSource:
+    if role not in _ROLES:
+        raise ValueError("Unknown assessment source role")
+    limit = min(MAX_SOURCE_BYTES, remaining)
+    try:
+        with open(path, "rb", opener=_open_source) as stream:
+            metadata = os.fstat(stream.fileno())
+            if not stat.S_ISREG(metadata.st_mode):
+                raise OSError("Not a regular file")
+            if metadata.st_size > limit:
+                raise ValueError(
+                    f"Source {source_number} exceeds the import size limit"
+                )
+            content = stream.read(limit + 1)
+    except OSError:
+        raise ValueError(
+            f"Could not read source {source_number}. Choose the file again."
+        ) from None
+    if len(content) > limit or len(content) != metadata.st_size:
+        raise ValueError(
+            f"Source {source_number} changed during import. Choose the file again."
+        )
+    return LocalSource(cast(SourceRole, role), content)
 
 
 def _open_source(filename: str, flags: int) -> int:
