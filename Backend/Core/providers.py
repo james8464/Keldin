@@ -458,10 +458,11 @@ class HostedLLMClient:
         source_prompt = prompt
         schema = _ollama_json_schema(prompt) if schema is None else schema
         if schema.get("required"):
-            # Keep the format visible to the model as well as the token decoder.
-            prompt += "\n\nReturn JSON only, following OUTPUT_SCHEMA=" + json.dumps(
-                schema, separators=(",", ":")
-            )
+            from Backend.Core.apple_intelligence import complete_prompt
+
+            # Typed requests may already carry this schema. Keep one copy in
+            # the input without changing the separate decoder contract.
+            prompt = complete_prompt(prompt, schema)
         if self.parallel_generation_workers == 2:
             # Only the owner thread loads or uses the shared MLX model/tokenizer.
             with self._apple_batcher_lock:
