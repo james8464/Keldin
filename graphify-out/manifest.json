@@ -60,8 +60,8 @@
     "semantic_hash": ""
   },
   "Backend/Core/cli.py": {
-    "mtime": 1794674514.3019154,
-    "ast_hash": "1864a33fb488a407139ce992a305b5c6",
+    "mtime": 1794676250.2547483,
+    "ast_hash": "5ffbf1fde260eeac639a25854ff2b8b5",
     "semantic_hash": ""
   },
   "Backend/Core/computer_science_audit.py": {
@@ -280,8 +280,8 @@
     "semantic_hash": ""
   },
   "Backend/Core/model_recommendations.py": {
-    "mtime": 1794674514.346543,
-    "ast_hash": "257e3df5a7683e07401466144ac7aea4",
+    "mtime": 1794676266.9759789,
+    "ast_hash": "aa610ffc9b68b9046e00cf0375341af7",
     "semantic_hash": ""
   },
   "Backend/Core/model_review.py": {
@@ -1275,8 +1275,8 @@
     "semantic_hash": ""
   },
   "macOS/Tests/CoordinatorTests.swift": {
-    "mtime": 1794674663.1004293,
-    "ast_hash": "e91410f42fc1c75479ad635883e330ac",
+    "mtime": 1794676250.308225,
+    "ast_hash": "b9b0529376a11608575010002f42cc47",
     "semantic_hash": ""
   },
   "macOS/scripts/bootstrap_backend.sh": {
@@ -1285,8 +1285,8 @@
     "semantic_hash": ""
   },
   "macOS/scripts/build_backend.sh": {
-    "mtime": 1794674514.559853,
-    "ast_hash": "1919fb69dfa4e397b3c6c873e8209148",
+    "mtime": 1794676250.3093064,
+    "ast_hash": "63f71ddb050d547873da674e018b4d84",
     "semantic_hash": ""
   },
   "macOS/scripts/clean.sh": {
@@ -1590,8 +1590,8 @@
     "semantic_hash": ""
   },
   "tests/test_model_recommendations.py": {
-    "mtime": 1794674514.6188512,
-    "ast_hash": "ec54e4ccd27db1694e79fe02170b79f8",
+    "mtime": 1794676267.034063,
+    "ast_hash": "cd86d48cfd437ac6226348ef35226956",
     "semantic_hash": ""
   },
   "tests/test_model_review.py": {
@@ -1950,8 +1950,8 @@
     "semantic_hash": ""
   },
   "README.md": {
-    "mtime": 1794674514.3636765,
-    "ast_hash": "beec510e1e530e899813a2513a3f2203",
+    "mtime": 1794676250.2555048,
+    "ast_hash": "0dc538d1518b0f9f147f1f41ffbedc17",
     "semantic_hash": ""
   },
   "Resources/economics/edexcel-a/generator/data/notes/text/1.1. Nature of Economics.txt": {
@@ -2105,8 +2105,8 @@
     "semantic_hash": ""
   },
   "docs/occitanie-project.md": {
-    "mtime": 1794674514.4059906,
-    "ast_hash": "c22656e288b38ed6164969395db01bbe",
+    "mtime": 1794676250.2575889,
+    "ast_hash": "878c39c6615d21eec35d6e6c5c8f1471",
     "semantic_hash": ""
   },
   "docs/project-analysis/IMPLEMENTATION_AND_FIDELITY_REPORT.md": {
@@ -3295,8 +3295,8 @@
     "semantic_hash": ""
   },
   "tests/test_french_ui_provenance.py": {
-    "mtime": 1794674514.6102006,
-    "ast_hash": "92fe112acb5dc756c94838d4d8cd07d7",
+    "mtime": 1794676250.3095682,
+    "ast_hash": "168779730daa62bdc7930afe3e8542d9",
     "semantic_hash": ""
   },
   "tests/test_french_whole_case_benchmark.py": {
@@ -3510,8 +3510,8 @@
     "semantic_hash": ""
   },
   "macOS/Keldin/Domain/GenerationPresentation.swift": {
-    "mtime": 1794674514.5383189,
-    "ast_hash": "94a5cd404c0eddfa1563334e34337200",
+    "mtime": 1794676250.305908,
+    "ast_hash": "dd7aa7992ac66476368fccb63f460f99",
     "semantic_hash": ""
   },
   "macOS/Keldin/Domain/InterfaceText.swift": {
@@ -3540,8 +3540,8 @@
     "semantic_hash": ""
   },
   "macOS/Keldin/Features/Generation/FrenchAssessmentWorkspace.swift": {
-    "mtime": 1794674514.541269,
-    "ast_hash": "e0208b184854e92c405c2750a5de8a92",
+    "mtime": 1794676250.306276,
+    "ast_hash": "aa81521bc2dcbdadfa5503cc5d2e4e03",
     "semantic_hash": ""
   },
   "macOS/Keldin/Features/Generation/GeneratorWorkspaceView.swift": {
@@ -3580,8 +3580,8 @@
     "semantic_hash": ""
   },
   "macOS/Keldin/State/ApplicationCoordinator.swift": {
-    "mtime": 1794674663.0977314,
-    "ast_hash": "cb4ef43e25a2e190b0b4198e86a3df26",
+    "mtime": 1794676265.3862932,
+    "ast_hash": "40fc7c781d94ec8fea3a906e260330bf",
     "semantic_hash": ""
   },
   "macOS/Keldin/State/BenchmarkCoordinator.swift": {
@@ -3620,8 +3620,8 @@
     "semantic_hash": ""
   },
   "macOS/Tests/MigrationTests.swift": {
-    "mtime": 1794674514.5551696,
-    "ast_hash": "864e974b8fb186a45b9834e70c034c82",
+    "mtime": 1794676250.3087008,
+    "ast_hash": "41169673e7d4364a99f036a68e1e8f86",
     "semantic_hash": ""
   },
   "tests/test_keldin_migration.py": {
@@ -4020,8 +4020,8 @@
     "semantic_hash": ""
   },
   "Resources/implementation-audit-coverage.json": {
-    "mtime": 1794674663.056275,
-    "ast_hash": "e517ee0019e1c7303d32e89e09560e49",
+    "mtime": 1794676250.257233,
+    "ast_hash": "85af0d773a8f8094da4fefcf8a50050c",
     "semantic_hash": ""
   },
   "macOS/Keldin/Services/PDFDocumentAccess.swift": {
@@ -4050,13 +4050,13 @@
     "semantic_hash": ""
   },
   "macOS/Tests/StorageLocalizationTests.swift": {
-    "mtime": 1794674514.558417,
-    "ast_hash": "bd5027767d25f5a6b4c03e706c1b41ac",
+    "mtime": 1794676266.2429981,
+    "ast_hash": "9e70e2d6db8c675fbc5b23a876db0623",
     "semantic_hash": ""
   },
   "macOS/Tests/UKArtifactPublisherTests.swift": {
-    "mtime": 1794674514.5592623,
-    "ast_hash": "c689f8a17af2c87195abd05d25aa3910",
+    "mtime": 1794676250.3090148,
+    "ast_hash": "fcc95d477385e14e6a480b4b9af91d72",
     "semantic_hash": ""
   },
   "tests/test_audit_coverage.py": {
@@ -4635,8 +4635,8 @@
     "semantic_hash": ""
   },
   "Backend/Core/france/occitanie_case_study.py": {
-    "mtime": 1794674514.3338504,
-    "ast_hash": "a50f07106855de0734ebef698137e91e",
+    "mtime": 1794676250.2551024,
+    "ast_hash": "f3055942c69fde14799eb3d63a846bb3",
     "semantic_hash": ""
   },
   "Backend/Core/mlx_download_info.py": {
@@ -4675,8 +4675,8 @@
     "semantic_hash": ""
   },
   "tests/test_occitanie_case_study.py": {
-    "mtime": 1794674514.6202605,
-    "ast_hash": "d1ae2e2ae3133f21c83be68bd538d3f3",
+    "mtime": 1794676250.3098145,
+    "ast_hash": "2d1c176448093f797683717831b94b12",
     "semantic_hash": ""
   },
   "docs/quality/accounting-paper-two-public-choice-binding-2026-10-29.md": {
@@ -5895,8 +5895,8 @@
     "semantic_hash": ""
   },
   "macOS/Tests/DocumentRecoveryInteractiveTests.swift": {
-    "mtime": 1794674514.551248,
-    "ast_hash": "22dc7b1d07a0bc65fdc86ea966244c4d",
+    "mtime": 1794676266.2427583,
+    "ast_hash": "2e273644c93a7d06b3675da0f46c2588",
     "semantic_hash": ""
   },
   "tests/test_cs_functional_source_binding.py": {
@@ -6055,8 +6055,8 @@
     "semantic_hash": ""
   },
   "Backend/Core/ollama_admission.py": {
-    "mtime": 1794674514.3475995,
-    "ast_hash": "846c8cacfd5df2185f6dbffddafd6f8d",
+    "mtime": 1794676266.9761615,
+    "ast_hash": "b78d72119d644d368b0088d2b76378d7",
     "semantic_hash": ""
   },
   "tests/test_ollama_resource_admission.py": {
