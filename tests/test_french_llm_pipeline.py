@@ -276,6 +276,33 @@ def raw_exercise(identifier="1", marker="Aventure originale"):
     }
 
 
+def test_live_authoring_retries_identical_questions_using_the_same_materials():
+    duplicate = raw_exercise()
+    duplicate["questions"][1]["prompt"] = duplicate["questions"][0]["prompt"]
+
+    class DuplicateFirst(Client):
+        def generate_request(self, request):
+            self.requests.append(request)
+            return duplicate if len(self.requests) == 1 else raw_exercise()
+
+    client = DuplicateFirst()
+    exercise, evidence = subject._author(
+        client, subject.exercise_request("1", 42, []), "1"
+    )
+    assert evidence["attempts"] == 2
+    assert "répétée" in evidence["rejected"][0]["issue"]
+    assert exercise.questions[0].prompt != exercise.questions[1].prompt
+
+
+def test_same_instruction_can_address_different_materials():
+    raw = raw_exercise()
+    raw["materials"].append(dict(raw["materials"][0], id="autres"))
+    raw["questions"][1]["prompt"] = raw["questions"][0]["prompt"]
+    raw["questions"][1]["material_ids"] = ["autres"]
+    exercise = subject.validate_authored_exercise(raw, "1")
+    subject._require_distinct_questions(exercise)
+
+
 class Client:
     provider = "ollama"
     model = "mock-model"

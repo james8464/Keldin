@@ -1287,6 +1287,8 @@ def _structural_feedback(error: Exception, schema: dict) -> str:
         return "Mise en page du code : rédiger des lignes plus courtes respectant les largeurs indiquées, sans modifier automatiquement le programme."
     if isinstance(error, PythonCodeFormatError):
         return "Présentation Python : fournir des programmes complets dans les blocs de code demandés, en conservant leur indentation."
+    if isinstance(error, RepeatedQuestionError):
+        return "Deux questions identiques utilisent les mêmes documents. Proposer deux tâches distinctes."
     if isinstance(error, ProviderOutputContractError):
         return "Structure JSON : produire un seul objet JSON valide respectant tous les champs, types et contraintes du schéma."
 
@@ -1390,6 +1392,20 @@ def _read_author_response(
     )
 
 
+class RepeatedQuestionError(ContentContractError):
+    """An exact repeat within a newly authored exercise."""
+
+
+def _require_distinct_questions(exercise: NSIExercise) -> None:
+    # Identical instructions can be valid when they address different figures.
+    seen: set[tuple[str, frozenset[str]]] = set()
+    for question in exercise.questions:
+        key = (question.prompt.strip(), frozenset(question.material_ids))
+        if key in seen:
+            raise RepeatedQuestionError(f"Question répétée : {question.id}")
+        seen.add(key)
+
+
 def _author(
     client,
     request,
@@ -1419,6 +1435,7 @@ def _author(
                 mark_plan=mark_plan,
                 wire_schema=request.schema,
             )
+            _require_distinct_questions(exercise)
         except (
             ContentContractError,
             SchemaValidationError,
