@@ -111,10 +111,12 @@ def handle_local_model_guidance(args: Any) -> int:
         ResourceAdmissionError,
         _checked_physical_memory,
         _headroom_snapshot,
+        local_ollama_cached_sizes,
     )
 
     try:
         physical = _checked_physical_memory()
+        cached_sizes = local_ollama_cached_sizes()
         available = _headroom_snapshot(physical)
         # The app bundle and the default Ollama cache can be on different volumes.
         cache = Path.home() / ".ollama" / "models"
@@ -138,14 +140,18 @@ def handle_local_model_guidance(args: Any) -> int:
     ]
     candidates.append(("qwen3.5:4b-q4_K_M", 3_400_000_000))
     rows = []
-    for model, size in candidates:
+    for model, download_estimate in candidates:
+        cached_size = cached_sizes.get(model)
+        size = cached_size if cached_size is not None else download_estimate
+        download_bytes = download_estimate if cached_size is None else 0
         required = size + max(2 * gib, (size + 3) // 4)
         rows.append(
             {
                 "model": model,
-                "estimated_download_bytes": size,
+                "estimated_download_bytes": download_bytes,
                 "estimated_required_memory_bytes": required,
-                "estimated_fit_now": required <= budget and size + gib <= disk,
+                "estimated_fit_now": required <= budget
+                and (cached_size is not None or download_bytes + gib <= disk),
                 "quality_verified": False,
             }
         )

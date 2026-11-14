@@ -37,6 +37,7 @@ def test_live_guidance_checks_headroom_and_disk(
     monkeypatch.setattr(
         "shutil.disk_usage", lambda _: SimpleNamespace(free=disk_gib * gib)
     )
+    monkeypatch.setattr(ollama_admission, "_model_metadata", lambda *_: [])
     monkeypatch.setattr(
         "Backend.Core.events.emit", lambda kind, **data: events.append((kind, data))
     )
@@ -48,6 +49,80 @@ def test_live_guidance_checks_headroom_and_disk(
         row["model"] for row in report["recommendations"] if row["estimated_fit_now"]
     ] == fitting
     assert not any(row["quality_verified"] for row in report["recommendations"])
+
+
+@pytest.mark.parametrize(
+    ("catalogue", "headroom_gib", "fits"),
+    [
+        ("installed", 7, True),
+        ("installed", 4, False),
+        ("larger-variant", 7, False),
+        ("absent", 7, False),
+        ("unavailable", 7, False),
+        ("remote", 7, False),
+        ("remote-only-model", 7, False),
+        ("ambiguous", 7, False),
+        ("conflicting-alias", 7, False),
+        ("malformed-size", 7, False),
+        ("bad-digest", 7, False),
+    ],
+)
+def test_fit_guidance_only_waives_download_space_for_verified_installed_model(
+    monkeypatch, catalogue, headroom_gib, fits
+):
+    from Backend.Core import ollama_admission
+    from Backend.Core.model_recommendations import handle_local_model_guidance
+
+    gib = 1 << 30
+    model = "qwen3.5:4b-q4_K_M"
+    installed = {"name": model, "model": model, "size": 3 * gib, "digest": "a" * 64}
+    if catalogue == "larger-variant":
+        installed["size"] = 6 * gib
+    if catalogue == "remote":
+        installed["remote_host"] = "https://ollama.com"
+    if catalogue == "remote-only-model":
+        installed["remote_model"] = "remote-model"
+    if catalogue == "conflicting-alias":
+        installed["model"] = "other:latest"
+    if catalogue == "malformed-size":
+        installed["size"] = True
+    if catalogue == "bad-digest":
+        installed["digest"] = "bad"
+
+    calls = []
+
+    def metadata(endpoint, route):
+        calls.append((endpoint, route))
+        if catalogue == "unavailable":
+            raise ollama_admission.ResourceAdmissionError("No local server")
+        if catalogue == "absent":
+            return []
+        if catalogue == "ambiguous":
+            return [installed, {**installed, "digest": "b" * 64}]
+        return [installed]
+
+    monkeypatch.setattr(ollama_admission, "_model_metadata", metadata)
+    monkeypatch.setattr(ollama_admission, "_checked_physical_memory", lambda: 18 * gib)
+    monkeypatch.setattr(
+        ollama_admission, "_headroom_snapshot", lambda _: headroom_gib * gib
+    )
+    monkeypatch.setattr("shutil.disk_usage", lambda _: SimpleNamespace(free=gib))
+    events = []
+    monkeypatch.setattr(
+        "Backend.Core.events.emit", lambda kind, **data: events.append((kind, data))
+    )
+    assert handle_local_model_guidance(None) == 0
+    assert calls == [("http://127.0.0.1:11434", "tags")]
+    [(kind, report)] = events
+    assert kind == "model_guidance" and report["conditions_verified"]
+    picked = next(row for row in report["recommendations"] if row["model"] == model)
+    assert picked["estimated_fit_now"] is fits
+    assert picked["quality_verified"] is False
+    if catalogue in {"installed", "larger-variant"}:
+        assert picked["estimated_download_bytes"] == 0
+        assert picked["estimated_required_memory_bytes"] == installed["size"] + 2 * gib
+    else:
+        assert picked["estimated_download_bytes"] > 0
 
 
 def test_recommendation_registry_is_contiguous_and_owns_cli_default() -> None:
@@ -212,6 +287,7 @@ def test_guidance_checks_cache_parent_volume_when_models_folder_is_missing(
     monkeypatch.setattr(Path, "home", lambda: tmp_path)
     monkeypatch.setattr(ollama_admission, "_checked_physical_memory", lambda: 18 << 30)
     monkeypatch.setattr(ollama_admission, "_headroom_snapshot", lambda _: 8 << 30)
+    monkeypatch.setattr(ollama_admission, "_model_metadata", lambda *_: [])
     paths = []
 
     def disk_usage(path):
