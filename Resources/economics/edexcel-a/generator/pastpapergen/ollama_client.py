@@ -44,7 +44,6 @@ from pastpapergen.models import (
     Syllabus,
     SyllabusTopic,
 )
-from pastpapergen.notes import note_context_for_topic
 from pastpapergen.render_pdf import candidate_stimulus_data
 from pastpapergen.validation import admit_parent_prompt
 
@@ -55,11 +54,6 @@ def build_question_prompt(
     paper_id: str | None = None,
 ) -> str:
     points = "\n".join(f"- {point}" for point in topic.points)
-    note_context = note_context_for_topic(
-        topic.id,
-        title=topic.title,
-        keywords=topic.points,
-    )[:1800]
     demand_target = ""
     if paper_id is not None:
         profile = profile_for(
@@ -84,9 +78,6 @@ Theme: {topic.theme}
 Title: {topic.title}
 Syllabus points (you must align every mark scheme bullet to these):
 {points}
-
-Revision-note context for factual grounding:
-{note_context}
 
 Write one genuinely new, independent Edexcel A-style question. Do not copy, reconstruct, or closely paraphrase any live, historic, or draft paper question.
 Question number: {question.number}

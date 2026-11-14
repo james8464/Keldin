@@ -10,6 +10,3 @@ dependencies = [
 [tool.setuptools.packages.find]
 where = ["."]
 include = ["aqaecongen*"]
-
-[tool.pytest.ini_options]
-testpaths = ["tests"]

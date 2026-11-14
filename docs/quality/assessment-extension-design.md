@@ -39,6 +39,9 @@ an existing family until its prior acceptance fixtures still pass.
    subprocess imports and both dependency installers use the advertised
    registry paths. Do not add the family to pytest or CI by hand. Unadvertised
    modules are excluded from those default paths.
+   Keep pytest configuration at the repository root. A second configuration
+   inside a family can bypass the shared fixtures when running a single test
+   by path, causing it to import an editable package from another checkout.
    The backend reads each paper's output roles, release checks and
    qualification into one read-only contract. The registry file format is
    unchanged. Each paper must have exactly one output declaration; duplicate

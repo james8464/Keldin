@@ -978,7 +978,7 @@
       "backend_subject": "economics",
       "checkpoint_namespace": {
         "identity_key": "economics_source_binding_version",
-        "version": "edexcel-instance-v2"
+        "version": "edexcel-declared-inputs-v1"
       },
       "resource_path": "economics/edexcel-a",
       "python_path": "economics/edexcel-a/generator",

@@ -20,6 +20,3 @@ cspapergen = "cspapergen.cli:main"
 
 [tool.setuptools.packages.find]
 include = ["cspapergen*"]
-
-[tool.pytest.ini_options]
-testpaths = ["tests"]
