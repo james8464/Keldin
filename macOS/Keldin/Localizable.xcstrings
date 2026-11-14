@@ -3167,6 +3167,7 @@
         }
       }
     },
+    "No matching subjects or boards": {"localizations":{"fr":{"stringUnit":{"state":"translated","value":"Aucune matière ni aucun organisme d’examen ne correspond à la recherche"}}}},
     "No PDFs to preview": {},
     "No Results": {
       "localizations": {
