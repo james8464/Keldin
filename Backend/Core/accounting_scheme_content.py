@@ -128,7 +128,10 @@ def _calculation_table(
     These finite display contracts contain no renderer case objects or worked
     formulae. The solver supplies results; the question supplies raw postings.
     """
-    from aqaaccountgen.marking_policy import printed_award_rows
+    from aqaaccountgen.marking_policy import (
+        printed_award_rows,
+        use_retirement_period_table,
+    )
 
     values = solution["numeric_results"]
     context = question.authoring_context
@@ -270,7 +273,11 @@ def _calculation_table(
         return ["", "£", "£", "Marks"], rows
     if rule == "partnership_1":
         data = context["source_data"]
-        return [
+        try:
+            retirement_period = use_retirement_period_table(question)
+        except ValueError as error:
+            raise LayoutConformanceError(str(error)) from error
+        headings = [
             "Date",
             "Details",
             "Alex £",
@@ -279,7 +286,8 @@ def _calculation_table(
             "Details",
             "Alex £",
             "Morgan £",
-        ], [
+        ]
+        rows = [
             [
                 "31 Aug",
                 "Goodwill written off",
@@ -301,7 +309,7 @@ def _calculation_table(
                 _amount(values["Morgan_goodwill_credit"]),
             ],
             [
-                "31 Dec",
+                "31 Aug" if retirement_period else "31 Dec",
                 "Balance c/d",
                 _amount(values["Alex_closing_capital"]),
                 _amount(values["Morgan_closing_capital"]),
@@ -311,6 +319,37 @@ def _calculation_table(
                 "",
             ],
         ]
+        if retirement_period:
+            totals = {
+                partner: Decimal(str(data["opening_capital"][partner]))
+                + Decimal(str(values[f"{partner}_goodwill_credit"]))
+                for partner in ("Alex", "Morgan")
+            }
+            rows.extend(
+                [
+                    [
+                        "",
+                        "Total",
+                        _amount(totals["Alex"]),
+                        _amount(totals["Morgan"]),
+                        "",
+                        "Total",
+                        _amount(totals["Alex"]),
+                        _amount(totals["Morgan"]),
+                    ],
+                    [
+                        "",
+                        "",
+                        "",
+                        "",
+                        "1 Sep",
+                        "Balance b/d",
+                        _amount(values["Alex_closing_capital"]),
+                        _amount(values["Morgan_closing_capital"]),
+                    ],
+                ]
+            )
+        return headings, rows
     if rule == "partnership_2":
         awards = dict(printed_award_rows(question))
         roles = [

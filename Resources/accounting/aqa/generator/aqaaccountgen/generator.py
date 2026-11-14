@@ -14,7 +14,12 @@ from aqaaccountgen.case_data import (
     SalesLedgerCase,
     ShareholderCase,
 )
-from aqaaccountgen.marking_policy import apply_marking_policy, finalise_marking_policy
+from aqaaccountgen.marking_policy import (
+    RETIREMENT_TABLE_KEY,
+    RETIREMENT_TABLE_POLICY,
+    apply_marking_policy,
+    finalise_marking_policy,
+)
 from aqaaccountgen.selected_response import build_accounting_choice
 from aqaaccountgen.syllabus import Syllabus, Topic
 from Backend.Core.accounting_levels import accounting_level_policy
@@ -671,7 +676,7 @@ def _written(
     elif rule.id == "company_statement":
         case = IncomeStatementCase.from_chart_values(business, values)
         prompt = (
-            f"Prepare the income statement for {business} for the year ended. "
+            f"Prepare the income statement for {business} for the year ended {case.YEAR_END}. "
             "Show all workings."
         )
         scheme = case.mark_scheme_points()
@@ -706,6 +711,7 @@ def _written(
         )
         scheme = case.retirement_mark_scheme_points()
         authoring_context = case.retirement_authoring_context()
+        authoring_context[RETIREMENT_TABLE_KEY] = RETIREMENT_TABLE_POLICY
     elif rule.id == "partnership_2":
         case = PartnershipCase.from_chart_values(values)
         prompt = (

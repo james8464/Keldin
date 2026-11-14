@@ -154,7 +154,7 @@ def test_native_figures_arithmetic_and_legacy_reading_remain_unchanged() -> None
     assert len(scheme) == 8
 
 
-def test_nonbudget_content_and_all_old_numeric_contracts_are_unchanged() -> None:
+def test_unchanged_content_and_all_old_numeric_contracts_are_preserved() -> None:
     expected = {
         "1": "1eecc968af212c412561c9ce4265634c9560c08908acf3b3e09d50716fad7c0d",
         "2": "95e3518cb9c7bd1d00c1596efa67ba58f94d2649d91395c60b6a375aa382ea4d",
@@ -166,6 +166,27 @@ def test_nonbudget_content_and_all_old_numeric_contracts_are_unchanged() -> None
         for section in raw["sections"]:
             for option in section["options"]:
                 for question in option["questions"]:
+                    if question["rule_id"] == "company_statement":
+                        # Check the new period and preserve the remainder of this
+                        # historical credit/content snapshot byte for byte.
+                        context = question["authoring_context"]
+                        for owner, field in (
+                            (question, "prompt"),
+                            (context, "task_scope"),
+                        ):
+                            assert owner[field].count("year ended 31 December") == 1
+                            owner[field] = owner[field].replace(
+                                "year ended 31 December", "year ended", 1
+                            )
+                        assert context["max_prompt_words"] == 18
+                        context["max_prompt_words"] = 16
+                    if question["rule_id"] == "partnership_1":
+                        assert (
+                            question["authoring_context"].pop(
+                                "partnership_capital_table"
+                            )
+                            == "retirement-period-v1"
+                        )
                     if component == "2" and question["number"] == "06":
                         # The new variance binding changes only public contract
                         # ownership; preserve this earlier content/numeric hash.

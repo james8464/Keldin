@@ -1,6 +1,7 @@
 """Direct family entry points publish complete sets, not early individual roles."""
 
 from concurrent.futures import ThreadPoolExecutor
+from dataclasses import replace
 from pathlib import Path
 from threading import Event
 
@@ -184,7 +185,7 @@ def test_success_returns_final_paths_in_order_with_support_and_done_after_commit
     result = run_owned(owned_adapter(supporting=support), tmp_path, progress)
     assert list(result) == ["scheme", "question", "support", "assessment_package"]
     assert all(path.parent == tmp_path and path.is_file() for path in result.values())
-    assert stages and stages[0].parent == tmp_path and not stages[0].exists()
+    assert stages and stages[0].parent.parent == tmp_path and not stages[0].exists()
     assert not list(tmp_path.glob(".keldin-family-*"))
     assert (tmp_path / ".keldin-checkpoints/publication.job.lock").is_file()
 
@@ -239,10 +240,79 @@ def test_support_output_cannot_escape_owned_staging(tmp_path, owned_io):
     assert outside.read_bytes() == b"owned outside"
 
 
-def test_duplicate_destinations_keep_old_set(tmp_path, owned_io):
+@pytest.mark.parametrize(
+    ("role", "filename", "error"),
+    [
+        ("question", "other.pdf", "output roles must be distinct"),
+        ("assessment_package", "other.pdf", "output roles must be distinct"),
+        ("other", "SCHEME.pdf", "filenames must be distinct"),
+        ("other", "owned-assessment.json", "filenames must be distinct"),
+    ],
+)
+def test_manifest_conflicts_stop_before_render(
+    tmp_path, monkeypatch, owned_io, role, filename, error
+):
     before = old_files(tmp_path)
-    with pytest.raises(OSError, match="filenames must be distinct"):
-        run_owned(owned_adapter(filename="scheme.pdf"), tmp_path)
+    adapter = owned_adapter()
+    artifacts = adapter.artifacts
+    adapter = replace(
+        adapter,
+        artifacts=lambda *args: (
+            *artifacts(*args),
+            ArtifactSpec(role, filename, lambda _: None, "Duplicate"),
+        ),
+    )
+    monkeypatch.setattr(
+        family_adapter,
+        "render_pdf_atomically",
+        lambda *_a, **_k: pytest.fail("conflicting manifest started rendering"),
+    )
+    with pytest.raises(ValueError, match=error):
+        run_owned(adapter, tmp_path)
+    assert visible_files(tmp_path) == before
+
+
+def test_manifest_uses_one_filename_for_canonically_equivalent_unicode(tmp_path):
+    adapter = owned_adapter(filename="Café.pdf")
+    artifacts = adapter.artifacts
+    adapter = replace(
+        adapter,
+        artifacts=lambda *args: (
+            *artifacts(*args),
+            ArtifactSpec("other", "Cafe\u0301.pdf", lambda _: None, "Duplicate"),
+        ),
+    )
+    with pytest.raises(ValueError, match="filenames must be distinct"):
+        run_owned(adapter, tmp_path)
+    assert not list(tmp_path.iterdir())
+
+
+@pytest.mark.parametrize(
+    ("role", "filename", "error"),
+    [
+        ("question", "another.pdf", "output roles must be distinct"),
+        ("assessment_package", "other.json", "output roles must be distinct"),
+        ("support", "question.pdf", "filenames must be distinct"),
+        ("support", "OWNED-ASSESSMENT.JSON", "filenames must be distinct"),
+    ],
+)
+def test_support_output_cannot_hide_rendered_or_reserved_roles(
+    tmp_path, monkeypatch, owned_io, role, filename, error
+):
+    before = old_files(tmp_path)
+
+    def support(_assessment, _context, _syllabus, _paper, output, _progress):
+        path = output / filename
+        path.write_bytes(b"new:support")
+        return {role: path}
+
+    monkeypatch.setattr(
+        family_adapter,
+        "write_assessment_package",
+        lambda *_a, **_k: pytest.fail("conflicting support reached packaging"),
+    )
+    with pytest.raises(ValueError, match=error):
+        run_owned(owned_adapter(supporting=support), tmp_path)
     assert visible_files(tmp_path) == before
 
 

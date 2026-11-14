@@ -59,8 +59,12 @@ an existing family until its prior acceptance fixtures still pass.
    need the same extension point.
 3. Use the common staging and publication pipeline. Validate each preview
    PDF after tagging, including supporting PDFs, before moving the set into
-   the destination. A release receipt must name the exact artifacts emitted
-   for that paper. Preview success says nothing about model-authored content.
+   the destination. Reject duplicate primary roles and filenames before
+   drawing a page. Support writers use separate staging, so a conflicting
+   file cannot overwrite a primary PDF. The shared runner reserves the
+   assessment package's role and filename. A release receipt must name the
+   exact artifacts emitted for that paper. Preview success says nothing
+   about model-authored content.
 4. Before replacing two tests with one, list the behaviours each protects.
    Combine equivalent cases, but retain distinct failure and compatibility
    checks. Compare seeded outputs and recovery paths before and after a

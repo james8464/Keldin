@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from pathlib import Path
 from tempfile import TemporaryDirectory
+from unicodedata import normalize
 
 from Backend.Core.ai_assessment import (
     ASSESSMENT_REVIEW_VERSION,
@@ -27,6 +28,34 @@ from Backend.Core.preview_presentation import preview_presentation, validate_pre
 from Backend.Core.providers import HostedLLMClient
 from Backend.Core.reference_demand import profile_for
 from Backend.Core.render_transaction import render_pdf_atomically
+
+
+class _OutputNames:
+    """Reserve the whole document set's names, including on case-folded volumes."""
+
+    def __init__(self) -> None:
+        self._roles: set[str] = set()
+        self._filenames: set[str] = set()
+
+    def add(self, role: str, filename: str) -> None:
+        if not filename or filename == ".." or Path(filename).name != filename:
+            raise ValueError("Artifact filenames must be direct children")
+        if role in self._roles:
+            raise ValueError("Family output roles must be distinct")
+        key = normalize("NFD", normalize("NFD", filename).casefold())
+        if key in self._filenames:
+            raise ValueError("Family output filenames must be distinct")
+        self._roles.add(role)
+        self._filenames.add(key)
+
+
+def _check_staged_files(paths: dict[str, Path], directory: Path) -> None:
+    parent = directory.resolve()
+    if any(
+        path.is_symlink() or not path.is_file() or path.resolve().parent != parent
+        for path in paths.values()
+    ):
+        raise ValueError("Family outputs must be files inside their staging directory")
 
 
 def run_family_adapter[Syllabus, Rule, Assessment, Context](
@@ -130,6 +159,13 @@ def run_family_adapter[Syllabus, Rule, Assessment, Context](
         emit(adapter.validation_message)
         adapter.validate(assessment, rule, syllabus)
 
+    assessment_name = f"{adapter.stem(rule, paper)}-assessment.json"
+    artifacts = tuple(adapter.artifacts(assessment, context, syllabus, paper))
+    names = _OutputNames()
+    names.add("assessment_package", assessment_name)
+    for artifact in artifacts:
+        names.add(artifact.role, artifact.filename)
+
     output_dir.mkdir(parents=True, exist_ok=True)
     # Direct family CLIs do not have the bridge's outer output transaction.
     # Keep every role private until rendering, support and packaging all succeed.
@@ -138,9 +174,7 @@ def run_family_adapter[Syllabus, Rule, Assessment, Context](
         paths: dict[str, Path] = {}
         # Scope includes supporting PDFs; disabled scopes override outer previews.
         with preview_presentation(dry_run):
-            for artifact in adapter.artifacts(assessment, context, syllabus, paper):
-                if Path(artifact.filename).name != artifact.filename:
-                    raise ValueError("Artifact filenames must be direct children")
+            for artifact in artifacts:
                 destination = staging_dir / artifact.filename
                 emit(artifact.progress_message)
 
@@ -152,16 +186,27 @@ def run_family_adapter[Syllabus, Rule, Assessment, Context](
                 paths[artifact.role] = destination
 
             if adapter.supporting_artifacts is not None:
-                paths.update(
-                    adapter.supporting_artifacts(
-                        assessment,
-                        context,
-                        syllabus,
-                        paper,
-                        staging_dir,
-                        emit,
+                # Support writers cannot overwrite a primary file by reusing its
+                # basename. Validate the returned names before combining the sets.
+                with TemporaryDirectory(prefix=".support-", dir=staging_dir) as support:
+                    support_dir = Path(support)
+                    supporting = dict(
+                        adapter.supporting_artifacts(
+                            assessment,
+                            context,
+                            syllabus,
+                            paper,
+                            support_dir,
+                            emit,
+                        )
                     )
-                )
+                    _check_staged_files(supporting, support_dir)
+                    for role, path in supporting.items():
+                        names.add(role, path.name)
+                    for role, path in supporting.items():
+                        destination = staging_dir / path.name
+                        path.replace(destination)
+                        paths[role] = destination
             if dry_run:
                 # Check the final tagged PDFs, including those from support hooks.
                 for path in paths.values():
@@ -177,9 +222,7 @@ def run_family_adapter[Syllabus, Rule, Assessment, Context](
                 if role not in adapter.output_order
             }
 
-        assessment_path = staging_dir / f"{adapter.stem(rule, paper)}-assessment.json"
-        if assessment_path.parent.resolve() != staging_dir.resolve():
-            raise ValueError("Assessment filename must be a direct child")
+        assessment_path = staging_dir / assessment_name
         write_assessment_package(
             assessment,
             assessment_path,
@@ -192,15 +235,7 @@ def run_family_adapter[Syllabus, Rule, Assessment, Context](
             model=getattr(question_client, "model", model) if not dry_run else None,
         )
         paths["assessment_package"] = assessment_path
-        if any(
-            path.is_symlink()
-            or not path.is_file()
-            or path.resolve().parent != staging_dir.resolve()
-            for path in paths.values()
-        ):
-            raise ValueError(
-                "Family outputs must be files inside their staging directory"
-            )
+        _check_staged_files(paths, staging_dir)
         # The bridge may still need to validate and publish these files itself.
         paths = publish_document_set(paths, output_dir, final_publication=False)
     emit("Done")
