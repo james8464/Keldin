@@ -17,9 +17,9 @@ from Backend.Core.family_adapter import (
     FamilyAdapter,
     run_family_adapter,
 )
+from Backend.Core.generator_registry import generator_capability
 from Backend.Core.json_client import JSONGenerationClient
 from Backend.Core.model_recommendations import default_ollama_model
-from Backend.Core.subjects.economics_contracts import economics_checkpoint_path
 from pastpapergen.generator import build_paper_blueprint
 from pastpapergen.ollama_client import (
     OllamaClient,
@@ -126,6 +126,13 @@ def generate_package(
     client: JSONGenerationClient | None = None,
     checkpoint_path: Path | None = None,
 ) -> dict[str, Path]:
+    if checkpoint_path is not None:
+        namespace = generator_capability(ADAPTER.backend_subject).checkpoint_namespace
+        if namespace is None:
+            raise ValueError(
+                "The Edexcel Economics checkpoint namespace is not configured"
+            )
+        checkpoint_path = namespace.apply(checkpoint_path)
     return run_family_adapter(
         ADAPTER,
         paper=paper,
@@ -137,9 +144,7 @@ def generate_package(
         dry_run=dry_run,
         progress=progress,
         client=client,
-        checkpoint_path=economics_checkpoint_path(checkpoint_path)
-        if checkpoint_path is not None
-        else None,
+        checkpoint_path=checkpoint_path,
     )
 
 

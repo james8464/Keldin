@@ -6,7 +6,6 @@ import hashlib
 import json
 import re
 from decimal import Decimal
-from pathlib import Path
 from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
@@ -15,12 +14,6 @@ from Backend.Core.numeric_integrity import NUMBER, NumericOutput, numeric_result
 
 ECONOMICS_CONTRACT_VERSION = "edexcel-instance-v1"
 ECONOMICS_SOURCE_BINDING_VERSION = "edexcel-instance-v2"
-
-
-def economics_checkpoint_path(path: Path) -> Path:
-    # This routes new work; normal checkpoint payload revalidation still applies.
-    prefix = f"{ECONOMICS_SOURCE_BINDING_VERSION}."
-    return path if path.name.startswith(prefix) else path.with_name(prefix + path.name)
 
 
 class SourceCell(BaseModel):

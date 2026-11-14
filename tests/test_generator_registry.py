@@ -143,6 +143,38 @@ def test_every_paper_declares_complete_output_roles() -> None:
             assert len(roles) == len(set(roles))
 
 
+def test_checkpoint_namespace_is_declared_by_the_family() -> None:
+    from Backend.Core.subjects.economics_contracts import (
+        ECONOMICS_SOURCE_BINDING_VERSION,
+    )
+
+    policies = {
+        family.backend_subject: family.checkpoint_namespace
+        for family in generator_capabilities().values()
+        if family.checkpoint_namespace is not None
+    }
+    assert set(policies) == {"economics"}
+    policy = policies["economics"]
+    assert policy.identity_key == "economics_source_binding_version"
+    assert policy.version == ECONOMICS_SOURCE_BINDING_VERSION
+
+
+@pytest.mark.parametrize(
+    "namespace",
+    [
+        {},
+        {"identity_key": "paper", "version": "v2"},
+        {"identity_key": "example_source_version", "version": "../v2"},
+    ],
+)
+def test_family_checkpoint_namespace_refuses_invalid_metadata(namespace):
+    payload = json.loads(REGISTRY_PATH.read_text(encoding="utf-8"))
+    raw = next(family for family in payload["families"] if family["advertised"])
+    raw["checkpoint_namespace"] = namespace
+    with pytest.raises(ValueError, match="checkpoint namespace"):
+        _capability(raw)
+
+
 def test_every_entry_point_and_declared_resource_is_loadable() -> None:
     for capability in generator_capabilities().values():
         generator_root = REPO_ROOT / "Resources" / capability.python_path

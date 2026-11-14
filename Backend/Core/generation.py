@@ -92,7 +92,9 @@ def handle_generate(args: argparse.Namespace) -> int:
                 stage="provider",
                 progress=0.04,
             )
-        checkpoint_path = checkpoint_path_for_job(args, output_dir)
+        checkpoint_path = checkpoint_path_for_job(
+            args, output_dir, capability=capability
+        )
         with checkpoint_job_lease(checkpoint_path):
             generated = _invoke_plugin(
                 capability,
@@ -258,7 +260,10 @@ def _invoke_plugin(
 def checkpoint_path_for_job(
     args: argparse.Namespace,
     output_dir: Path,
+    *,
+    capability: GeneratorCapability | None = None,
 ) -> Path:
+    namespace = (capability or generator_capability(args.subject)).checkpoint_namespace
     identity = {
         "assessment_review_version": ASSESSMENT_REVIEW_VERSION,
         "subject": args.subject,
@@ -267,12 +272,8 @@ def checkpoint_path_for_job(
         "provider": args.provider,
         "model": args.model,
     }
-    if args.subject == "economics":
-        from Backend.Core.subjects.economics_contracts import (
-            ECONOMICS_SOURCE_BINDING_VERSION,
-        )
-
-        identity["economics_source_binding_version"] = ECONOMICS_SOURCE_BINDING_VERSION
+    if namespace is not None:
+        identity[namespace.identity_key] = namespace.version
     digest = hashlib.sha256(
         json.dumps(identity, sort_keys=True, separators=(",", ":")).encode("utf-8")
     ).hexdigest()[:20]
@@ -280,11 +281,7 @@ def checkpoint_path_for_job(
         output_directory(output_dir, ".keldin-checkpoints")
         / f"{args.subject}-paper-{args.paper}-{digest}.json"
     )
-    if args.subject == "economics":
-        from Backend.Core.subjects.economics_contracts import economics_checkpoint_path
-
-        return economics_checkpoint_path(path)
-    return path
+    return namespace.apply(path) if namespace is not None else path
 
 
 def _load_entry_point(value: str) -> Callable[..., dict[str, Path]]:

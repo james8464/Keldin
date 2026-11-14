@@ -92,7 +92,26 @@ def test_mlx_result_requires_model_pin_before_resume(tmp_path, pin, expected):
         path.write_text(json.dumps({"reference_demand": {"passed": True}}))
         files[role] = str(path)
     events = tmp_path / "events.jsonl"
-    events.write_text('{"type":"done"}\n')
+    events.write_text(
+        "\n".join(
+            json.dumps(event)
+            for event in (
+                {
+                    "type": "file",
+                    "role": "assessment_package",
+                    "path": files["assessment_package"],
+                },
+                {
+                    "type": "file",
+                    "role": "package_manifest",
+                    "path": files["package_manifest"],
+                },
+                {"type": "done"},
+            )
+        )
+        + "\n",
+        encoding="utf-8",
+    )
     result = {
         "passed": True,
         "request_identity": identity,

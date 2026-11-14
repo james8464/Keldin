@@ -189,6 +189,24 @@ def test_success_returns_final_paths_in_order_with_support_and_done_after_commit
     assert (tmp_path / ".keldin-checkpoints/publication.job.lock").is_file()
 
 
+def test_preview_validation_runs_once_on_each_final_staged_pdf(
+    tmp_path, monkeypatch, owned_io
+):
+    inspected = []
+
+    def validate(path):
+        inspected.append(path.name)
+
+    def support(_assessment, _context, _syllabus, _paper, output, _progress):
+        path = output / "support.pdf"
+        path.write_bytes(b"new:support")
+        return {"support": path}
+
+    monkeypatch.setattr(family_adapter, "validate_preview_pdf", validate)
+    run_owned(owned_adapter(supporting=support), tmp_path)
+    assert inspected == ["question.pdf", "scheme.pdf", "support.pdf"]
+
+
 @pytest.mark.parametrize(
     "filename", ["../outside.pdf", "/outside.pdf", "sub/question.pdf"]
 )

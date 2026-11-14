@@ -144,14 +144,9 @@ def run_family_adapter[Syllabus, Rule, Assessment, Context](
                 destination = staging_dir / artifact.filename
                 emit(artifact.progress_message)
 
-                def render(path: Path, artifact: ArtifactSpec = artifact) -> None:
-                    artifact.renderer(path)
-                    if dry_run:
-                        validate_preview_pdf(path)
-
                 render_pdf_atomically(
                     destination,
-                    render,
+                    artifact.renderer,
                     role=artifact.role.replace("_", " "),
                 )
                 paths[artifact.role] = destination
@@ -168,6 +163,7 @@ def run_family_adapter[Syllabus, Rule, Assessment, Context](
                     )
                 )
             if dry_run:
+                # Check the final tagged PDFs, including those from support hooks.
                 for path in paths.values():
                     if path.suffix.casefold() == ".pdf":
                         validate_preview_pdf(path)
