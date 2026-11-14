@@ -109,8 +109,20 @@ def test_existing_actual_four_mark_part_and_authored_eight_routes_are_unchanged(
     question = next(q for q in paper(2, 0).questions if q.number == "2")
     part = next(p for p in question.parts if p.label == "b")
     assert part.marks == 4 and sum(part.assessment_objectives.values()) == 4
-    assert digest(part.model_dump(mode="json")) == (
-        "c7c275a6c6c33a111f986e3fd72fd15dc82ed42aeb357d65c37019e41ebfc477"
+    assert question.source_instance is not None
+    assert question.source_instance.context == question.source_text
+    assert "includes evidence on causes of growth, costs and benefits of growth" in (
+        question.source_text
+    )
+    part_payload = part.model_dump(mode="json")
+    # Preserve every credit and task field. Bind the digest to the actual
+    # declared context rather than the revision notes used by old checkouts.
+    assert (
+        part_payload["assessment_contract"].pop("source_fingerprint")
+        == question.source_instance.fingerprint()
+    )
+    assert digest(part_payload) == (
+        "3a48f1c68213e864ff7ed0c10f7dee8739f175e43cd4562ae7b894d38a4e83c4"
     )
     authored = next(q for q in paper(3, 1).questions if q.number == "1(b)")
     assert authored.marks == 8 and authored.topic_id == "3.1"

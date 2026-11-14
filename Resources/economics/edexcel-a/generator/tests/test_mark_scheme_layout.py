@@ -468,7 +468,7 @@ def test_mark_scheme_valid_points_are_clean_exam_sentences(tmp_path):
     assert "\n           - Regulation." not in text
 
 
-def test_mark_scheme_uses_uploaded_note_points_for_extended_questions(tmp_path):
+def test_mark_scheme_uses_topic_points_for_extended_questions(tmp_path):
     syllabus = load_syllabus(Path("data/syllabus_seed.json"))
     config = load_builtin_paper_config("paper_1")
     blueprint = _blueprint_with_section_b_topic(config, syllabus, "3.4")

@@ -42,7 +42,7 @@ def test_ollama_prompt_limits_generation_to_syllabus_topic():
     assert "mark scheme and indicative content are immutable" in prompt
 
 
-def test_ollama_prompt_includes_uploaded_notes_context_for_topic():
+def test_extended_question_uses_declared_syllabus_points():
     topic = SyllabusTopic(
         id="3.4",
         theme=3,
@@ -60,6 +60,5 @@ def test_ollama_prompt_includes_uploaded_notes_context_for_topic():
 
     prompt = build_question_prompt(question, topic)
 
-    assert "Revision-note context for factual grounding" in prompt
-    assert "perfect competition" in prompt.lower()
-    assert "contestability" in prompt.lower()
+    assert "Revision-note context" not in prompt
+    assert "\n- perfect competition\n- monopoly\n- contestability\n" in prompt

@@ -2789,132 +2789,6 @@
       "reason": "No file-level semantic implementation review recorded in this ledger."
     },
     {
-      "path": "Resources/economics/edexcel-a/generator/data/notes/text/1.1. Nature of Economics.txt",
-      "classification": "documentation",
-      "status": "excluded",
-      "reason": "Prose/reference material is outside implementation review; content and publication claims are not certified."
-    },
-    {
-      "path": "Resources/economics/edexcel-a/generator/data/notes/text/1.2. How Markets Work.txt",
-      "classification": "documentation",
-      "status": "excluded",
-      "reason": "Prose/reference material is outside implementation review; content and publication claims are not certified."
-    },
-    {
-      "path": "Resources/economics/edexcel-a/generator/data/notes/text/1.3. Market Failure.txt",
-      "classification": "documentation",
-      "status": "excluded",
-      "reason": "Prose/reference material is outside implementation review; content and publication claims are not certified."
-    },
-    {
-      "path": "Resources/economics/edexcel-a/generator/data/notes/text/1.4. Government Intervention.txt",
-      "classification": "documentation",
-      "status": "excluded",
-      "reason": "Prose/reference material is outside implementation review; content and publication claims are not certified."
-    },
-    {
-      "path": "Resources/economics/edexcel-a/generator/data/notes/text/2.1. Measures of Economic Performance.txt",
-      "classification": "documentation",
-      "status": "excluded",
-      "reason": "Prose/reference material is outside implementation review; content and publication claims are not certified."
-    },
-    {
-      "path": "Resources/economics/edexcel-a/generator/data/notes/text/2.2. Aggregate Demand.txt",
-      "classification": "documentation",
-      "status": "excluded",
-      "reason": "Prose/reference material is outside implementation review; content and publication claims are not certified."
-    },
-    {
-      "path": "Resources/economics/edexcel-a/generator/data/notes/text/2.3. Aggregate Supply.txt",
-      "classification": "documentation",
-      "status": "excluded",
-      "reason": "Prose/reference material is outside implementation review; content and publication claims are not certified."
-    },
-    {
-      "path": "Resources/economics/edexcel-a/generator/data/notes/text/2.4. National Income.txt",
-      "classification": "documentation",
-      "status": "excluded",
-      "reason": "Prose/reference material is outside implementation review; content and publication claims are not certified."
-    },
-    {
-      "path": "Resources/economics/edexcel-a/generator/data/notes/text/2.5. Economic Growth.txt",
-      "classification": "documentation",
-      "status": "excluded",
-      "reason": "Prose/reference material is outside implementation review; content and publication claims are not certified."
-    },
-    {
-      "path": "Resources/economics/edexcel-a/generator/data/notes/text/2.6. Macroeconomic Objectives and Policies.txt",
-      "classification": "documentation",
-      "status": "excluded",
-      "reason": "Prose/reference material is outside implementation review; content and publication claims are not certified."
-    },
-    {
-      "path": "Resources/economics/edexcel-a/generator/data/notes/text/3.1. Business Growth.txt",
-      "classification": "documentation",
-      "status": "excluded",
-      "reason": "Prose/reference material is outside implementation review; content and publication claims are not certified."
-    },
-    {
-      "path": "Resources/economics/edexcel-a/generator/data/notes/text/3.2. Business Objectives.txt",
-      "classification": "documentation",
-      "status": "excluded",
-      "reason": "Prose/reference material is outside implementation review; content and publication claims are not certified."
-    },
-    {
-      "path": "Resources/economics/edexcel-a/generator/data/notes/text/3.3. Revenues, Costs and Profits.txt",
-      "classification": "documentation",
-      "status": "excluded",
-      "reason": "Prose/reference material is outside implementation review; content and publication claims are not certified."
-    },
-    {
-      "path": "Resources/economics/edexcel-a/generator/data/notes/text/3.4. Market Structures.txt",
-      "classification": "documentation",
-      "status": "excluded",
-      "reason": "Prose/reference material is outside implementation review; content and publication claims are not certified."
-    },
-    {
-      "path": "Resources/economics/edexcel-a/generator/data/notes/text/3.5. Labour Markets.txt",
-      "classification": "documentation",
-      "status": "excluded",
-      "reason": "Prose/reference material is outside implementation review; content and publication claims are not certified."
-    },
-    {
-      "path": "Resources/economics/edexcel-a/generator/data/notes/text/3.6. Government Intervention.txt",
-      "classification": "documentation",
-      "status": "excluded",
-      "reason": "Prose/reference material is outside implementation review; content and publication claims are not certified."
-    },
-    {
-      "path": "Resources/economics/edexcel-a/generator/data/notes/text/4.1. International Economics.txt",
-      "classification": "documentation",
-      "status": "excluded",
-      "reason": "Prose/reference material is outside implementation review; content and publication claims are not certified."
-    },
-    {
-      "path": "Resources/economics/edexcel-a/generator/data/notes/text/4.2. Poverty and Inequality.txt",
-      "classification": "documentation",
-      "status": "excluded",
-      "reason": "Prose/reference material is outside implementation review; content and publication claims are not certified."
-    },
-    {
-      "path": "Resources/economics/edexcel-a/generator/data/notes/text/4.3. Emerging and Developing Economies.txt",
-      "classification": "documentation",
-      "status": "excluded",
-      "reason": "Prose/reference material is outside implementation review; content and publication claims are not certified."
-    },
-    {
-      "path": "Resources/economics/edexcel-a/generator/data/notes/text/4.4. The Financial Sector.txt",
-      "classification": "documentation",
-      "status": "excluded",
-      "reason": "Prose/reference material is outside implementation review; content and publication claims are not certified."
-    },
-    {
-      "path": "Resources/economics/edexcel-a/generator/data/notes/text/4.5. Role of the State in the Macroeconomy.txt",
-      "classification": "documentation",
-      "status": "excluded",
-      "reason": "Prose/reference material is outside implementation review; content and publication claims are not certified."
-    },
-    {
       "path": "Resources/economics/edexcel-a/generator/data/syllabus_seed.json",
       "classification": "configuration-or-runtime-data",
       "status": "pending",
@@ -3016,11 +2890,8 @@
     {
       "path": "Resources/economics/edexcel-a/generator/pastpapergen/generator.py",
       "classification": "maintained-source",
-      "status": "reviewed",
-      "reason": "All 3,376 lines. Seed, section, source and canonical binding paths were inspected. Three tiny in-memory built-in-paper probes had valid 100-mark candidate paths. Those structural checks did not independently validate downstream credit semantics, where the separate trade-barrier defect was found. No complete paper-quality claim follows.",
-      "source_sha256": "430fc254810f02694dd3946c53e1484fb01c60cf17c28f51f282d31806b868e2",
-      "review_evidence": "docs/quality/implementation-audit-reconciliation-2026-11-10.md",
-      "review_evidence_sha256": "799d0c38f8fce9352aa3b7697bae3e7e9bd9ccf480cafc45c12e94e6d1582c10"
+      "status": "pending",
+      "reason": "No file-level semantic implementation review recorded in this ledger."
     },
     {
       "path": "Resources/economics/edexcel-a/generator/pastpapergen/models.py",
@@ -3032,22 +2903,10 @@
       "review_evidence_sha256": "bb98a3b38c4795e8b83ad544940570d72884305e0cb6edbe836c7081490fe8f6"
     },
     {
-      "path": "Resources/economics/edexcel-a/generator/pastpapergen/notes.py",
-      "classification": "maintained-source",
-      "status": "reviewed",
-      "reason": "Attributed prior complete-file EOF semantic review, not a fresh full read. Current 216-line source SHA and count match the explicit positive item nov7-entrypoint-eof-audit-batch2.json/complete_source_eof/6; exact provenance/ranges and limitations in tracked note. Complete selected module only with scoped callers/tests; no dynamic rendering/model execution, transitive dependency or output-quality audit. Follow the row's reachability classification. No execution, broad dependency, official-equivalence or whole-project-quality claim.",
-      "source_sha256": "9dda4594eabbd445b7d675c4dc855099578a2970d89e073f4ec80a615a12b1ed",
-      "review_evidence": "docs/quality/attributed-eof-backfill-review-2026-11-07.md",
-      "review_evidence_sha256": "92d4635ed7b71056840a08929f060b7e4f7fa4a1476142c950761a291aff42a0"
-    },
-    {
       "path": "Resources/economics/edexcel-a/generator/pastpapergen/ollama_client.py",
       "classification": "maintained-source",
-      "status": "reviewed",
-      "reason": "Explicit completed EOF or documented full baseline plus entire delta review; source ownership, retry or required-check preservation and reviewer attribution are bounded in the evidence.",
-      "source_sha256": "4a6ceecf3e2ec5d266152410e233fabda9066467fadf21bb9005c0afc39243e3",
-      "review_evidence": "docs/quality/edexcel-checkpoint-admission-2026-11-02.md",
-      "review_evidence_sha256": "664ff5c0ff55e0963c0d4b70dce69d6dd66dce2eddb01b5cb6ec23ff116d00e4"
+      "status": "pending",
+      "reason": "No file-level semantic implementation review recorded in this ledger."
     },
     {
       "path": "Resources/economics/edexcel-a/generator/pastpapergen/paper_configs.py",
@@ -3061,11 +2920,8 @@
     {
       "path": "Resources/economics/edexcel-a/generator/pastpapergen/render_pdf.py",
       "classification": "maintained-source",
-      "status": "reviewed",
-      "reason": "Complete prior EOF read plus complete independently reviewed rendering repair and relevant identity/source callers; not a new whole-file read after the delta.",
-      "source_sha256": "5f24e4c8d286af15347179b7dcbca7ae05b7e5e4e74409367f79e5d6c3922388",
-      "review_evidence": "docs/quality/renderer-eof-audit-and-release-follow-ups.md",
-      "review_evidence_sha256": "bb98a3b38c4795e8b83ad544940570d72884305e0cb6edbe836c7081490fe8f6"
+      "status": "pending",
+      "reason": "No file-level semantic implementation review recorded in this ledger."
     },
     {
       "path": "Resources/economics/edexcel-a/generator/pastpapergen/selection_contracts.py",
@@ -3170,6 +3026,12 @@
       "reason": "No file-level semantic implementation review recorded in this ledger."
     },
     {
+      "path": "Resources/economics/edexcel-a/generator/tests/test_declared_inputs.py",
+      "classification": "test",
+      "status": "pending",
+      "reason": "No file-level semantic implementation review recorded in this ledger."
+    },
+    {
       "path": "Resources/economics/edexcel-a/generator/tests/test_exam_dates.py",
       "classification": "test",
       "status": "pending",
@@ -3177,15 +3039,6 @@
     },
     {
       "path": "Resources/economics/edexcel-a/generator/tests/test_mark_scheme_layout.py",
-      "classification": "test",
-      "status": "reviewed",
-      "reason": "Complete 562-line test file read through EOF; scoped row-wrapping regressions and existing full-content, typography and pagination checks reviewed. This does not attest the complete renderer or whole-project release readiness.",
-      "source_sha256": "ce6abcea2ec3a3163f8e46daac5ce9c0ee932dbc21bbd2e28e4201afc8e1d2aa",
-      "review_evidence": "docs/quality/edexcel-mark-scheme-cell-wrapping-2026-11-03.md",
-      "review_evidence_sha256": "1802aa5724a2ca0b24d29b950273519f06009f09f88fe095e4193c2a58dd9ea4"
-    },
-    {
-      "path": "Resources/economics/edexcel-a/generator/tests/test_notes.py",
       "classification": "test",
       "status": "pending",
       "reason": "No file-level semantic implementation review recorded in this ledger."
@@ -3957,6 +3810,12 @@
     },
     {
       "path": "docs/quality/edexcel-checkpoint-admission-2026-11-02.md",
+      "classification": "historical-evidence",
+      "status": "excluded",
+      "reason": "Retained diagnostic/review evidence, not maintained executable implementation; exclusion does not certify its claims."
+    },
+    {
+      "path": "docs/quality/edexcel-declared-inputs.md",
       "classification": "historical-evidence",
       "status": "excluded",
       "reason": "Retained diagnostic/review evidence, not maintained executable implementation; exclusion does not certify its claims."
@@ -7270,11 +7129,8 @@
     {
       "path": "tests/test_economics_checkpoint_namespace.py",
       "classification": "test",
-      "status": "reviewed",
-      "reason": "Complete 224-line new test file reviewed by author and independently. Owned old/new recovery isolation, other-subject byte-identical paths, bridge ownership-path agreement and both package entry points; no models or GUI.",
-      "source_sha256": "78860803378cdf179cdcb99db3bcfc5a173fa84b36c0985880bbf56fa28c7b63",
-      "review_evidence": "docs/quality/economics-source-binding-review.md",
-      "review_evidence_sha256": "0821e1420f8755120d25289cb89b0a08697ed45cc0e5b77f94c88d9e0da122db"
+      "status": "pending",
+      "reason": "No file-level semantic implementation review recorded in this ledger."
     },
     {
       "path": "tests/test_economics_source_binding.py",
@@ -7315,11 +7171,8 @@
     {
       "path": "tests/test_edexcel_trade_barrier_credit.py",
       "classification": "test",
-      "status": "reviewed",
-      "reason": "All 137 lines. The actual Paper 2 seed-0 witness, source/input preservation, existing tariff snapshots, authored routes and helper-only negative control were read. The latter is not represented as a currently seeded currency question.",
-      "source_sha256": "cd6a1a4bdf8f5dc6951a922289fbcce39272a0caa41fec63a96757179098f7f6",
-      "review_evidence": "docs/quality/implementation-audit-reconciliation-2026-11-10.md",
-      "review_evidence_sha256": "799d0c38f8fce9352aa3b7697bae3e7e9bd9ccf480cafc45c12e94e6d1582c10"
+      "status": "pending",
+      "reason": "No file-level semantic implementation review recorded in this ledger."
     },
     {
       "path": "tests/test_education_context.py",
@@ -8407,11 +8260,8 @@
     {
       "path": "tests/test_generator_configuration_parity.py",
       "classification": "test",
-      "status": "reviewed",
-      "reason": "Complete behaviour-test review; synthetic collection, subprocess imports, pinned installer sets and invalid-path controls.",
-      "source_sha256": "b7ba36a23fb7bbe43aeb61f25577efdf757b0c4bcf727cf429cb1f627b31bd41",
-      "review_evidence": "docs/quality/generator-development-inventory-review.md",
-      "review_evidence_sha256": "302b1eee3bd00c35602f0a7d1212677a617756c87d706d839489e9d82cf9ce0f"
+      "status": "pending",
+      "reason": "No file-level semantic implementation review recorded in this ledger."
     },
     {
       "path": "tests/test_generator_migration.py",

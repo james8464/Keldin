@@ -56,7 +56,6 @@ from Backend.Core.subjects.economics_contracts import EconomicsSource
 from pastpapergen import stimulus_diagrams
 from pastpapergen.exam_dates import economics_exam_schedule
 from pastpapergen.models import GraphParams, PaperBlueprint, QuestionBlueprint, Syllabus
-from pastpapergen.notes import note_points_for_topic
 from pastpapergen.source_cases import GENERIC_SOURCE_ATTRIBUTION
 from pastpapergen.stimulus_data import line_chart_data, table_rows
 
@@ -4024,12 +4023,8 @@ def _specific_mark_scheme_context(
 def _specific_answer_points(question, topic) -> list[str]:
     seen: set[str] = set()
     points: list[str] = []
-    note_points = note_points_for_topic(
-        topic.id, title=topic.title, keywords=topic.points, limit=6
-    )
     for item in [
         *question.indicative_content,
-        *note_points,
         *question.mark_scheme,
         *topic.points,
     ]:

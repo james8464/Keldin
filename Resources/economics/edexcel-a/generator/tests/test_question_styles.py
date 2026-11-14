@@ -1096,7 +1096,7 @@ def test_section_a_can_cover_all_allowed_paper_1_topics_across_random_seeds():
     assert seen_topic_ids == expected_topic_ids
 
 
-def test_section_a_uses_note_context_for_generic_topics():
+def test_section_a_uses_syllabus_scope_for_generic_topics():
     syllabus = load_syllabus(Path("data/syllabus_seed.json"))
     config = load_builtin_paper_config("paper_1")
     section_a_text = " ".join(
@@ -1115,7 +1115,7 @@ def test_section_a_uses_note_context_for_generic_topics():
     )
 
 
-def test_section_a_note_contexts_are_rewritten_as_exam_evidence():
+def test_section_a_uses_exam_evidence_without_reproducing_notes():
     syllabus = load_syllabus(Path("data/syllabus_seed.json"))
     config = load_builtin_paper_config("paper_1")
     blueprint = build_paper_blueprint(config, syllabus, seed=0)

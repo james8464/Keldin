@@ -20,6 +20,46 @@ GENERATOR_ROOTS = {
 }
 
 
+def test_targeted_generator_test_still_uses_repository_configuration(tmp_path):
+    root = tmp_path / "project"
+    for relative in (
+        "conftest.py",
+        "pytest.ini",
+        "tools/generator_development.py",
+        "Resources/generator-registry.json",
+    ):
+        path = root / relative
+        path.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(ROOT / relative, path)
+    for relative in GENERATOR_ROOTS:
+        generator = root / relative
+        (generator / "tests").mkdir(parents=True)
+        shutil.copyfile(
+            ROOT / relative / "pyproject.toml", generator / "pyproject.toml"
+        )
+    edexcel = root / "Resources/economics/edexcel-a/generator"
+    target = edexcel / "tests/test_isolation.py"
+    (edexcel / "fixture_subject.py").write_text("SOURCE = 'selected checkout'\n")
+    target.write_text(
+        "from pathlib import Path\n"
+        "from fixture_subject import SOURCE\n"
+        "def test_isolation():\n"
+        "    assert SOURCE == 'selected checkout'\n"
+        "    assert Path.cwd() == Path(__file__).resolve().parents[1]\n"
+    )
+    result = subprocess.run(
+        [sys.executable, "-m", "pytest", "-q", str(target)],
+        cwd=root,
+        env={key: value for key, value in os.environ.items() if key != "PYTHONPATH"},
+        capture_output=True,
+        text=True,
+        timeout=20,
+        check=False,
+    )
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert "1 passed" in result.stdout
+
+
 @pytest.mark.parametrize("has_family_tests", [True, False])
 def test_registry_addition_needs_no_pytest_path_edits(tmp_path, has_family_tests):
     repository = tmp_path / "new exam"

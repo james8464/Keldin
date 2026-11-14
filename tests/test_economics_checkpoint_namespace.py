@@ -48,16 +48,21 @@ def historical_path(args, output, source_version=None):
     )
 
 
-def test_new_economics_namespace_preserves_old_bytes_and_explicit_replay(tmp_path):
+@pytest.mark.parametrize("prior_version", [None, "edexcel-instance-v2"])
+def test_new_economics_namespace_preserves_old_bytes_and_explicit_replay(
+    tmp_path, prior_version
+):
     args = request()
     old_path, new_path = (
-        historical_path(args, tmp_path),
+        historical_path(args, tmp_path, source_version=prior_version),
         checkpoint_path_for_job(args, tmp_path),
     )
     assert new_path != old_path
-    assert "edexcel-instance-v2" in new_path.name
-    marked = historical_path(args, tmp_path, source_version="edexcel-instance-v2")
-    assert new_path == marked.with_name("edexcel-instance-v2." + marked.name)
+    if prior_version is not None:
+        old_path = old_path.with_name(f"{prior_version}.{old_path.name}")
+    current_version = "edexcel-declared-inputs-v1"
+    marked = historical_path(args, tmp_path, source_version=current_version)
+    assert new_path == marked.with_name(f"{current_version}.{marked.name}")
     options = {
         "provider": args.provider,
         "model": args.model,
@@ -67,7 +72,7 @@ def test_new_economics_namespace_preserves_old_bytes_and_explicit_replay(tmp_pat
         {
             "paper_id": "paper_2",
             "seed": args.seed,
-            "source_version": "edexcel-instance-v1",
+            "recovery_namespace": prior_version or "unversioned",
         },
         **options,
     )
@@ -75,7 +80,7 @@ def test_new_economics_namespace_preserves_old_bytes_and_explicit_replay(tmp_pat
         {
             "paper_id": "paper_2",
             "seed": args.seed,
-            "source_version": "edexcel-instance-v2",
+            "recovery_namespace": current_version,
         },
         **options,
     )
@@ -130,7 +135,7 @@ def test_explicit_package_checkpoint_path_is_versioned_once(
 
     monkeypatch.setattr(implementation, "run_family_adapter", run)
     old_path = tmp_path / filename
-    current_path = tmp_path / ("edexcel-instance-v2." + filename)
+    current_path = tmp_path / ("edexcel-declared-inputs-v1." + filename)
     supplied = current_path if already_namespaced else old_path
     old_path.write_bytes(b"owned legacy recovery sentinel")
 

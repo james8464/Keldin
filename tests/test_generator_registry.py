@@ -197,10 +197,6 @@ def test_family_rejects_inconsistent_paper_contract(problem, message) -> None:
 
 
 def test_checkpoint_namespace_is_declared_by_the_family() -> None:
-    from Backend.Core.subjects.economics_contracts import (
-        ECONOMICS_SOURCE_BINDING_VERSION,
-    )
-
     policies = {
         family.backend_subject: family.checkpoint_namespace
         for family in generator_capabilities().values()
@@ -209,7 +205,7 @@ def test_checkpoint_namespace_is_declared_by_the_family() -> None:
     assert set(policies) == {"economics"}
     policy = policies["economics"]
     assert policy.identity_key == "economics_source_binding_version"
-    assert policy.version == ECONOMICS_SOURCE_BINDING_VERSION
+    assert policy.version == "edexcel-declared-inputs-v1"
 
 
 @pytest.mark.parametrize(

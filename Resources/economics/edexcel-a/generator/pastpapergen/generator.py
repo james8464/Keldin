@@ -16,8 +16,9 @@ from pastpapergen.models import (
     Syllabus,
     SyllabusTopic,
 )
-from pastpapergen.notes import essay_capable_topic_ids, note_points_for_topic
 from pastpapergen.source_cases import data_response_extract, section_c_extract
+
+_SHORT_ANSWER_TOPIC_IDS = frozenset({"1.1", "1.2.1"})
 
 
 def build_paper_blueprint(
@@ -29,7 +30,7 @@ def build_paper_blueprint(
     topics = syllabus.topics_for_themes(config.allowed_themes)
     if not topics:
         raise ValueError("No syllabus topics available for this paper.")
-    essay_topic_ids = essay_capable_topic_ids({topic.id for topic in topics})
+    essay_topic_ids = {topic.id for topic in topics} - _SHORT_ANSWER_TOPIC_IDS
     theme_plan = _theme_plan(config, rng)
     paper_3_contexts = _paper_3_context_plan(config.id, rng)
     paper_3_source_variants = {
@@ -1926,7 +1927,7 @@ def _part_guidance(
         return points, points
     return (
         _mark_scheme(command, marks, topic.title),
-        _indicative_content(topic.id, topic.title, topic.points),
+        _indicative_content(topic.title, topic.points),
     )
 
 
@@ -2436,7 +2437,7 @@ def _question_guidance(
         return points, points
     return (
         _mark_scheme(command, marks, topic.title),
-        _indicative_content(topic.id, topic.title, topic.points),
+        _indicative_content(topic.title, topic.points),
     )
 
 
@@ -2902,7 +2903,7 @@ def _source_text(
         extract_index = [0, 1, 2, 2, 3][min(index, 4)]
         return _data_response_extract(topic_title, points, extract_index)
     if section_name == "A":
-        return _section_a_context(topic_id, topic_title, focus, points, stimulus_kind)
+        return _section_a_context(topic_title, focus, stimulus_kind)
     if stimulus_kind == "data_table":
         return (
             f"The table shows how indicators linked to {topic_title.lower()} changed over time. "
@@ -3058,10 +3059,8 @@ def _section_c_extract(
 
 
 def _section_a_context(
-    topic_id: str,
     topic_title: str,
     focus: str,
-    points: list[str],
     stimulus_kind: str = "",
 ) -> str:
     stimulus_contexts = {
@@ -3115,67 +3114,10 @@ def _section_a_context(
             "The government is considering a new policy to influence market outcomes. The policy may affect prices, "
             "output, consumer surplus and producer incentives."
         )
-    note_points = (
-        note_points_for_topic(topic_id, title=topic_title, keywords=points, limit=8)
-        if topic_id
-        else []
-    )
-    context_point = _best_section_a_context_point(note_points)
-    if context_point:
-        return (
-            f"A market report on {_topic_phrase(topic_title)} states: {context_point} "
-            f"The evidence can be used to analyse {focus}."
-        )
     return (
         f"A market report on {_topic_phrase(topic_title)} includes evidence on {focus}. The information can be used "
         "to consider incentives, opportunity cost and likely market outcomes."
     )
-
-
-def _best_section_a_context_point(note_points: list[str]) -> str:
-    weak_endings = {
-        "a",
-        "and",
-        "after",
-        "from",
-        "in",
-        "new",
-        "of",
-        "or",
-        "that",
-        "the",
-        "to",
-        "where",
-        "which",
-        "who",
-        "with",
-        "word",
-    }
-    for point in note_points:
-        cleaned = point.lstrip("●•-– ").strip()
-        if not cleaned or cleaned[0].islower() or cleaned.startswith("("):
-            continue
-        if cleaned.endswith(":") or cleaned[0].isdigit():
-            continue
-        candidate = _first_sentence(cleaned)
-        if candidate.rstrip(".").endswith(","):
-            continue
-        if candidate.rstrip(".").split()[-1].lower() in weak_endings:
-            continue
-        return _sentence(candidate)
-    return ""
-
-
-def _first_sentence(text: str) -> str:
-    for delimiter in [". ", "? ", "! "]:
-        if delimiter in text:
-            return text.split(delimiter, 1)[0] + delimiter[0]
-    return text
-
-
-def _sentence(text: str) -> str:
-    cleaned = text.strip()
-    return cleaned if cleaned.endswith((".", "?", "!")) else f"{cleaned}."
 
 
 def _topic_phrase(topic_title: str) -> str:
@@ -3354,20 +3296,8 @@ def _mark_scheme(command_word: str, marks: int, topic_title: str) -> list[str]:
     return bullets
 
 
-def _indicative_content(
-    topic_id: str, topic_title: str, points: list[str]
-) -> list[str]:
-    note_points = (
-        note_points_for_topic(topic_id, title=topic_title, keywords=points, limit=4)
-        if topic_id
-        else []
-    )
-    content = [*note_points, *points[:4]]
-    unique_content = []
-    for item in content:
-        if item not in unique_content:
-            unique_content.append(item)
-    content = unique_content[:6]
+def _indicative_content(topic_title: str, points: list[str]) -> list[str]:
+    content = list(dict.fromkeys(points[:4]))
     return content or [
         f"Definition and core features of {topic_title.lower()}",
         "Relevant source evidence",
