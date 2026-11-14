@@ -12,6 +12,7 @@ struct CustomAssessmentPreview: View {
     private struct InspectionRow: Identifiable {
         let id: UUID
         let name: String
+        let selection: CustomAssessmentSelection
         let metadata: CustomAssessmentSourceMetadata
     }
 
@@ -21,10 +22,17 @@ struct CustomAssessmentPreview: View {
     @State private var showPicker = false
     @State private var inspecting = false
     @State private var errorMessage: String?
+    @State private var selectedSourceID: UUID?
+    @State private var selectedPage = 1
+    @State private var observation: CustomPageLayoutObservation?
+    @State private var layoutError: String?
+
+    private var controlsLocked: Bool { inspecting || application.isObservingCustomPage }
+    private var selectedResult: InspectionRow? { results.first { $0.id == selectedSourceID } }
 
     private var canInspect: Bool {
         sources.filter { $0.role == .questionPaper }.count >= 3
-            && !inspecting && !application.isRunning && !application.isImportingPreviousData
+            && !controlsLocked && !application.isRunning && !application.isImportingPreviousData
             && !application.benchmarkCoordinator.isRunning
     }
 
@@ -52,10 +60,10 @@ struct CustomAssessmentPreview: View {
                             sources.removeAll { $0.id == sourceID }
                         }
                     }
-                    .disabled(inspecting)
+                    .disabled(controlsLocked)
                 }
                 Button("Add PDFs…") { showPicker = true }
-                    .disabled(inspecting || sources.count >= 12)
+                    .disabled(controlsLocked || sources.count >= 12)
                 Button("Inspect PDFs", action: inspect)
                     .disabled(!canInspect)
                 if inspecting {
@@ -84,6 +92,40 @@ struct CustomAssessmentPreview: View {
                         }
                     }
                 }
+                Section("Page layout") {
+                    Text("Inspect one page with the Ollama model selected in Settings. Use a model that accepts images and runs on this Mac.")
+                        .foregroundStyle(.secondary)
+                    LabeledContent("Ollama model") {
+                        Text(verbatim: application.selectedModel)
+                    }
+                    Group {
+                        Picker("Source", selection: $selectedSourceID) {
+                            ForEach(results) { result in
+                                Text(verbatim: result.name).tag(Optional(result.id))
+                            }
+                        }
+                        if let result = selectedResult, result.metadata.pageCount > 1 {
+                            Stepper(value: $selectedPage, in: 1...result.metadata.pageCount) {
+                                Text("Page \(selectedPage) of \(result.metadata.pageCount)")
+                            }
+                        }
+                    }
+                    .disabled(controlsLocked)
+                    Button("Check Layout") { checkLayout() }
+                        .disabled(
+                            selectedResult == nil || controlsLocked || application.isRunning
+                                || application.isImportingPreviousData || application.benchmarkCoordinator.isRunning
+                        )
+                    if application.isObservingCustomPage {
+                        ProgressView("Checking page layout…")
+                    }
+                    if let layoutError {
+                        Label(layoutError, systemImage: "exclamationmark.triangle")
+                    }
+                    if let observation {
+                        PageLayoutResultView(observation: observation)
+                    }
+                }
             }
         }
         .formStyle(.grouped)
@@ -104,7 +146,13 @@ struct CustomAssessmentPreview: View {
         .onChange(of: sources.map { CustomAssessmentSelection(role: $0.role, url: $0.url) }) {
             results = []
             errorMessage = nil
+            resetLayout()
         }
+        .onChange(of: selectedSourceID) {
+            selectedPage = 1
+            resetLayout()
+        }
+        .onChange(of: selectedPage) { resetLayout() }
     }
 
     private func inspect() {
@@ -113,16 +161,75 @@ struct CustomAssessmentPreview: View {
         let selection = snapshot.map { CustomAssessmentSelection(role: $0.role, url: $0.url) }
         inspecting = true
         results = []
+        selectedPage = 1
         errorMessage = nil
+        resetLayout()
         Task {
             defer { inspecting = false }
             do {
                 let metadata = try await application.inspectCustomAssessmentSources(selection)
                 results = zip(snapshot, metadata).map { source, result in
-                    InspectionRow(id: source.id, name: source.url.lastPathComponent, metadata: result)
+                    InspectionRow(
+                        id: source.id,
+                        name: source.url.lastPathComponent,
+                        selection: CustomAssessmentSelection(role: source.role, url: source.url),
+                        metadata: result
+                    )
                 }
+                selectedSourceID = results.first?.id
             } catch {
                 errorMessage = error.localizedDescription
+            }
+        }
+    }
+
+    private func resetLayout() {
+        observation = nil
+        layoutError = nil
+    }
+
+    private func checkLayout() {
+        guard let result = selectedResult else { return }
+        let page = selectedPage
+        resetLayout()
+        Task {
+            do {
+                observation = try await application.observeCustomPage(
+                    page, of: result.selection, verified: result.metadata
+                )
+            } catch {
+                layoutError = error.localizedDescription
+            }
+        }
+    }
+}
+
+private struct PageLayoutResultView: View {
+    let observation: CustomPageLayoutObservation
+
+    var body: some View {
+        Text("Draft observation. Compare it with the original PDF.")
+            .foregroundStyle(.secondary)
+        LabeledContent("Analyzed with") { Text(verbatim: observation.model) }
+        LabeledContent("Page and columns") {
+            Text("Page \(observation.page), \(observation.layout.columns) columns")
+        }
+        if !observation.layout.heading.isEmpty {
+            LabeledContent("Heading") { Text(verbatim: observation.layout.heading) }
+        }
+        if !observation.layout.questionMarkers.isEmpty {
+            LabeledContent("Question markers") {
+                Text(verbatim: observation.layout.questionMarkers.formatted(.list(type: .and)))
+            }
+        }
+        if !observation.layout.responseSpace.isEmpty {
+            LabeledContent("Response space") {
+                Text(verbatim: observation.layout.responseSpace.formatted(.list(type: .and)))
+            }
+        }
+        if !observation.layout.figures.isEmpty {
+            LabeledContent("Figures") {
+                Text(verbatim: observation.layout.figures.formatted(.list(type: .and)))
             }
         }
     }

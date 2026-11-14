@@ -9,6 +9,7 @@ enum CustomAssessmentInspectionError: LocalizedError, Equatable {
     case invalidSelection
     case invalidResponse
     case rejected(String)
+    case busy
 
     var errorDescription: String? {
         switch self {
@@ -18,6 +19,8 @@ enum CustomAssessmentInspectionError: LocalizedError, Equatable {
             String(localized: "Keldin could not verify the inspection result. Choose the files again.")
         case let .rejected(message):
             message
+        case .busy:
+            String(localized: "Wait for the current task to finish before checking a page.")
         }
     }
 }
@@ -62,6 +65,51 @@ enum CustomAssessmentInspection {
               result.map(\.role) == selections.map(\.role) else {
             throw CustomAssessmentInspectionError.invalidResponse
         }
+        return result
+    }
+
+    static func observePage(
+        _ page: Int,
+        of selection: CustomAssessmentSelection,
+        verified: CustomAssessmentSourceMetadata,
+        model: String,
+        backend: any BackendRunning,
+        startAccess: (URL) -> Bool = { $0.startAccessingSecurityScopedResource() },
+        stopAccess: (URL) -> Void = { $0.stopAccessingSecurityScopedResource() }
+    ) async throws -> CustomPageLayoutObservation {
+        guard selection.url.isFileURL, selection.role == verified.role,
+              verified.isValid, (1...verified.pageCount).contains(page) else {
+            throw CustomAssessmentInspectionError.invalidSelection
+        }
+        try Task.checkCancellation()
+        let scoped = startAccess(selection.url)
+        defer { if scoped { stopAccess(selection.url) } }
+        let events = try await backend.collect(arguments: [
+            "inspect-custom-page-layout", "--source", selection.role.rawValue,
+            selection.url.path, "--sha256", verified.sha256,
+            "--page", String(page), "--model", model,
+        ])
+        try Task.checkCancellation()
+        var result: CustomPageLayoutObservation?
+        for event in events {
+            switch event {
+            case let .customPageLayout(observation):
+                guard result == nil, observation.isValid, observation.role == selection.role,
+                      observation.sha256 == verified.sha256, observation.page == page,
+                      observation.model == model else {
+                    throw CustomAssessmentInspectionError.invalidResponse
+                }
+                result = observation
+            case let .error(message, code):
+                if ["custom_layout_rejected", "local_memory_unavailable"].contains(code ?? "") {
+                    throw CustomAssessmentInspectionError.rejected(message)
+                }
+                throw CustomAssessmentInspectionError.invalidResponse
+            default:
+                continue
+            }
+        }
+        guard let result else { throw CustomAssessmentInspectionError.invalidResponse }
         return result
     }
 }

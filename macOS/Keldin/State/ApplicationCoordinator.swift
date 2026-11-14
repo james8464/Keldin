@@ -30,6 +30,7 @@ final class ApplicationCoordinator: ObservableObject {
     @Published var outputFolder = AppDefaults.defaultOutputFolder()
     @Published var dryRun = false
     @Published private var activeRun: BackendRun?
+    @Published private(set) var isObservingCustomPage = false
     private var cancelledFrenchRuns: [UUID: (jobID: UUID, root: URL)] = [:]
     @Published var status = "Ready"
     @Published var generationProgress: Double?
@@ -113,7 +114,7 @@ final class ApplicationCoordinator: ObservableObject {
     var isRunning: Bool { activeRun != nil }
 
     var canImportPreviousData: Bool {
-        !isImportingPreviousData && !isRunning && !benchmarkCoordinator.isRunning
+        !isObservingCustomPage && !isImportingPreviousData && !isRunning && !benchmarkCoordinator.isRunning
     }
 
     var hasCommandBlockingPresentation: Bool {
@@ -192,6 +193,7 @@ final class ApplicationCoordinator: ObservableObject {
 
     var generationBlockerResource: LocalizedStringResource? {
         if isImportingPreviousData { return "Previous app data is being imported." }
+        if isObservingCustomPage { return "A custom page is being checked." }
         if isRunning { return "Generation is already running." }
         if benchmarkCoordinator.isRunning { return "Benchmark is running." }
         if showWelcome { return "Finish the welcome guide before creating a paper." }
@@ -207,6 +209,7 @@ final class ApplicationCoordinator: ObservableObject {
 
     var frenchGenerationBlockerResource: LocalizedStringResource? {
         if isImportingPreviousData { return "Previous app data is being imported." }
+        if isObservingCustomPage { return "A custom page is being checked." }
         if isRunning { return "Generation is already running." }
         if benchmarkCoordinator.isRunning { return "Benchmark is running." }
         if showWelcome { return "Finish the welcome guide before creating a paper." }
@@ -432,6 +435,21 @@ final class ApplicationCoordinator: ObservableObject {
         try await CustomAssessmentInspection.inspect(selections, backend: backend)
     }
 
+    func observeCustomPage(
+        _ page: Int,
+        of selection: CustomAssessmentSelection,
+        verified: CustomAssessmentSourceMetadata
+    ) async throws -> CustomPageLayoutObservation {
+        guard !isObservingCustomPage, !isRunning, !isImportingPreviousData,
+              !benchmarkCoordinator.isRunning else { throw CustomAssessmentInspectionError.busy }
+        isObservingCustomPage = true
+        defer { isObservingCustomPage = false }
+        let tag = selectedModel.contains(":") ? selectedModel : selectedModel + ":latest"
+        return try await CustomAssessmentInspection.observePage(
+            page, of: selection, verified: verified, model: tag, backend: backend
+        )
+    }
+
     func localModelGuidance() async throws -> LocalModelGuidance? {
         let events = try await backend.collect(arguments: ["local-model-guidance"])
         for event in events {
@@ -554,7 +572,7 @@ final class ApplicationCoordinator: ObservableObject {
     }
 
     func generateFrenchPaper(largePrint: Bool) {
-        guard !isRunning, !benchmarkCoordinator.isRunning, !isImportingPreviousData else { return }
+        guard !isObservingCustomPage, !isRunning, !benchmarkCoordinator.isRunning, !isImportingPreviousData else { return }
         if aiProvider == .appleIntelligence {
             pendingFrenchLargePrint = nil
             setError(InterfaceText.resolve("Apple Intelligence supports shorter tasks, but not complete French NSI papers in Keldin. Choose another provider.", language: presentationLanguage))
@@ -650,7 +668,7 @@ final class ApplicationCoordinator: ObservableObject {
     }
 
     func generateOccitanieActivity() {
-        guard !isRunning, !benchmarkCoordinator.isRunning, !isImportingPreviousData else { return }
+        guard !isObservingCustomPage, !isRunning, !benchmarkCoordinator.isRunning, !isImportingPreviousData else { return }
         progressEntries.removeAll()
         lastQualityReport = nil
         lastFrenchDraftQualityReport = nil
@@ -1572,7 +1590,7 @@ final class ApplicationCoordinator: ObservableObject {
     }
 
     func startBenchmark() {
-        guard !isRunning, !benchmarkCoordinator.isRunning, !isImportingPreviousData else { return }
+        guard !isObservingCustomPage, !isRunning, !benchmarkCoordinator.isRunning, !isImportingPreviousData else { return }
         ollamaRefreshRevision = UUID()
         benchmarkCoordinator.start(generationIsRunning: isRunning)
         status = "Benchmarking"
@@ -1815,7 +1833,7 @@ final class ApplicationCoordinator: ObservableObject {
         case let .ollamaStatus(installed, running, command, message):
             ollamaState = OllamaState(installed: installed, running: running, command: command, message: message ?? "")
             status = message ?? status
-        case .benchmarkMetric, .benchmarkSample, .benchmarkDone, .localModelGuidance, .customAssessmentSources:
+        case .benchmarkMetric, .benchmarkSample, .benchmarkDone, .localModelGuidance, .customAssessmentSources, .customPageLayout:
             break
         }
     }

@@ -4,6 +4,65 @@ import XCTest
 @testable import Keldin
 
 final class BackendStreamTests: XCTestCase {
+    private func layoutEvent(page: Int = 2, model: String = "fixture:latest") throws -> BackendEvent {
+        let digest = String(repeating: "a", count: 64)
+        return try BackendEvent(jsonLine: """
+        {"type":"custom_page_layout","role":"question-paper","sha256":"\(digest)","page":\(page),"model":"\(model)","layout":{"heading":"Practice","columns":1,"question_markers":["1"],"response_space":["box"],"figures":["diagram"]}}
+        """)
+    }
+
+    func testPageLayoutRejectsInvalidMetadata() throws {
+        XCTAssertThrowsError(try layoutEvent(page: 81))
+        XCTAssertThrowsError(try layoutEvent(model: "https://example.com"))
+        guard case let .customPageLayout(value) = try layoutEvent() else {
+            return XCTFail("Expected a page layout")
+        }
+        XCTAssertEqual(value.layout.questionMarkers, ["1"])
+        XCTAssertEqual(value.layout.responseSpace, ["box"])
+    }
+
+    @MainActor
+    func testPageLayoutBindsSourcePageAndModelAndReleasesAccess() async throws {
+        let selection = CustomAssessmentSelection(
+            role: .questionPaper, url: URL(fileURLWithPath: "/tmp/Keldin Layout Test.pdf")
+        )
+        let digest = String(repeating: "a", count: 64)
+        let metadata = CustomAssessmentSourceMetadata(
+            role: .questionPaper, sha256: digest, pageCount: 2, pagesWithoutText: [2]
+        )
+        let valid = try layoutEvent()
+        let expectedArguments = [
+            "inspect-custom-page-layout", "--source", "question-paper", selection.url.path,
+            "--sha256", digest, "--page", "2", "--model", "fixture:latest",
+        ]
+        let fixtures: [([BackendEvent], CustomAssessmentInspectionError?)] = [
+            ([valid], nil),
+            ([valid, valid], .invalidResponse),
+            ([try layoutEvent(page: 1)], .invalidResponse),
+            ([try layoutEvent(model: "other:latest")], .invalidResponse),
+            ([valid, .error(message: "private stderr")], .invalidResponse),
+            ([.error(message: "Not enough memory.", code: "local_memory_unavailable")], .rejected("Not enough memory.")),
+        ]
+        for (events, expectedError) in fixtures {
+            var acquired: [URL] = []
+            var released: [URL] = []
+            let backend = CustomInspectionFixture(expectedArguments: expectedArguments, events: events)
+            do {
+                let result = try await CustomAssessmentInspection.observePage(
+                    2, of: selection, verified: metadata, model: "fixture:latest", backend: backend,
+                    startAccess: { acquired.append($0); return true },
+                    stopAccess: { released.append($0) }
+                )
+                XCTAssertNil(expectedError)
+                XCTAssertEqual(BackendEvent.customPageLayout(result), valid)
+            } catch {
+                XCTAssertEqual(error as? CustomAssessmentInspectionError, expectedError)
+            }
+            XCTAssertEqual(acquired, [selection.url])
+            XCTAssertEqual(released, acquired)
+        }
+    }
+
     @MainActor
     func testCustomInspectionReleasesScopedAccessAndRejectsErrorsAfterResult() async throws {
         let selections = (1...3).map {
