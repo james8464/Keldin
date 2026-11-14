@@ -9313,11 +9313,8 @@
     {
       "path": "tools/run_french_nsi_qualification.command",
       "classification": "maintained-source",
-      "status": "reviewed",
-      "reason": "Recovered explicit complete-file review from the recorded unchanged checkpoint; scope and unresolved findings remain in the evidence, with no whole-project clearance.",
-      "source_sha256": "8f44a723765044d0441ff16251067085a146a78063d4b2d2beab2de17206b32c",
-      "review_evidence": "docs/quality/tooling-file-review-batch-2-2026-10-28.md",
-      "review_evidence_sha256": "5055be3d7421e1e582497896542594cb2359172304511e22a2811c6c4eff0439"
+      "status": "pending",
+      "reason": "No file-level semantic implementation review recorded in this ledger."
     },
     {
       "path": "tools/run_french_nsi_reference_reconciliation.command",
