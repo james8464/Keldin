@@ -1,5 +1,5 @@
 #!/bin/zsh
-# Run resumable French NSI checks against the local reference catalogue.
+# Replay the historical V32 French NSI rendering and checkpoint checks.
 
 set -euo pipefail
 
@@ -9,6 +9,8 @@ PYTHON_BIN="$PROJECT_DIR/.venv/bin/python"
 REFERENCE_INDEX="$PROJECT_DIR/Reference Corpus/france/nsi/references.sqlite"
 OUTPUT_DIR=${KELDIN_FRENCH_QUALIFICATION_OUTPUT:-"$PROJECT_DIR/tmp/qualification-fr-nsi-2027"}
 MODELS=${KELDIN_FRENCH_MODELS:-"gemma4:12b,ministral-3:8b,qwen3:8b"}
+
+print -u2 "Historical V32 integrity checks only. This launcher does not qualify live V36 generation."
 
 if [[ ! -x "$PYTHON_BIN" ]]; then
   print -u2 "Python environment missing: $PYTHON_BIN"
