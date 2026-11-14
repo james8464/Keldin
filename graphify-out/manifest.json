@@ -60,7 +60,7 @@
     "semantic_hash": ""
   },
   "Backend/Core/cli.py": {
-    "mtime": 1794670182.064733,
+    "mtime": 1794670359.2876778,
     "ast_hash": "c88ed3fd17dae4caaac6726ecb45f0f5",
     "semantic_hash": ""
   },
@@ -1245,8 +1245,8 @@
     "semantic_hash": "9089fa356046b0e497da7729dfba8605"
   },
   "Resources/repository-inventory.json": {
-    "mtime": 1794670214.3753874,
-    "ast_hash": "92020447eb8342b92a43ea93e629f896",
+    "mtime": 1794670430.5973704,
+    "ast_hash": "4870021740470154c27ddfba7a7b29c3",
     "semantic_hash": ""
   },
   "bridge.py": {
@@ -1275,7 +1275,7 @@
     "semantic_hash": ""
   },
   "macOS/Tests/CoordinatorTests.swift": {
-    "mtime": 1794669596.0210547,
+    "mtime": 1794670359.3183684,
     "ast_hash": "ddaf30c516f63ff0266dc93108506aef",
     "semantic_hash": ""
   },
@@ -2150,7 +2150,7 @@
     "semantic_hash": ""
   },
   "docs/quality/french-nsi-evaluation.md": {
-    "mtime": 1794669231.2469194,
+    "mtime": 1794670335.022308,
     "ast_hash": "bf334938b5f72f7da42f96ca62ff664a",
     "semantic_hash": ""
   },
@@ -3485,8 +3485,8 @@
     "semantic_hash": ""
   },
   "macOS/Keldin/Domain/AppModels.swift": {
-    "mtime": 1794670013.8548422,
-    "ast_hash": "a36f299202addd3b278884b0957880cb",
+    "mtime": 1794670378.100916,
+    "ast_hash": "6d461cfd84e6728804e76b6badd34499",
     "semantic_hash": ""
   },
   "macOS/Keldin/Domain/AssessmentBundleExporter.swift": {
@@ -3560,13 +3560,13 @@
     "semantic_hash": ""
   },
   "macOS/Keldin/Navigation/ContentView.swift": {
-    "mtime": 1794669596.0179315,
-    "ast_hash": "f4ef93dbaadd3bbbc495fcca0ea5f514",
+    "mtime": 1794670378.102145,
+    "ast_hash": "704ad2aee33cf83a26b9fbaaec4802b8",
     "semantic_hash": ""
   },
   "macOS/Keldin/Navigation/SidebarView.swift": {
-    "mtime": 1794669596.0185668,
-    "ast_hash": "af2e86d8b8f53d55a5b21e6fbccd920d",
+    "mtime": 1794670378.1019292,
+    "ast_hash": "6080d2804196513e9f927a6afc7d2199",
     "semantic_hash": ""
   },
   "macOS/Keldin/Services/BackendClient.swift": {
@@ -3580,7 +3580,7 @@
     "semantic_hash": ""
   },
   "macOS/Keldin/State/ApplicationCoordinator.swift": {
-    "mtime": 1794670208.4398046,
+    "mtime": 1794670359.3178136,
     "ast_hash": "3e9389a1dc68d4551610363138d731ac",
     "semantic_hash": ""
   },
@@ -3590,8 +3590,8 @@
     "semantic_hash": ""
   },
   "macOS/Keldin/State/CatalogStore.swift": {
-    "mtime": 1794669596.0204217,
-    "ast_hash": "92f7e3432c82d6a36485ef5806385784",
+    "mtime": 1794670378.1016521,
+    "ast_hash": "1e1882dfca7d559d72edbe47c0af5f40",
     "semantic_hash": ""
   },
   "macOS/Keldin/State/CoordinatorDependencies.swift": {
@@ -3865,7 +3865,7 @@
     "semantic_hash": ""
   },
   "macOS/Tests/BackendStreamTests.swift": {
-    "mtime": 1794670208.440287,
+    "mtime": 1794670359.3181462,
     "ast_hash": "5a50e36be1b9bdc13cb3d383dbe25a47",
     "semantic_hash": ""
   },
@@ -4020,8 +4020,8 @@
     "semantic_hash": ""
   },
   "Resources/implementation-audit-coverage.json": {
-    "mtime": 1794670214.1521292,
-    "ast_hash": "53855274c7bdfd9b19d11180478e0856",
+    "mtime": 1794670430.4390073,
+    "ast_hash": "97f6428d5a1511a40e55a6ccf2617099",
     "semantic_hash": ""
   },
   "macOS/Keldin/Services/PDFDocumentAccess.swift": {
@@ -6325,28 +6325,33 @@
     "semantic_hash": ""
   },
   "Backend/Core/custom_assessment_evidence.py": {
-    "mtime": 1794669920.3570287,
+    "mtime": 1794670359.2879152,
     "ast_hash": "23f1fefb4d9ecc0d84f34c6f5f0654f1",
     "semantic_hash": ""
   },
   "tests/test_custom_assessment_evidence.py": {
-    "mtime": 1794670208.4400642,
+    "mtime": 1794670359.3189223,
     "ast_hash": "377b34e8e5e4a9f00b2a7da19bc2cd13",
     "semantic_hash": ""
   },
   "Backend/Core/custom_assessment_contract.py": {
-    "mtime": 1794669801.2062328,
+    "mtime": 1794670359.287809,
     "ast_hash": "b04836fe6e76e1a0e749be4467daf7fe",
     "semantic_hash": ""
   },
   "tests/test_custom_assessment_contract.py": {
-    "mtime": 1794669801.206229,
+    "mtime": 1794670359.318672,
     "ast_hash": "82533715999a75d678b575baf5e6e94b",
     "semantic_hash": ""
   },
   "macOS/Keldin/Services/CustomAssessmentInspection.swift": {
-    "mtime": 1794670208.4392023,
+    "mtime": 1794670359.317265,
     "ast_hash": "d7a9e98430405ec55104b6d54e0a2130",
+    "semantic_hash": ""
+  },
+  "macOS/Keldin/Features/Generation/CustomAssessmentPreview.swift": {
+    "mtime": 1794670429.9697464,
+    "ast_hash": "cddc35564c32d549d24ff89081b5eb82",
     "semantic_hash": ""
   }
 }

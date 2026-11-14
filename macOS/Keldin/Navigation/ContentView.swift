@@ -34,6 +34,12 @@ struct ContentView: View {
                         BenchmarkWorkspace()
                     case .frenchBaccalaureat:
                         FrenchAssessmentWorkspace()
+                    case .customAssessmentPreview:
+                        #if DEBUG
+                        CustomAssessmentPreview()
+                        #else
+                        ContentUnavailableView("Custom papers are not available in this build.", systemImage: "doc.badge.plus")
+                        #endif
                     case .documents:
                         DocumentPreviewView(
                             files: application.generatedFiles,

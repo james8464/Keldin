@@ -133,6 +133,7 @@ final class CatalogStore {
         case .documents: value = "documents"
         case .history: value = "history"
         case .frenchBaccalaureat: value = "france:nsi"
+        case .customAssessmentPreview: return
         case nil: value = ""
         }
         defaults.set(value, forKey: AppStorageKey.sidebarSelection)
