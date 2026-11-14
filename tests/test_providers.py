@@ -9,6 +9,7 @@ from types import ModuleType, SimpleNamespace
 
 import pytest
 
+from Backend.Core.generation_requests import GenerationRequest
 from Backend.Core.ollama_thinking import structured_thinking_policy
 from Backend.Core.providers import (
     HostedLLMClient,
@@ -330,8 +331,38 @@ def test_apple_batch_format_and_identifier_repair(monkeypatch, mlx_snapshot):
     assert client.generate_json(prompt)["questions"] == [{"id": "0/0/0"}]
     assert len(prompts) == 2
     assert "OUTPUT_SCHEMA=" in prompts[0]
-    assert '"enum":["0/0/0"]' in prompts[0]
+    assert '"enum": ["0/0/0"]' in prompts[0]
     assert "question identifiers or count did not match" in prompts[1]
+
+
+@pytest.mark.parametrize("suffix_kind", ["matching", "different", "missing"])
+def test_mlx_does_not_repeat_matching_terminal_schema(monkeypatch, suffix_kind):
+    schema = {
+        "type": "object",
+        "properties": {"réponse": {"type": "string"}},
+        "required": ["réponse"],
+    }
+    prompt = "Unchanged French task"
+    if suffix_kind != "missing":
+        suffix = schema if suffix_kind == "matching" else {"type": "object"}
+        prompt += "\nOUTPUT_SCHEMA=" + json.dumps(suffix, ensure_ascii=False)
+    captured = []
+
+    def respond(self, text, actual_schema, budget):
+        captured.append(text)
+        assert actual_schema == schema
+        return '{"réponse":"oui"}'
+
+    monkeypatch.setenv("KELDIN_PARALLEL_MLX_GENERATION", "0")
+    monkeypatch.setattr(HostedLLMClient, "_apple_response", respond)
+    client = HostedLLMClient(provider="apple", model="fixture", api_key="")
+    assert client.generate_request(
+        GenerationRequest(prompt, "french_nsi_authoring", schema)
+    ) == {"réponse": "oui"}
+    assert captured[0].startswith(prompt)
+    assert json.loads(captured[0].rsplit("\nOUTPUT_SCHEMA=", 1)[1]) == schema
+    if suffix_kind == "matching":
+        assert captured == [prompt]
 
 
 @pytest.mark.parametrize(
