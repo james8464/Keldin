@@ -379,6 +379,7 @@ enum SidebarItem: Hashable {
     case board(String)
     case frenchBaccalaureat
     case customAssessmentPreview
+    case admissionsTests
     case benchmark
     case documents
     case history
@@ -533,6 +534,7 @@ enum DistributionMode: String {
     }
 
     var canManageOllama: Bool { self == .direct }
+    var canGenerateFrenchNSI: Bool { self == .direct }
 }
 
 struct OllamaState: Equatable {
