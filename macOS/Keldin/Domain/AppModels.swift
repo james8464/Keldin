@@ -1141,6 +1141,7 @@ enum BackendEvent: Equatable {
     case models([String], message: String?)
     case ollamaStatus(installed: Bool, running: Bool, command: String?, message: String?)
     case mlxDownloadInfo(MLXDownloadInfo)
+    case localModelGuidance(LocalModelGuidance)
     case benchmarkMetric(BenchmarkMetric)
     case benchmarkSample(BenchmarkSample)
     case benchmarkDone(BenchmarkVerdict)
@@ -1150,6 +1151,10 @@ enum BackendEvent: Equatable {
         let payload = try JSONDecoder().decode(BackendEventPayload.self, from: data)
 
         switch payload.type {
+        case "model_guidance":
+            let decoder = JSONDecoder()
+            decoder.keyDecodingStrategy = .convertFromSnakeCase
+            self = .localModelGuidance(try decoder.decode(LocalModelGuidance.self, from: data))
         case "hello":
             self = .hello(
                 protocolVersion: payload.protocolVersion ?? 0,

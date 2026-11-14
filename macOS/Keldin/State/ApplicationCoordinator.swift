@@ -426,6 +426,14 @@ final class ApplicationCoordinator: ObservableObject {
         }
     }
 
+    func localModelGuidance() async throws -> LocalModelGuidance? {
+        let events = try await backend.collect(arguments: ["local-model-guidance"])
+        for event in events {
+            if case let .localModelGuidance(result) = event { return result }
+        }
+        return nil
+    }
+
     func refreshOllama(presentation: SettingsActionPresentation? = nil) {
         guard !isRunning, !benchmarkCoordinator.isRunning, !isRefreshingOllama, !isImportingPreviousData else { return }
         isRefreshingOllama = true
@@ -1801,7 +1809,7 @@ final class ApplicationCoordinator: ObservableObject {
         case let .ollamaStatus(installed, running, command, message):
             ollamaState = OllamaState(installed: installed, running: running, command: command, message: message ?? "")
             status = message ?? status
-        case .benchmarkMetric, .benchmarkSample, .benchmarkDone:
+        case .benchmarkMetric, .benchmarkSample, .benchmarkDone, .localModelGuidance:
             break
         }
     }

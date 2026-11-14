@@ -163,6 +163,9 @@ private struct SettingsWindowConfiguration: NSViewRepresentable {
 }
 
 private struct AISettingsTab: View {
+    @State private var localGuidance: LocalModelGuidance?
+    @State private var checkingLocalGuidance = false
+    @State private var checkedLocalGuidance = false
     @ObservedObject var presentation: SettingsActionPresentation
     @Environment(\.openWindow) private var openWindow
     @Environment(\.locale) private var locale
@@ -192,6 +195,9 @@ private struct AISettingsTab: View {
                         systemImage: "network"
                     )
                     .foregroundStyle(.secondary)
+                    Text("An API key is required. Check the provider’s billing and limits before generating; a chat subscription does not guarantee API credit.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
                 }
             }
 
@@ -219,6 +225,31 @@ private struct AISettingsTab: View {
         switch application.aiProvider {
         case .ollama:
             Section("Local model") {
+                Button("Check this Mac") {
+                    checkingLocalGuidance = true
+                    Task {
+                        defer { checkingLocalGuidance = false }
+                        localGuidance = try? await application.localModelGuidance()
+                        checkedLocalGuidance = true
+                    }
+                }
+                .disabled(checkingLocalGuidance)
+                if checkingLocalGuidance {
+                    ProgressView("Checking memory and disk space…")
+                } else if checkedLocalGuidance {
+                    if let localGuidance, localGuidance.conditionsVerified {
+                        if let model = localGuidance.fittingModels.first {
+                            LabeledContent("Estimated to fit now", value: model)
+                            Text("This is a memory and disk estimate, not a paper-quality check.")
+                        } else {
+                            Text("None of the checked local models is estimated to fit right now.")
+                        }
+                    } else {
+                        Text("Current memory and disk space could not be verified.")
+                    }
+                    Text("We recommend a cloud model for full papers. Check the provider’s usage limits and pricing before generating.")
+                        .foregroundStyle(.secondary)
+                }
                 LabeledContent("Memory-fit suggestion") {
                     VStack(alignment: .trailing, spacing: 2) {
                         Text(application.ollamaRecommendation.model)
