@@ -5,7 +5,10 @@ from __future__ import annotations
 import hashlib
 import json
 import re
+from collections.abc import Callable, Mapping
+from dataclasses import dataclass
 from pathlib import Path
+from typing import Any
 
 import pymupdf as fitz
 
@@ -47,23 +50,11 @@ AQA_CS_PAPER1_SCHEME_PAGINATION = "generated-aqa-cs-paper1-mark-scheme-content-v
 def runtime_page_count_policy(
     family: str, role: str, reference_count: int, *, paper: str | None = None
 ) -> dict:
-    if family == "aqa-computer-science" and role == "question-paper" and paper == "1":
-        return {"kind": AQA_CS_PAPER1_QUESTION_PAGINATION}
-    if family == "aqa-accounting" and role == "mark-scheme" and paper == "1":
-        return {"kind": ACCOUNTING_SCHEME_PAGINATION}
-    if family == "aqa-accounting" and role == "mark-scheme" and paper == "2":
-        return {"kind": ACCOUNTING_PAPER_TWO_SCHEME_PAGINATION}
-    if family == "aqa-business" and role == "mark-scheme" and paper == "2":
-        return {"kind": BUSINESS_SCHEME_PAGINATION}
-    if family == "edexcel-economics" and role == "mark-scheme":
-        return {"kind": EDEXCEL_SCHEME_PAGINATION}
-    if family == "ocr-economics" and role == "mark-scheme":
-        return {"kind": OCR_ECONOMICS_SCHEME_PAGINATION}
-    if family == "aqa-computer-science" and role == "mark-scheme":
-        if paper == "1":
-            return {"kind": AQA_CS_PAPER1_SCHEME_PAGINATION}
-        if paper == "2":
-            return {"kind": AQA_CS_SCHEME_PAGINATION}
+    if role in {"question-paper", "mark-scheme"}:
+        output_role = role.replace("-", "_")
+        for kind, policy in _CONTENT_POLICIES.items():
+            if policy.accepts(family, output_role, paper):
+                return {"kind": kind}
     return {"kind": "exact", "minimum": reference_count, "maximum": reference_count}
 
 
@@ -438,248 +429,243 @@ def _edexcel_printed_credit(
     }
 
 
+@dataclass(frozen=True, slots=True)
+class _RenderedDocument:
+    path: Path
+    assessment_path: Path | None
+    paper: str
+    master: Mapping[str, Any]
+
+    @property
+    def reference_count(self) -> int:
+        return int(self.master["page_count"])
+
+    def apply_boxes(self, *, strict: bool, page_count: int | None = None) -> None:
+        conform_pdf_to_box_template(
+            self.path,
+            self.master.get("page_boxes") or self.master["boxes"],
+            expected_page_count=(
+                self.master["page_count"] if page_count is None else page_count
+            ),
+            strict_page_count=strict,
+        )
+
+
+type _ContentReport = dict[str, Any]
+type _ContentVerifier = Callable[[Path, Path | None, int], _ContentReport | None]
+
+
+@dataclass(frozen=True, slots=True)
+class _ContentPolicy:
+    family: str
+    subject: str
+    role: str
+    paper: str | None
+    check: Callable[[_RenderedDocument], _ContentReport | None]
+    mismatch: str
+
+    def accepts(self, family: str, role: str, paper: str | None) -> bool:
+        return (
+            self.family == family
+            and self.role == role
+            and (self.paper is None or self.paper == paper)
+        )
+
+
+def _verify_before_boxes(
+    verifier: _ContentVerifier, *, fixed_count: int | None = None
+) -> Callable[[_RenderedDocument], _ContentReport | None]:
+    def check(document: _RenderedDocument) -> _ContentReport | None:
+        report = verifier(
+            document.path, document.assessment_path, document.reference_count
+        )
+        # Untagged older schemes retain their measured template. The compact
+        # Accounting Paper 1 format has a fixed count once its credit is verified.
+        document.apply_boxes(
+            strict=fixed_count is not None or report is None,
+            page_count=fixed_count if report else None,
+        )
+        return report
+
+    return check
+
+
+def _check_cs1_questions(document: _RenderedDocument) -> _ContentReport:
+    report = verify_cs_paper1_questions(
+        document.path, document.assessment_path, document.reference_count
+    )
+    document.apply_boxes(strict=False)
+    return report
+
+
+def _check_ocr_scheme(document: _RenderedDocument) -> _ContentReport:
+    report = verify_ocr_scheme_content(
+        document.path,
+        document.assessment_path,
+        paper=document.paper,
+        reference_count=document.reference_count,
+    )
+    # Overflow keeps the landscape grid; only the final page uses the colophon.
+    measured = document.master["page_boxes"]
+    landscape = next(box for box in measured if box["media"][2] > box["media"][3])
+    with fitz.open(document.path) as pdf:
+        page_count = pdf.page_count
+    boxes = [
+        measured[index]
+        if index < 10
+        else measured[-1]
+        if index == page_count - 1
+        else landscape
+        for index in range(page_count)
+    ]
+    conform_pdf_to_box_template(document.path, boxes, strict_page_count=False)
+    return report
+
+
+def _check_cs_scheme(document: _RenderedDocument) -> _ContentReport:
+    document.apply_boxes(strict=False)
+    return _aqa_cs_printed_credit(
+        document.path,
+        document.assessment_path,
+        document.reference_count,
+        paper=document.paper,
+    )
+
+
+def _check_edexcel_scheme(document: _RenderedDocument) -> _ContentReport:
+    document.apply_boxes(strict=False)
+    return _edexcel_printed_credit(
+        document.path,
+        document.assessment_path,
+        document.paper,
+        document.reference_count,
+    )
+
+
+_CS_MISMATCH = "CS scheme pagination policy cannot apply to this document"
+_CONTENT_POLICIES: Mapping[str, _ContentPolicy] = {
+    AQA_CS_PAPER1_QUESTION_PAGINATION: _ContentPolicy(
+        "aqa-computer-science",
+        "computer_science",
+        "question_paper",
+        "1",
+        _check_cs1_questions,
+        "CS1 question content policy cannot apply here",
+    ),
+    ACCOUNTING_SCHEME_PAGINATION: _ContentPolicy(
+        "aqa-accounting",
+        "accounting_aqa",
+        "mark_scheme",
+        "1",
+        _verify_before_boxes(
+            verify_accounting_scheme, fixed_count=ACCOUNTING_SCHEME_PAGES
+        ),
+        "Accounting scheme policy cannot apply to this document",
+    ),
+    ACCOUNTING_PAPER_TWO_SCHEME_PAGINATION: _ContentPolicy(
+        "aqa-accounting",
+        "accounting_aqa",
+        "mark_scheme",
+        "2",
+        _verify_before_boxes(verify_accounting_paper_two_scheme),
+        "Accounting Paper 2 policy cannot apply to this document",
+    ),
+    BUSINESS_SCHEME_PAGINATION: _ContentPolicy(
+        "aqa-business",
+        "business_aqa",
+        "mark_scheme",
+        "2",
+        _verify_before_boxes(verify_business_paper_two_scheme),
+        "Business Paper 2 policy cannot apply to this document",
+    ),
+    AQA_CS_PAPER1_SCHEME_PAGINATION: _ContentPolicy(
+        "aqa-computer-science",
+        "computer_science",
+        "mark_scheme",
+        "1",
+        _check_cs_scheme,
+        _CS_MISMATCH,
+    ),
+    AQA_CS_SCHEME_PAGINATION: _ContentPolicy(
+        "aqa-computer-science",
+        "computer_science",
+        "mark_scheme",
+        "2",
+        _check_cs_scheme,
+        _CS_MISMATCH,
+    ),
+    OCR_ECONOMICS_SCHEME_PAGINATION: _ContentPolicy(
+        "ocr-economics",
+        "economics_ocr",
+        "mark_scheme",
+        None,
+        _check_ocr_scheme,
+        "OCR scheme pagination policy cannot apply to this document",
+    ),
+    EDEXCEL_SCHEME_PAGINATION: _ContentPolicy(
+        "edexcel-economics",
+        "economics",
+        "mark_scheme",
+        None,
+        _check_edexcel_scheme,
+        "Edexcel scheme pagination policy cannot apply to this document",
+    ),
+}
+
+
+def _check_measured_pagination(
+    document: _RenderedDocument, declared: Mapping[str, Any] | None
+) -> None:
+    if declared and declared.get("kind") not in ("exact", "range"):
+        raise LayoutConformanceError("Unknown generated-document page-count policy")
+    policy = (
+        PageCountPolicy(int(declared["minimum"]), int(declared["maximum"]))
+        if declared
+        else PageCountPolicy.exact(document.reference_count)
+    )
+    with fitz.open(document.path) as pdf:
+        page_count = pdf.page_count
+    if not policy.accepts(page_count):
+        expectation = (
+            str(policy.minimum)
+            if policy.kind == "exact"
+            else f"{policy.minimum}–{policy.maximum} from the measured multi-year range"
+        )
+        raise LayoutConformanceError(
+            f"{document.path.name} has {page_count} pages; expected {expectation}"
+        )
+    document.apply_boxes(strict=policy.kind == "exact")
+
+
 def conform_generated_documents(
-    subject: str,
-    paper: str,
-    paths: dict[str, Path],
-) -> dict[str, dict]:
-    results = {}
+    subject: str, paper: str, paths: dict[str, Path]
+) -> dict[str, _ContentReport]:
     if not REGISTRY_PATH.exists():
-        return results
+        return {}
     registry = json.loads(REGISTRY_PATH.read_text(encoding="utf-8"))
     record = registry.get("papers", {}).get(f"{subject}:{paper}")
     if not record:
-        return results
-    for generated_role, master_role in (
-        ("question_paper", "question-paper"),
-        ("mark_scheme", "mark-scheme"),
-        ("source_booklet", "source-booklet"),
-    ):
-        generated_path = paths.get(generated_role)
-        master = record.get(master_role)
-        if not generated_path or not master:
+        return {}
+    results: dict[str, _ContentReport] = {}
+    for role in ("question_paper", "mark_scheme", "source_booklet"):
+        path = paths.get(role)
+        master = record.get(role.replace("_", "-"))
+        if not path or not master:
             continue
-        policy_payload = master.get("page_count_policy")
-        if (
-            policy_payload
-            and policy_payload.get("kind") == AQA_CS_PAPER1_QUESTION_PAGINATION
-        ):
-            if (
-                subject != "computer_science"
-                or record.get("family") != "aqa-computer-science"
-                or paper != "1"
-                or generated_role != "question_paper"
-            ):
-                raise LayoutConformanceError(
-                    "CS1 question content policy cannot apply here"
-                )
-            results[generated_role] = verify_cs_paper1_questions(
-                generated_path,
-                paths.get("assessment_package"),
-                int(master["page_count"]),
-            )
-            conform_pdf_to_box_template(
-                generated_path,
-                master.get("page_boxes") or master["boxes"],
-                expected_page_count=master["page_count"],
-                strict_page_count=False,
-            )
-            continue
-        if policy_payload and policy_payload.get("kind") == BUSINESS_SCHEME_PAGINATION:
-            if (
-                subject != "business_aqa"
-                or record.get("family") != "aqa-business"
-                or paper != "2"
-                or generated_role != "mark_scheme"
-            ):
-                raise LayoutConformanceError(
-                    "Business Paper 2 policy cannot apply to this document"
-                )
-            content_report = verify_business_paper_two_scheme(
-                generated_path,
-                paths.get("assessment_package"),
-                int(master["page_count"]),
-            )
-            conform_pdf_to_box_template(
-                generated_path,
-                master.get("page_boxes") or master["boxes"],
-                expected_page_count=master["page_count"],
-                strict_page_count=content_report is None,
-            )
-            if content_report:
-                results[generated_role] = content_report
-            continue
-        if (
-            policy_payload
-            and policy_payload.get("kind") == ACCOUNTING_PAPER_TWO_SCHEME_PAGINATION
-        ):
-            if (
-                subject != "accounting_aqa"
-                or paper != "2"
-                or generated_role != "mark_scheme"
-            ):
-                raise LayoutConformanceError(
-                    "Accounting Paper 2 policy cannot apply to this document"
-                )
-            content_report = verify_accounting_paper_two_scheme(
-                generated_path,
-                paths.get("assessment_package"),
-                int(master["page_count"]),
-            )
-            conform_pdf_to_box_template(
-                generated_path,
-                master.get("page_boxes") or master["boxes"],
-                expected_page_count=master["page_count"],
-                strict_page_count=content_report is None,
-            )
-            if content_report:
-                results[generated_role] = content_report
-            continue
-        if (
-            policy_payload
-            and policy_payload.get("kind") == ACCOUNTING_SCHEME_PAGINATION
-        ):
-            if (
-                subject != "accounting_aqa"
-                or paper != "1"
-                or generated_role != "mark_scheme"
-            ):
-                raise LayoutConformanceError(
-                    "Accounting scheme policy cannot apply to this document"
-                )
-            content_report = verify_accounting_scheme(
-                generated_path,
-                paths.get("assessment_package"),
-                int(master["page_count"]),
-            )
-            # Unmarked historical packages retain their exact measured template;
-            # only the explicit V11 credit contract selects the compact layout.
-            conform_pdf_to_box_template(
-                generated_path,
-                master.get("page_boxes") or master["boxes"],
-                expected_page_count=ACCOUNTING_SCHEME_PAGES
-                if content_report
-                else master["page_count"],
-                strict_page_count=True,
-            )
-            if content_report:
-                results[generated_role] = content_report
-            continue
-        if (
-            policy_payload
-            and policy_payload.get("kind") == OCR_ECONOMICS_SCHEME_PAGINATION
-        ):
-            if (
-                subject != "economics_ocr"
-                or record.get("family") != "ocr-economics"
-                or generated_role != "mark_scheme"
-            ):
-                raise LayoutConformanceError(
-                    "OCR scheme pagination policy cannot apply to this document"
-                )
-            results[generated_role] = verify_ocr_scheme_content(
-                generated_path,
-                paths.get("assessment_package"),
-                paper=paper,
-                reference_count=int(master["page_count"]),
-            )
-            # Overflow retains the landscape marking grid, not the reference's
-            # portrait colophon simply because its fixed page index was reached.
-            measured = master["page_boxes"]
-            landscape = next(
-                box for box in measured if box["media"][2] > box["media"][3]
-            )
-            with fitz.open(generated_path) as document:
-                boxes = [
-                    measured[index]
-                    if index < 10
-                    else measured[-1]
-                    if index == len(document) - 1
-                    else landscape
-                    for index in range(len(document))
-                ]
-            conform_pdf_to_box_template(generated_path, boxes, strict_page_count=False)
-            continue
-        if policy_payload and policy_payload.get("kind") in {
-            AQA_CS_SCHEME_PAGINATION,
-            AQA_CS_PAPER1_SCHEME_PAGINATION,
-        }:
-            if (
-                subject != "computer_science"
-                or paper not in {"1", "2"}
-                or generated_role != "mark_scheme"
-                or policy_payload["kind"]
-                != runtime_page_count_policy(
-                    "aqa-computer-science",
-                    "mark-scheme",
-                    int(master["page_count"]),
-                    paper=paper,
-                )["kind"]
-            ):
-                raise LayoutConformanceError(
-                    "CS scheme pagination policy cannot apply to this document"
-                )
-            conform_pdf_to_box_template(
-                generated_path,
-                master.get("page_boxes") or master["boxes"],
-                expected_page_count=master["page_count"],
-                strict_page_count=False,
-            )
-            results[generated_role] = _aqa_cs_printed_credit(
-                generated_path,
-                paths.get("assessment_package"),
-                int(master["page_count"]),
-                paper=paper,
-            )
-            continue
-        if policy_payload and policy_payload.get("kind") == EDEXCEL_SCHEME_PAGINATION:
-            if (
-                subject != "economics"
-                or record.get("family") != "edexcel-economics"
-                or generated_role != "mark_scheme"
-            ):
-                raise LayoutConformanceError(
-                    "Edexcel scheme pagination policy cannot apply to this document"
-                )
-            conform_pdf_to_box_template(
-                generated_path,
-                master.get("page_boxes") or master["boxes"],
-                expected_page_count=master["page_count"],
-                strict_page_count=False,
-            )
-            results[generated_role] = _edexcel_printed_credit(
-                generated_path,
-                paths.get("assessment_package"),
-                paper,
-                int(master["page_count"]),
-            )
-            continue
-        if policy_payload and policy_payload.get("kind") not in {"exact", "range"}:
-            raise LayoutConformanceError("Unknown generated-document page-count policy")
-        policy = (
-            PageCountPolicy(
-                int(policy_payload["minimum"]),
-                int(policy_payload["maximum"]),
-            )
-            if policy_payload
-            else PageCountPolicy.exact(int(master["page_count"]))
+        document = _RenderedDocument(
+            path, paths.get("assessment_package"), paper, master
         )
-        with fitz.open(generated_path) as document:
-            actual_page_count = document.page_count
-        if not policy.accepts(actual_page_count):
-            raise LayoutConformanceError(
-                f"{generated_path.name} has {actual_page_count} pages; expected "
-                f"{policy.minimum}"
-                + (
-                    ""
-                    if policy.kind == "exact"
-                    else f"–{policy.maximum} from the measured multi-year range"
-                )
-            )
-        conform_pdf_to_box_template(
-            generated_path,
-            master.get("page_boxes") or master["boxes"],
-            expected_page_count=master["page_count"],
-            strict_page_count=policy.kind == "exact",
-        )
+        declared = master.get("page_count_policy")
+        kind = declared.get("kind") if declared else None
+        content_policy = _CONTENT_POLICIES.get(kind) if isinstance(kind, str) else None
+        if content_policy is None:
+            _check_measured_pagination(document, declared)
+            continue
+        if subject != content_policy.subject or not content_policy.accepts(
+            record.get("family"), role, paper
+        ):
+            raise LayoutConformanceError(content_policy.mismatch)
+        report = content_policy.check(document)
+        if report is not None:
+            results[role] = report
     return results

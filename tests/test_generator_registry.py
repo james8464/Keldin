@@ -3,6 +3,7 @@ from __future__ import annotations
 import importlib
 import json
 import sys
+from dataclasses import FrozenInstanceError
 
 import pytest
 
@@ -11,6 +12,7 @@ from Backend.Core.generator_registry import (
     _capability,
     _paper_qualification,
     generator_capabilities,
+    generator_capability,
     generator_subjects,
 )
 from Backend.Core.paths import REPO_ROOT
@@ -100,7 +102,7 @@ def test_schema_v3_family_metadata_migrates_deterministically() -> None:
 
 def test_every_current_paper_has_truthful_qualification_levels() -> None:
     readiness = {
-        (capability.id, paper): capability.qualification_by_paper[paper]
+        (capability.id, paper): capability.paper_for(paper).qualification
         for capability in generator_capabilities().values()
         for paper in capability.papers
     }
@@ -136,11 +138,62 @@ def test_every_advertised_generator_creates_unique_ai_content() -> None:
 def test_every_paper_declares_complete_output_roles() -> None:
     for capability in generator_capabilities().values():
         for paper in capability.papers:
-            roles = capability.outputs_for(paper)
+            roles = capability.paper_for(paper).output_roles
             assert "question_paper" in roles
             assert "mark_scheme" in roles
             assert "assessment_package" in roles
             assert len(roles) == len(set(roles))
+
+
+def test_cached_paper_contract_cannot_be_changed_between_jobs() -> None:
+    families = generator_capabilities()
+    capability = next(iter(families.values()))
+    paper_id = capability.papers[0]
+    paper = capability.paper_for(paper_id)
+
+    with pytest.raises(TypeError):
+        families[capability.backend_subject] = None
+    with pytest.raises(TypeError):
+        capability.paper_contracts[paper_id] = None
+    with pytest.raises(FrozenInstanceError):
+        paper.output_roles = ()
+    with pytest.raises(TypeError):
+        paper.gates["release"] = False
+    with pytest.raises(TypeError):
+        paper.qualification.evidence_by_level["engineering"] = ()
+
+    assert generator_capability(capability.backend_subject).paper_for(paper_id) is paper
+
+
+@pytest.mark.parametrize(
+    ("problem", "message"),
+    [
+        ("duplicate-paper", "duplicate paper"),
+        ("extra-output", "match paper records"),
+        ("missing-output", "match paper records"),
+        ("duplicate-role", "invalid output roles"),
+        ("truthy-gate", "boolean gate"),
+    ],
+)
+def test_family_rejects_inconsistent_paper_contract(problem, message) -> None:
+    payload = json.loads(REGISTRY_PATH.read_text(encoding="utf-8"))
+    raw = next(family for family in payload["families"] if family["advertised"])
+    paper = raw["papers"][0]
+    roles = raw["outputs_by_paper"]
+    if problem == "duplicate-paper":
+        raw["papers"].append(paper)
+        raw["declared_papers"].append(paper["id"])
+    elif problem == "extra-output":
+        roles["not-a-paper"] = roles[paper["id"]]
+    elif problem == "missing-output":
+        roles.pop(paper["id"])
+    elif problem == "duplicate-role":
+        roles[paper["id"]].append(roles[paper["id"]][0])
+    elif problem == "truthy-gate":
+        paper["checks"]["release"] = "false"
+
+    with pytest.raises(ValueError, match=message):
+        _capability(raw)
 
 
 def test_checkpoint_namespace_is_declared_by_the_family() -> None:

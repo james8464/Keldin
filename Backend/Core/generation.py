@@ -42,7 +42,11 @@ from Backend.Core.events import (
     progress_emitter,
 )
 from Backend.Core.generation_diagnostics import save_failure_diagnostic
-from Backend.Core.generator_registry import GeneratorCapability, generator_capability
+from Backend.Core.generator_registry import (
+    GeneratorCapability,
+    PaperContract,
+    generator_capability,
+)
 from Backend.Core.layout_conformance import conform_generated_documents
 from Backend.Core.legacy_migration import environment_value, output_directory
 from Backend.Core.mlx_setup import MLXModelSetupRequired
@@ -181,7 +185,7 @@ def _validate_request(
     args: argparse.Namespace,
     capability: GeneratorCapability,
 ) -> str | None:
-    if args.paper not in capability.papers:
+    if args.paper not in capability.paper_contracts:
         return f"{args.subject} does not support paper {args.paper}."
     if capability.uses_ai and args.provider not in capability.supported_providers:
         return f"{args.provider} is not supported by {capability.id}."
@@ -300,7 +304,8 @@ def finalize_generated_documents(
     output_dir: Path,
     paths: dict[str, Path],
 ) -> dict[str, Path]:
-    expected = set(capability.outputs_for(args.paper))
+    paper = capability.paper_for(args.paper)
+    expected = set(paper.output_roles)
     actual = set(paths)
     if actual != expected:
         raise RuntimeError(
@@ -380,6 +385,7 @@ def finalize_generated_documents(
     manifest_path = _write_package_manifest(
         args=args,
         capability=capability,
+        paper=paper,
         staging_dir=staging_dir,
         paths=paths,
         pdf_validation=pdf_validation,
@@ -395,6 +401,7 @@ def _write_package_manifest(
     *,
     args: argparse.Namespace,
     capability: GeneratorCapability,
+    paper: PaperContract,
     staging_dir: Path,
     paths: dict[str, Path],
     pdf_validation: dict[str, dict[str, Any]],
@@ -402,8 +409,8 @@ def _write_package_manifest(
     novelty_validation: dict[str, Any],
 ) -> Path:
     repository_commit = _repository_commit()
-    gate_results = capability.evidence_by_paper[args.paper]
-    qualification = capability.qualification_by_paper[args.paper]
+    gate_results = dict(paper.gates)
+    qualification = paper.qualification
     manifest = {
         "schema_version": 2,
         "created_at": datetime.now(UTC).isoformat(),

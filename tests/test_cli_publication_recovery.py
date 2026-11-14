@@ -1,7 +1,6 @@
 """A failed CLI commit must not replace only part of an accepted paper set."""
 
 from argparse import Namespace
-from types import SimpleNamespace
 
 import pytest
 
@@ -28,10 +27,14 @@ def prepared(tmp_path, monkeypatch):
     monkeypatch.setattr(generation, "conform_generated_documents", lambda *a: {})
     monkeypatch.setattr(generation, "validate_pdf_for_release", lambda *a, **k: {})
     monkeypatch.setattr(generation, "_write_package_manifest", lambda **k: manifest)
+    capability = generation.generator_capability("accounting_aqa")
     args = Namespace(
-        subject="fixture", paper="1", dry_run=False, provider="ollama", model="unused"
+        subject=capability.backend_subject,
+        paper="1",
+        dry_run=False,
+        provider="ollama",
+        model="unused",
     )
-    capability = SimpleNamespace(outputs_for=lambda _: tuple(paths))
     finalize = generation.finalize_generated_documents
 
     def finish():

@@ -1189,6 +1189,10 @@ def _align_paper1_structure(
     rng: random.Random,
 ) -> list[Question]:
     recursive_n = rng.choice([5, 6])
+    first_recursive_argument, second_recursive_argument = (
+        recursive_n - 1,
+        recursive_n - 2,
+    )
     parts_by_question: dict[int, list[QuestionPart]] = {
         1: [
             _paper1_part(
@@ -1374,8 +1378,8 @@ def _align_paper1_structure(
                 2,
                 f"State the first two recursive calls made when evaluating the supplied function for n = {recursive_n}.",
                 [
-                    "First recursive call decreases n by one;",
-                    "Second recursive call decreases n by one again;",
+                    f"The initial call makes the recursive call value({first_recursive_argument});",
+                    f"That call then makes the recursive call value({second_recursive_argument});",
                 ],
                 4,
                 "AO1",
@@ -1649,8 +1653,8 @@ def _align_paper1_structure(
     parts_by_question[1][7].set_closed_answers({"passes": ["79", "79 passes"]})
     parts_by_question[5][0].set_closed_answers(
         {
-            "first-call-n": [str(recursive_n - 1)],
-            "second-call-n": [str(recursive_n - 2)],
+            "first-call-n": [str(first_recursive_argument)],
+            "second-call-n": [str(second_recursive_argument)],
         }
     )
     matrix_rows = ["010100", "101010", "010001", "100010", "010101", "001010"]

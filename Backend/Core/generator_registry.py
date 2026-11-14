@@ -4,9 +4,11 @@ from __future__ import annotations
 
 import json
 import re
+from collections.abc import Mapping
 from dataclasses import dataclass
 from functools import lru_cache
 from pathlib import Path
+from types import MappingProxyType
 from typing import Any
 
 from Backend.Core.board_profiles import board_profile as load_board_profile
@@ -23,12 +25,19 @@ KNOWN_QUALIFICATION_STATES = frozenset(
 )
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class PaperQualification:
     engineering_validated: bool
     visually_calibrated: bool
     empirically_calibrated: bool
-    evidence_by_level: dict[str, tuple[str, ...]]
+    evidence_by_level: Mapping[str, tuple[str, ...]]
+
+
+@dataclass(frozen=True, slots=True)
+class PaperContract:
+    output_roles: tuple[str, ...]
+    gates: Mapping[str, bool]
+    qualification: PaperQualification
 
 
 @dataclass(frozen=True)
@@ -43,7 +52,7 @@ class CheckpointNamespace:
         )
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class GeneratorCapability:
     manifest_version: int
     id: str
@@ -60,19 +69,20 @@ class GeneratorCapability:
     reference_demand_profile: str
     content_mode: str
     supported_providers: tuple[str, ...]
-    papers: tuple[str, ...]
-    outputs_by_paper: dict[str, tuple[str, ...]]
-    evidence_by_paper: dict[str, dict[str, bool]]
-    qualification_by_paper: dict[str, PaperQualification]
+    paper_contracts: Mapping[str, PaperContract]
     checkpoint_namespace: CheckpointNamespace | None = None
 
     @property
     def uses_ai(self) -> bool:
         return self.content_mode == "ai-assisted"
 
-    def outputs_for(self, paper: str) -> tuple[str, ...]:
+    @property
+    def papers(self) -> tuple[str, ...]:
+        return tuple(self.paper_contracts)
+
+    def paper_for(self, paper: str) -> PaperContract:
         try:
-            return self.outputs_by_paper[paper]
+            return self.paper_contracts[paper]
         except KeyError as error:
             raise ValueError(
                 f"{self.backend_subject} does not support paper {paper}"
@@ -80,7 +90,7 @@ class GeneratorCapability:
 
 
 @lru_cache(maxsize=1)
-def generator_capabilities() -> dict[str, GeneratorCapability]:
+def generator_capabilities() -> Mapping[str, GeneratorCapability]:
     payload = json.loads(REGISTRY_PATH.read_text(encoding="utf-8"))
     if payload.get("schema_version") not in {2, 3, 4, 5}:
         raise ValueError(
@@ -96,7 +106,7 @@ def generator_capabilities() -> dict[str, GeneratorCapability]:
         result[capability.backend_subject] = capability
     if not result:
         raise ValueError("generator registry has no advertised families")
-    return result
+    return MappingProxyType(result)
 
 
 def generator_capability(subject: str) -> GeneratorCapability:
@@ -124,13 +134,53 @@ def assessment_framework(identifier: str):
     return NSI_2027
 
 
-def _capability(raw: dict[str, Any]) -> GeneratorCapability:
-    papers = tuple(str(item["id"]) for item in raw.get("papers", []))
-    declared = tuple(str(item) for item in raw.get("declared_papers", []))
-    if not papers or papers != declared:
-        raise ValueError(
-            f"{raw.get('id', 'unknown')} declared papers do not match paper records"
+def _paper_contracts(raw: dict[str, Any]) -> Mapping[str, PaperContract]:
+    family = raw["id"]
+    records = raw.get("papers", [])
+    papers = tuple(item["id"] for item in records)
+    if not papers or papers != tuple(raw.get("declared_papers", [])):
+        raise ValueError(f"{family} declared papers do not match paper records")
+    if not all(
+        isinstance(paper, str) and re.fullmatch(r"[A-Za-z0-9.-]+", paper)
+        for paper in papers
+    ):
+        raise ValueError(f"{family} has an invalid paper ID")
+    if len(set(papers)) != len(papers):
+        raise ValueError(f"{family} has a duplicate paper ID")
+
+    outputs = raw.get("outputs_by_paper")
+    if not isinstance(outputs, dict) or outputs.keys() != set(papers):
+        raise ValueError(f"{family} output declarations must match paper records")
+
+    result: dict[str, PaperContract] = {}
+    for paper, record in zip(papers, records, strict=True):
+        roles = outputs[paper]
+        if (
+            not isinstance(roles, list)
+            or not roles
+            or not all(isinstance(role, str) and role.strip() for role in roles)
+            or len(set(roles)) != len(roles)
+        ):
+            raise ValueError(f"{family} paper {paper} has invalid output roles")
+        result[paper] = PaperContract(
+            output_roles=tuple(roles),
+            gates=_gate_flags(record.get("checks", record.get("gates", {}))),
+            qualification=_paper_qualification(record),
         )
+    return MappingProxyType(result)
+
+
+def _gate_flags(value: object) -> Mapping[str, bool]:
+    if not isinstance(value, dict) or not all(
+        isinstance(key, str) and isinstance(passed, bool)
+        for key, passed in value.items()
+    ):
+        raise ValueError("paper gate checks must be an object with boolean gate values")
+    return MappingProxyType(dict(value))
+
+
+def _capability(raw: dict[str, Any]) -> GeneratorCapability:
+    paper_contracts = _paper_contracts(raw)
     mode = str(raw.get("content_mode", ""))
     if mode not in KNOWN_CONTENT_MODES:
         raise ValueError(f"{raw['id']} has unsupported content mode: {mode}")
@@ -142,25 +192,6 @@ def _capability(raw: dict[str, Any]) -> GeneratorCapability:
         )
     if (mode == "ai-assisted") != bool(providers):
         raise ValueError(f"{raw['id']} AI mode and supported providers disagree")
-    output_payload = raw.get("outputs_by_paper", {})
-    outputs = {
-        paper: tuple(str(role) for role in output_payload.get(paper, ()))
-        for paper in papers
-    }
-    if any(not roles for roles in outputs.values()):
-        raise ValueError(f"{raw['id']} is missing declared output roles")
-    evidence = {
-        str(item["id"]): {
-            str(gate): bool(passed)
-            for gate, passed in item.get("checks", item.get("gates", {})).items()
-        }
-        for item in raw.get("papers", [])
-    }
-    if set(evidence) != set(papers):
-        raise ValueError(f"{raw['id']} is missing per-paper evidence")
-    qualification = {
-        str(item["id"]): _paper_qualification(item) for item in raw.get("papers", [])
-    }
     entry_point = str(raw.get("entry_point", ""))
     package = str(raw.get("package", ""))
     if not entry_point.startswith(f"{package}.") or ":" not in entry_point:
@@ -209,10 +240,7 @@ def _capability(raw: dict[str, Any]) -> GeneratorCapability:
         reference_demand_profile=reference_demand_profile,
         content_mode=mode,
         supported_providers=providers,
-        papers=papers,
-        outputs_by_paper=outputs,
-        evidence_by_paper=evidence,
-        qualification_by_paper=qualification,
+        paper_contracts=paper_contracts,
         checkpoint_namespace=_checkpoint_namespace(raw),
     )
 
@@ -236,14 +264,12 @@ def _checkpoint_namespace(raw: dict[str, Any]) -> CheckpointNamespace | None:
 def _paper_qualification(raw: dict[str, Any]) -> PaperQualification:
     payload = raw.get("qualification")
     if payload is None:
-        gates = raw.get("gates", {})
-        if not isinstance(gates, dict):
-            raise ValueError("legacy paper gates must be an object")
+        gates = _gate_flags(raw.get("gates", {}))
         return PaperQualification(
-            engineering_validated=bool(gates.get("release", False)),
-            visually_calibrated=bool(gates.get("visual", False)),
-            empirically_calibrated=bool(gates.get("difficulty", False)),
-            evidence_by_level={},
+            engineering_validated=gates.get("release", False),
+            visually_calibrated=gates.get("visual", False),
+            empirically_calibrated=gates.get("difficulty", False),
+            evidence_by_level=MappingProxyType({}),
         )
     if not isinstance(payload, dict) or set(payload) != {
         "engineering",
@@ -282,11 +308,13 @@ def _paper_qualification(raw: dict[str, Any]) -> PaperQualification:
         empirically_calibrated=(
             empirical == "passed" and engineering_satisfied and visual_satisfied
         ),
-        evidence_by_level={
-            "engineering": engineering_evidence,
-            "visual": visual_evidence,
-            "empirical": empirical_evidence,
-        },
+        evidence_by_level=MappingProxyType(
+            {
+                "engineering": engineering_evidence,
+                "visual": visual_evidence,
+                "empirical": empirical_evidence,
+            }
+        ),
     )
 
 

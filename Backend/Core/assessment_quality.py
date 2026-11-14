@@ -7,7 +7,7 @@ import json
 import re
 import unicodedata
 from collections import Counter
-from collections.abc import Iterable, Mapping
+from collections.abc import Iterable, Mapping, Sequence
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
@@ -218,15 +218,21 @@ def item_fingerprint(value: str) -> str:
 
 # Weighted token-shingle Jaccard similarity in the closed interval 0...1.
 def content_similarity(left: str, right: str, *, width: int = 3) -> float:
+    return _shingle_similarity(
+        _shingles(normalise_item_text(left), width=width),
+        _shingles(normalise_item_text(right), width=width),
+    )
 
-    left_counter = _shingles(normalise_item_text(left), width=width)
-    right_counter = _shingles(normalise_item_text(right), width=width)
-    if not left_counter and not right_counter:
-        return 1.0
-    if not left_counter or not right_counter:
-        return 0.0
-    intersection = sum((left_counter & right_counter).values())
-    union = sum((left_counter | right_counter).values())
+
+def _shingle_similarity(
+    left: Counter[tuple[str, ...]], right: Counter[tuple[str, ...]]
+) -> float:
+    if not left or not right:
+        return 0.0 if left or right else 1.0
+    if len(left) > len(right):
+        left, right = right, left
+    intersection = sum(min(count, right[key]) for key, count in left.items())
+    union = left.total() + right.total() - intersection
     return intersection / union if union else 0.0
 
 
@@ -236,18 +242,27 @@ def assert_distinct_items(
     threshold: float = 0.84,
     context: str = "paper",
 ) -> None:
-    materialised = list(items)
-    for index, item in enumerate(materialised):
+    _checked_item_shingles(list(items), threshold=threshold, context=context)
+
+
+def _checked_item_shingles(
+    items: Sequence[dict[str, Any]], *, threshold: float, context: str
+) -> list[tuple[dict[str, Any], Counter[tuple[str, ...]]]]:
+    checked: list[tuple[dict[str, Any], Counter[tuple[str, ...]]]] = []
+    for index, item in enumerate(items):
         prompt = str(item.get("prompt", "")).strip()
         if not prompt:
             raise ValueError(f"{context} item {item.get('id', index)} has no prompt")
-        for previous in materialised[:index]:
-            score = content_similarity(prompt, str(previous.get("prompt", "")))
+        shingles = _shingles(normalise_item_text(prompt), width=3)
+        for previous, previous_shingles in checked:
+            score = _shingle_similarity(shingles, previous_shingles)
             if score >= threshold:
                 raise ValueError(
                     f"{context} items {previous.get('id')} and {item.get('id')} "
                     f"are too similar ({score:.3f})"
                 )
+        checked.append((item, shingles))
+    return checked
 
 
 # Compare a completed assessment package with earlier published packages.
@@ -265,36 +280,40 @@ def validate_package_novelty(
         raise ValueError("Unknown cross-generation similarity policy")
     strict_history = cross_generation_policy == "strict-cross-generation-v1"
     current = _load_package(package_path)
-    current_items = _items(current)
-    assert_distinct_items(current_items, threshold=threshold)
+    current_items = _checked_item_shingles(
+        _items(current), threshold=threshold, context="paper"
+    )
 
     comparisons = 0
     skipped_history_packages = 0
     historical_overlap = False
     nearest: dict[str, Any] | None = None
+    current_path = package_path.resolve()
     for historic_path in sorted(history_root.glob("*-assessment.json")):
         if (
-            historic_path.resolve() == package_path.resolve()
-            or historic_path.name == package_path.name
+            historic_path.name == package_path.name
+            or historic_path.resolve() == current_path
         ):
             continue
         try:
             historic = _load_package(historic_path)
-            historic_items = _historical_items(historic)
-        except (OSError, ValueError, json.JSONDecodeError):
+            historic_items = _normalised_historical_items(historic)
+        except (OSError, ValueError):
             skipped_history_packages += 1
             continue
-        for item in current_items:
-            for historic_item in historic_items:
+        # Retain shingles for the current paper and at most this historical
+        # package. Preserve pair order for nearest matches and strict refusals.
+        historic_shingles: dict[int, Counter[tuple[str, ...]]] = {}
+        for item, shingles in current_items:
+            for index, (historic_item, prompt) in enumerate(historic_items):
                 if item.get("subject") != historic_item.get("subject") or item.get(
                     "paper"
                 ) != historic_item.get("paper"):
                     continue
                 comparisons += 1
-                score = content_similarity(
-                    str(item.get("prompt", "")),
-                    str(historic_item.get("prompt", "")),
-                )
+                if index not in historic_shingles:
+                    historic_shingles[index] = _shingles(prompt, width=3)
+                score = _shingle_similarity(shingles, historic_shingles[index])
                 if nearest is None or score > float(nearest["similarity"]):
                     nearest = {
                         "similarity": round(score, 4),
@@ -352,11 +371,14 @@ def _items(package: dict[str, Any]) -> list[dict[str, Any]]:
     return [item for item in raw_items if isinstance(item, dict)]
 
 
-def _historical_items(package: dict[str, Any]) -> list[dict[str, Any]]:
+def _normalised_historical_items(
+    package: dict[str, Any],
+) -> list[tuple[dict[str, Any], str]]:
     """Require usable comparison records, without claiming full package approval."""
     raw_items = package.get("items")
     if not isinstance(raw_items, list) or not raw_items:
         raise ValueError("historical assessment items must be a nonempty list")
+    items = []
     for item in raw_items:
         if not isinstance(item, dict):
             raise ValueError("historical assessment contains an invalid item")
@@ -368,6 +390,8 @@ def _historical_items(package: dict[str, Any]) -> list[dict[str, Any]]:
                 )
             if field != "prompt" and any(character.isspace() for character in value):
                 raise ValueError("historical assessment item has invalid metadata")
-        if not normalise_item_text(item["prompt"]):
+        prompt = normalise_item_text(item["prompt"])
+        if not prompt:
             raise ValueError("historical assessment item has no comparison text")
-    return raw_items
+        items.append((item, prompt))
+    return items

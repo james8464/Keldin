@@ -126,6 +126,52 @@ def test_content_driven_cs_paper1_scheme_checks_every_assessed_part(tmp_path):
     assert result["actual_page_count"] < 41
 
 
+def test_cs_scheme_policy_checks_family_before_touching_pdf(tmp_path, monkeypatch):
+    from Backend.Core import layout_conformance
+
+    registry = tmp_path / "master.json"
+    registry.write_text(
+        json.dumps(
+            {
+                "papers": {
+                    "computer_science:1": {
+                        "family": "ocr-computer-science",
+                        "mark-scheme": {
+                            "page_count": 41,
+                            "page_count_policy": {
+                                "kind": layout_conformance.AQA_CS_PAPER1_SCHEME_PAGINATION
+                            },
+                        },
+                    }
+                }
+            }
+        )
+    )
+    monkeypatch.setattr(layout_conformance, "REGISTRY_PATH", registry)
+    with pytest.raises(LayoutConformanceError, match="CS scheme pagination policy"):
+        layout_conformance.conform_generated_documents(
+            "computer_science", "1", {"mark_scheme": tmp_path / "unopened.pdf"}
+        )
+
+
+def test_stored_exact_and_content_policies_match_runtime_selection():
+    from Backend.Core.layout_conformance import runtime_page_count_policy
+
+    registry = json.loads(REGISTRY_PATH.read_bytes())
+    for key, record in registry["papers"].items():
+        paper = key.rsplit(":", 1)[1]
+        for role in ("question-paper", "mark-scheme", "source-booklet"):
+            template = record.get(role)
+            if template is None or template["page_count_policy"]["kind"] == "range":
+                continue
+            assert (
+                runtime_page_count_policy(
+                    record["family"], role, template["page_count"], paper=paper
+                )
+                == template["page_count_policy"]
+            ), (key, role)
+
+
 @pytest.mark.parametrize("mutation", ["filler", "changed-code"])
 def test_cs_paper1_reference_solution_cannot_be_replaced(tmp_path, mutation):
     import pymupdf
