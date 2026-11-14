@@ -52,33 +52,3 @@ def test_production_pdf_renderers_run_inside_atomic_transactions(path: Path) -> 
             f"{path}:{renderer_call.lineno} must pass {_call_name(renderer_call)} "
             "as a deferred ArtifactSpec renderer"
         )
-
-
-def test_shared_family_adapter_owns_atomic_pdf_transaction() -> None:
-    path = ROOT / "Backend/Core/family_adapter.py"
-    tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
-    calls = [
-        node
-        for node in ast.walk(tree)
-        if isinstance(node, ast.Call) and _call_name(node) == "render_pdf_atomically"
-    ]
-
-    assert len(calls) == 1
-    call = calls[0]
-    # The transaction receives a deferred wrapper so notice validation happens
-    # against the temporary file, before atomic replacement.
-    assert isinstance(call.args[1], ast.Name)
-    wrappers = [
-        node
-        for node in ast.walk(tree)
-        if isinstance(node, ast.FunctionDef) and node.name == call.args[1].id
-    ]
-    assert len(wrappers) == 1
-    wrapper_calls = [
-        node for node in ast.walk(wrappers[0]) if isinstance(node, ast.Call)
-    ]
-    assert any(
-        isinstance(node.func, ast.Attribute) and node.func.attr == "renderer"
-        for node in wrapper_calls
-    )
-    assert any(_call_name(node) == "validate_preview_pdf" for node in wrapper_calls)

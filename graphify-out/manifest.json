@@ -1530,8 +1530,8 @@
     "semantic_hash": ""
   },
   "tests/test_generator_render_transactions.py": {
-    "mtime": 1793600084.7745323,
-    "ast_hash": "31060783f98e230aedde1a89645aa879",
+    "mtime": 1794679457.6878867,
+    "ast_hash": "0789962da55b752fec6af2bb53dd9584",
     "semantic_hash": ""
   },
   "tests/test_humanities_overlay.py": {
@@ -4020,7 +4020,7 @@
     "semantic_hash": ""
   },
   "Resources/implementation-audit-coverage.json": {
-    "mtime": 1794678952.0337193,
+    "mtime": 1794679463.8653145,
     "ast_hash": "07a26484b4a6e6721af0e0914e17d9b6",
     "semantic_hash": ""
   },
@@ -4585,8 +4585,8 @@
     "semantic_hash": ""
   },
   "tests/test_mlx_matrix_identity.py": {
-    "mtime": 1793543731.7207472,
-    "ast_hash": "8c5d852935538657d3d6937336b4338a",
+    "mtime": 1794679457.6878817,
+    "ast_hash": "b7f4a5730a052f2c3baf393a1f4cd78f",
     "semantic_hash": ""
   },
   "docs/quality/local-generation-batching-acceptance-2026-10-29.md": {
