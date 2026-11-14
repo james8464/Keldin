@@ -4,6 +4,31 @@ import XCTest
 @testable import Keldin
 
 final class BackendStreamTests: XCTestCase {
+    func testCustomInspectionDecodesOnlyBoundedSourceMetadata() throws {
+        let hashes = ["a", "b", "c"].map { String(repeating: $0, count: 64) }
+        let sources = hashes.map { hash in
+            """
+            {"role":"question-paper","sha256":"\(hash)","page_count":2,"pages_without_text":[2]}
+            """
+        }.joined(separator: ",")
+        let json = """
+        {"type":"custom_assessment_sources","sources":[\(sources)]}
+        """
+        guard case let .customAssessmentSources(result) = try BackendEvent(jsonLine: json) else {
+            return XCTFail("Expected custom assessment sources")
+        }
+        XCTAssertEqual(result.map(\.sha256), hashes)
+        XCTAssertEqual(result.map(\.pagesWithoutText), [[2], [2], [2]])
+        for malformed in [
+            json.replacingOccurrences(of: "[2]", with: "[3]"),
+            json.replacingOccurrences(of: "[2]", with: "[1,2]"),
+            json.replacingOccurrences(of: hashes[1], with: hashes[0]),
+            json.replacingOccurrences(of: "question-paper", with: "syllabus"),
+        ] {
+            XCTAssertThrowsError(try BackendEvent(jsonLine: malformed))
+        }
+    }
+
     func testFrenchSavedCancellationDecodesOnlyAnExactBundleName() throws {
         let bundle = "nsi-2027-v36-42-0123456789ab"
         func decode(_ name: String, code: String = "cancelled") throws -> BackendEvent {

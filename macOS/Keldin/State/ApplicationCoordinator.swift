@@ -1809,7 +1809,7 @@ final class ApplicationCoordinator: ObservableObject {
         case let .ollamaStatus(installed, running, command, message):
             ollamaState = OllamaState(installed: installed, running: running, command: command, message: message ?? "")
             status = message ?? status
-        case .benchmarkMetric, .benchmarkSample, .benchmarkDone, .localModelGuidance:
+        case .benchmarkMetric, .benchmarkSample, .benchmarkDone, .localModelGuidance, .customAssessmentSources:
             break
         }
     }
