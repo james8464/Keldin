@@ -60,7 +60,7 @@
     "semantic_hash": ""
   },
   "Backend/Core/cli.py": {
-    "mtime": 1793632981.066839,
+    "mtime": 1794662934.7531688,
     "ast_hash": "058d8c0cbc52ce449c3d76f52d3f8821",
     "semantic_hash": ""
   },
@@ -280,7 +280,7 @@
     "semantic_hash": ""
   },
   "Backend/Core/model_recommendations.py": {
-    "mtime": 1793543731.5917788,
+    "mtime": 1794662934.753424,
     "ast_hash": "b7b9deab274eafac81f58e915af2d3df",
     "semantic_hash": ""
   },
@@ -1590,7 +1590,7 @@
     "semantic_hash": ""
   },
   "tests/test_model_recommendations.py": {
-    "mtime": 1793543731.721123,
+    "mtime": 1794662934.7788846,
     "ast_hash": "f67797db34447e1c66f2f4f78e9f25ab",
     "semantic_hash": ""
   },
@@ -3485,7 +3485,7 @@
     "semantic_hash": ""
   },
   "macOS/Keldin/Domain/AppModels.swift": {
-    "mtime": 1794364893.751861,
+    "mtime": 1794662934.7779875,
     "ast_hash": "ec102271353b159e68ddca021261da24",
     "semantic_hash": ""
   },
@@ -3520,7 +3520,7 @@
     "semantic_hash": ""
   },
   "macOS/Keldin/Domain/OllamaModelGuide.swift": {
-    "mtime": 1793543731.6889472,
+    "mtime": 1794662934.7781913,
     "ast_hash": "12c140cad4a86b766f708bb1d902b23a",
     "semantic_hash": ""
   },
@@ -3555,7 +3555,7 @@
     "semantic_hash": ""
   },
   "macOS/Keldin/Features/Settings/SettingsPane.swift": {
-    "mtime": 1793653533.928932,
+    "mtime": 1794662934.7783358,
     "ast_hash": "a94f210b14dc9514e2e3016e157d6cdf",
     "semantic_hash": ""
   },
@@ -3580,7 +3580,7 @@
     "semantic_hash": ""
   },
   "macOS/Keldin/State/ApplicationCoordinator.swift": {
-    "mtime": 1794364893.7530763,
+    "mtime": 1794662934.7787297,
     "ast_hash": "e9cec5bb854454e77583c442defe2c8f",
     "semantic_hash": ""
   },
@@ -4020,7 +4020,7 @@
     "semantic_hash": ""
   },
   "Resources/implementation-audit-coverage.json": {
-    "mtime": 1794659918.9410403,
+    "mtime": 1794662941.7387745,
     "ast_hash": "840dc951d2692c6d5aaf49e2221463dc",
     "semantic_hash": ""
   },
@@ -4760,8 +4760,8 @@
     "semantic_hash": ""
   },
   "Backend/Core/france/llm_runtime.py": {
-    "mtime": 1794396196.5026987,
-    "ast_hash": "bc6337248f3fbbd9e97bf44a1f89d46f",
+    "mtime": 1794662451.2862391,
+    "ast_hash": "d0ace6656ebf648ef318faab82fa61fe",
     "semantic_hash": ""
   },
   "macOS/Keldin/Domain/FrenchDraftQualityReport.swift": {
@@ -4810,8 +4810,8 @@
     "semantic_hash": ""
   },
   "tests/test_french_llm_runtime.py": {
-    "mtime": 1794396196.5311074,
-    "ast_hash": "ec5797e0e66eacd689949e8a528a4450",
+    "mtime": 1794662477.4085534,
+    "ast_hash": "ef0773c0ccf5c5c9374b670b44d27511",
     "semantic_hash": ""
   },
   "tests/test_french_model_capability.py": {
@@ -6235,8 +6235,8 @@
     "semantic_hash": ""
   },
   "tests/test_french_postrename_cleanup.py": {
-    "mtime": 1794364893.7541294,
-    "ast_hash": "990cf30ce3cd0c5990b34f4653df711c",
+    "mtime": 1794662940.6689875,
+    "ast_hash": "f79c6061c5bcf525d4edeb62e5654b94",
     "semantic_hash": ""
   },
   "docs/quality/cs1-on-screen-source-flow-review-2026-11-07.md": {
