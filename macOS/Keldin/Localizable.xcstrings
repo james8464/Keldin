@@ -11,6 +11,8 @@
     "Practice generation for these tests is coming soon.": {"localizations":{"fr":{"stringUnit":{"state":"translated","value":"La génération de sujets d’entraînement pour ces tests sera bientôt disponible."}}}},
     "We’re still checking the questions, corrections and printable papers. Saved papers remain available in Documents.": {"localizations":{"fr":{"stringUnit":{"state":"translated","value":"Nous vérifions encore les questions, les corrigés et les versions imprimables. Les sujets enregistrés restent disponibles dans Documents."}}}},
     "Check this Mac": {"localizations":{"fr":{"stringUnit":{"state":"translated","value":"Vérifier ce Mac"}}}},
+    "Check local model fit": {"localizations":{"fr":{"stringUnit":{"state":"translated","value":"Vérifier la compatibilité des modèles locaux"}}}},
+    "If you use Ollama, choose Check this Mac in Settings to see which models are estimated to fit.": {"localizations":{"fr":{"stringUnit":{"state":"translated","value":"Si vous utilisez Ollama, choisissez « Vérifier ce Mac » dans les réglages pour voir quels modèles semblent compatibles."}}}},
     "Checking memory and disk space…": {"localizations":{"fr":{"stringUnit":{"state":"translated","value":"Vérification de la mémoire et de l’espace disque…"}}}},
     "Estimated to fit now": {"localizations":{"fr":{"stringUnit":{"state":"translated","value":"Compatible selon l’estimation actuelle"}}}},
     "This is a memory and disk estimate, not a paper-quality check.": {"localizations":{"fr":{"stringUnit":{"state":"translated","value":"Cette estimation porte sur la mémoire et le stockage, pas sur la qualité des sujets."}}}},
