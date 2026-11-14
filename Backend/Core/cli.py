@@ -191,7 +191,7 @@ def handle_custom_assessment_sources(args: argparse.Namespace) -> int:
             [(role, Path(filename)) for role, filename in args.source]
         )
     except ValueError as error:
-        emit("error", message=str(error))
+        emit("error", code="custom_source_rejected", message=str(error))
         return 1
     emit(
         "custom_assessment_sources",

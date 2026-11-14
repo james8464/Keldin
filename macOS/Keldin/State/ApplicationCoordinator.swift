@@ -426,6 +426,12 @@ final class ApplicationCoordinator: ObservableObject {
         }
     }
 
+    func inspectCustomAssessmentSources(
+        _ selections: [CustomAssessmentSelection]
+    ) async throws -> [CustomAssessmentSourceMetadata] {
+        try await CustomAssessmentInspection.inspect(selections, backend: backend)
+    }
+
     func localModelGuidance() async throws -> LocalModelGuidance? {
         let events = try await backend.collect(arguments: ["local-model-guidance"])
         for event in events {

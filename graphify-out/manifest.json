@@ -60,8 +60,8 @@
     "semantic_hash": ""
   },
   "Backend/Core/cli.py": {
-    "mtime": 1794669920.357139,
-    "ast_hash": "11d2922b4980d61e80bfa5f62df2b6ef",
+    "mtime": 1794670182.064733,
+    "ast_hash": "c88ed3fd17dae4caaac6726ecb45f0f5",
     "semantic_hash": ""
   },
   "Backend/Core/computer_science_audit.py": {
@@ -1245,8 +1245,8 @@
     "semantic_hash": "9089fa356046b0e497da7729dfba8605"
   },
   "Resources/repository-inventory.json": {
-    "mtime": 1794669807.6528075,
-    "ast_hash": "2ee8c66b93027e4c5f846e1d82ba6e88",
+    "mtime": 1794670214.3753874,
+    "ast_hash": "92020447eb8342b92a43ea93e629f896",
     "semantic_hash": ""
   },
   "bridge.py": {
@@ -3580,8 +3580,8 @@
     "semantic_hash": ""
   },
   "macOS/Keldin/State/ApplicationCoordinator.swift": {
-    "mtime": 1794670013.8554187,
-    "ast_hash": "a1bea3df5703ffb3874e546262c43613",
+    "mtime": 1794670208.4398046,
+    "ast_hash": "3e9389a1dc68d4551610363138d731ac",
     "semantic_hash": ""
   },
   "macOS/Keldin/State/BenchmarkCoordinator.swift": {
@@ -3865,8 +3865,8 @@
     "semantic_hash": ""
   },
   "macOS/Tests/BackendStreamTests.swift": {
-    "mtime": 1794669995.7233653,
-    "ast_hash": "8fa9ee3b28e9e7b7a5da956a5326d313",
+    "mtime": 1794670208.440287,
+    "ast_hash": "5a50e36be1b9bdc13cb3d383dbe25a47",
     "semantic_hash": ""
   },
   "macOS/Tests/RunIsolationTests.swift": {
@@ -4020,8 +4020,8 @@
     "semantic_hash": ""
   },
   "Resources/implementation-audit-coverage.json": {
-    "mtime": 1794670023.3818164,
-    "ast_hash": "7d90144d94298529344a12bad723c9ec",
+    "mtime": 1794670214.1521292,
+    "ast_hash": "53855274c7bdfd9b19d11180478e0856",
     "semantic_hash": ""
   },
   "macOS/Keldin/Services/PDFDocumentAccess.swift": {
@@ -6330,8 +6330,8 @@
     "semantic_hash": ""
   },
   "tests/test_custom_assessment_evidence.py": {
-    "mtime": 1794669938.5155382,
-    "ast_hash": "48cc123cbcd7f7bd70ff3c063b6f56d9",
+    "mtime": 1794670208.4400642,
+    "ast_hash": "377b34e8e5e4a9f00b2a7da19bc2cd13",
     "semantic_hash": ""
   },
   "Backend/Core/custom_assessment_contract.py": {
@@ -6342,6 +6342,11 @@
   "tests/test_custom_assessment_contract.py": {
     "mtime": 1794669801.206229,
     "ast_hash": "82533715999a75d678b575baf5e6e94b",
+    "semantic_hash": ""
+  },
+  "macOS/Keldin/Services/CustomAssessmentInspection.swift": {
+    "mtime": 1794670208.4392023,
+    "ast_hash": "d7a9e98430405ec55104b6d54e0a2130",
     "semantic_hash": ""
   }
 }

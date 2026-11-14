@@ -163,6 +163,7 @@ def test_cli_handles_missing_file_without_leaking_its_path(
     captured = capsys.readouterr()
     event = json.loads(captured.out.splitlines()[-1])
     assert event["type"] == "error"
+    assert event["code"] == "custom_source_rejected"
     assert event["message"] == "Could not read source 1. Choose the file again."
     assert "private-name" not in captured.out + captured.err
 

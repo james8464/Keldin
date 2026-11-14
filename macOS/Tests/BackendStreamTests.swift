@@ -4,6 +4,40 @@ import XCTest
 @testable import Keldin
 
 final class BackendStreamTests: XCTestCase {
+    @MainActor
+    func testCustomInspectionReleasesScopedAccessAndRejectsErrorsAfterResult() async throws {
+        let selections = (1...3).map {
+            CustomAssessmentSelection(role: .questionPaper, url: URL(fileURLWithPath: "/tmp/Keldin Sample \($0).pdf"))
+        }
+        let sources = ["a", "b", "c"].map {
+            CustomAssessmentSourceMetadata(role: .questionPaper, sha256: String(repeating: $0, count: 64), pageCount: 2, pagesWithoutText: [2])
+        }
+        let expectedArguments = ["inspect-custom-assessment"] + selections.flatMap {
+            ["--source", "question-paper", $0.url.path]
+        }
+        for shouldFail in [false, true] {
+            var acquired: [URL] = []
+            var released: [URL] = []
+            let events: [BackendEvent] = [.customAssessmentSources(sources)] + (shouldFail ? [
+                .error(message: "private path in unexpected stderr"),
+            ] : [])
+            let backend = CustomInspectionFixture(expectedArguments: expectedArguments, events: events)
+            do {
+                let result = try await CustomAssessmentInspection.inspect(selections, backend: backend, startAccess: {
+                    acquired.append($0)
+                    return true
+                }, stopAccess: { released.append($0) })
+                XCTAssertFalse(shouldFail)
+                XCTAssertEqual(result, sources)
+            } catch {
+                XCTAssertTrue(shouldFail)
+                XCTAssertEqual(error as? CustomAssessmentInspectionError, .invalidResponse)
+            }
+            XCTAssertEqual(acquired, selections.map(\.url))
+            XCTAssertEqual(released, Array(acquired.reversed()))
+        }
+    }
+
     func testCustomInspectionDecodesOnlyBoundedSourceMetadata() throws {
         let hashes = ["a", "b", "c"].map { String(repeating: $0, count: 64) }
         let sources = hashes.map { hash in
@@ -156,5 +190,24 @@ final class BackendStreamTests: XCTestCase {
 
         XCTAssertEqual(buffer.append(Data([0xFF])), [])
         XCTAssertThrowsError(try BackendEvent(jsonLine: buffer.finish()))
+    }
+}
+
+private struct CustomInspectionFixture: BackendRunning {
+    let expectedArguments: [String]
+    let events: [BackendEvent]
+
+    func collect(arguments: [String]) async throws -> [BackendEvent] {
+        XCTAssertEqual(arguments, expectedArguments)
+        return events
+    }
+
+    func run(
+        arguments: [String], environment: [String: String],
+        onEvent: @escaping @Sendable @MainActor (BackendEvent) -> Void,
+        onFinish: @escaping @Sendable @MainActor (Result<Int32, Error>) -> Void
+    ) throws -> Process {
+        XCTFail("Inspection must not launch a generation run")
+        throw CustomAssessmentInspectionError.invalidResponse
     }
 }
