@@ -3,6 +3,7 @@ from __future__ import annotations
 import copy
 import json
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 
@@ -15,6 +16,38 @@ from Backend.Core.model_recommendations import (
 
 def payload() -> dict[str, object]:
     return json.loads(MODEL_RECOMMENDATIONS_PATH.read_text(encoding="utf-8"))
+
+
+@pytest.mark.parametrize(
+    ("available_gib", "disk_gib", "fitting"),
+    [(6, 20, ["qwen3.5:4b-q4_K_M"]), (4, 20, []), (6, 3, [])],
+)
+def test_live_guidance_checks_headroom_and_disk(
+    monkeypatch, available_gib, disk_gib, fitting
+):
+    from Backend.Core import ollama_admission
+    from Backend.Core.model_recommendations import handle_local_model_guidance
+
+    gib = 1 << 30
+    events = []
+    monkeypatch.setattr(ollama_admission, "_checked_physical_memory", lambda: 18 * gib)
+    monkeypatch.setattr(
+        ollama_admission, "_headroom_snapshot", lambda _: available_gib * gib
+    )
+    monkeypatch.setattr(
+        "shutil.disk_usage", lambda _: SimpleNamespace(free=disk_gib * gib)
+    )
+    monkeypatch.setattr(
+        "Backend.Core.events.emit", lambda kind, **data: events.append((kind, data))
+    )
+    assert handle_local_model_guidance(None) == 0
+    [(kind, report)] = events
+    assert kind == "model_guidance"
+    assert report["conditions_verified"] and report["prefer_cloud"]
+    assert [
+        row["model"] for row in report["recommendations"] if row["estimated_fit_now"]
+    ] == fitting
+    assert not any(row["quality_verified"] for row in report["recommendations"])
 
 
 def test_recommendation_registry_is_contiguous_and_owns_cli_default() -> None:
@@ -166,3 +199,46 @@ def test_help_formats_dynamic_values_from_selected_language() -> None:
     ).read_text()
     assert "downloadResource(locale: selectedLocale" in help_view
     assert "private var currentMemoryResource: LocalizedStringResource" in help_view
+
+
+def test_guidance_checks_cache_parent_volume_when_models_folder_is_missing(
+    tmp_path, monkeypatch
+):
+    from Backend.Core import ollama_admission
+    from Backend.Core.model_recommendations import handle_local_model_guidance
+
+    cache_parent = tmp_path / ".ollama"
+    cache_parent.mkdir()
+    monkeypatch.setattr(Path, "home", lambda: tmp_path)
+    monkeypatch.setattr(ollama_admission, "_checked_physical_memory", lambda: 18 << 30)
+    monkeypatch.setattr(ollama_admission, "_headroom_snapshot", lambda _: 8 << 30)
+    paths = []
+
+    def disk_usage(path):
+        paths.append(path)
+        return SimpleNamespace(free=1 << 30)
+
+    monkeypatch.setattr("shutil.disk_usage", disk_usage)
+    assert handle_local_model_guidance(None) == 0
+    assert paths == [cache_parent]
+
+
+def test_live_guidance_does_not_offer_models_when_pressure_is_unknown(monkeypatch):
+    from Backend.Core import ollama_admission
+    from Backend.Core.model_recommendations import handle_local_model_guidance
+
+    def unavailable():
+        raise ollama_admission.ResourceAdmissionError("Sensor unavailable")
+
+    events = []
+    monkeypatch.setattr(ollama_admission, "_checked_physical_memory", unavailable)
+    monkeypatch.setattr(
+        "Backend.Core.events.emit", lambda kind, **data: events.append((kind, data))
+    )
+    assert handle_local_model_guidance(None) == 0
+    assert events == [
+        (
+            "model_guidance",
+            {"prefer_cloud": True, "conditions_verified": False, "recommendations": []},
+        )
+    ]

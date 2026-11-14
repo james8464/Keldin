@@ -16,7 +16,10 @@ from Backend.Core.generator_registry import generator_capabilities, generator_su
 from Backend.Core.legacy_migration import environment_value
 from Backend.Core.mlx_download_info import handle_mlx_download_info
 from Backend.Core.mlx_setup import handle_mlx_status, handle_setup_mlx
-from Backend.Core.model_recommendations import default_ollama_model
+from Backend.Core.model_recommendations import (
+    default_ollama_model,
+    handle_local_model_guidance,
+)
 from Backend.Core.ollama import (
     OLLAMA_API,
     handle_list_models,
@@ -34,6 +37,9 @@ DEFAULT_BENCHMARK_DURATION_SECONDS = 30.0
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="JSON-lines bridge for Keldin.")
     subparsers = parser.add_subparsers(dest="command", required=True)
+
+    guidance = subparsers.add_parser("local-model-guidance")
+    guidance.set_defaults(handler=handle_local_model_guidance)
 
     status = subparsers.add_parser("ollama-status")
     status.add_argument("--ollama-url", default=OLLAMA_API)

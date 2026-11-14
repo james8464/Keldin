@@ -313,11 +313,8 @@
     {
       "path": "Backend/Core/cli.py",
       "classification": "maintained-source",
-      "status": "reviewed",
-      "reason": "Root read complete current source through EOF; bounded dependencies and qualification limits are documented.",
-      "source_sha256": "7507301145633c28ded0f84619d0236a91204dd66143c302e7679479567eda60",
-      "review_evidence": "docs/quality/model-download-and-packaging-input-review-2026-11-02.md",
-      "review_evidence_sha256": "9f13e6fbd83877c17dbad7659d266ce11619458437938f95242ecd585565908e"
+      "status": "pending",
+      "reason": "No file-level semantic implementation review recorded in this ledger."
     },
     {
       "path": "Backend/Core/computer_science_audit.py",
@@ -1612,11 +1609,8 @@
     {
       "path": "Backend/Core/model_recommendations.py",
       "classification": "maintained-source",
-      "status": "reviewed",
-      "reason": "Complete EOF static review recorded; dependencies and runtime/model/qualification limits remain explicit.",
-      "source_sha256": "d8a4f670a8c7d671b5151f8c0c6b7dd11456d2701a7da71a06938162a4fc5911",
-      "review_evidence": "docs/quality/model-download-and-packaging-input-review-2026-11-02.md",
-      "review_evidence_sha256": "9f13e6fbd83877c17dbad7659d266ce11619458437938f95242ecd585565908e"
+      "status": "pending",
+      "reason": "No file-level semantic implementation review recorded in this ledger."
     },
     {
       "path": "Backend/Core/model_review.py",
@@ -5977,11 +5971,8 @@
     {
       "path": "macOS/Keldin/Domain/OllamaModelGuide.swift",
       "classification": "maintained-source",
-      "status": "reviewed",
-      "reason": "Complete-file semantic review within the documented boundary scope. Patch-only larger files and final release acceptance remain separate; no whole-project clearance.",
-      "source_sha256": "83dd834ae716938cc6c411aee53ca787725d12e73975c55a0c93852cc0cb637f",
-      "review_evidence": "docs/quality/native-release-safety-review-2026-10-29.md",
-      "review_evidence_sha256": "67053cc5cc00ad0a12244a3b787c06427c802aa8b28680fa9883eeb395c1fd0c"
+      "status": "pending",
+      "reason": "No file-level semantic implementation review recorded in this ledger."
     },
     {
       "path": "macOS/Keldin/Domain/PaperQualityGuidance.swift",
@@ -6103,11 +6094,8 @@
     {
       "path": "macOS/Keldin/Features/Settings/SettingsPane.swift",
       "classification": "maintained-source",
-      "status": "reviewed",
-      "reason": "Author reread final 541-line SettingsPane through EOF after the typed Privacy-value fix; root and a separate internal reviewer reviewed the complete change. No full UI or HIG certification.",
-      "source_sha256": "e27310df336ec0068a781f18eba8a49ab508fc0dd9025311b55b410fc0bbe9ae",
-      "review_evidence": "docs/quality/privacy-status-localisation-review-2026-11-02.md",
-      "review_evidence_sha256": "09ac1129c8911c4c55b463110a9bb08403e176f106913737c13b41570616ddb8"
+      "status": "pending",
+      "reason": "No file-level semantic implementation review recorded in this ledger."
     },
     {
       "path": "macOS/Keldin/Info.plist",
@@ -6502,11 +6490,8 @@
     {
       "path": "macOS/Tests/ModelQualityGuidanceTests.swift",
       "classification": "test",
-      "status": "reviewed",
-      "reason": "Complete 90-line native test file read through EOF; exact provider/model boundaries, localizations and isolated temporary report fixtures reviewed. Native test execution is not claimed by this review.",
-      "source_sha256": "5f4b90fccdf45fbf80b72a1cfb9436694415c2fb9841919f68d1db2ecf400cc0",
-      "review_evidence": "docs/quality/edexcel-mark-scheme-cell-wrapping-2026-11-03.md",
-      "review_evidence_sha256": "1802aa5724a2ca0b24d29b950273519f06009f09f88fe095e4193c2a58dd9ea4"
+      "status": "pending",
+      "reason": "No file-level semantic implementation review recorded in this ledger."
     },
     {
       "path": "macOS/Tests/NativeInterfaceAuditTests.swift",
@@ -8623,11 +8608,8 @@
     {
       "path": "tests/test_native_model_quality_guidance.py",
       "classification": "test",
-      "status": "reviewed",
-      "reason": "Complete 174-line source-contract test file read through EOF; bounded warning scope, retained catalogue entries and memory/status presentation contracts reviewed. Static checks do not establish native runtime behavior or paper quality.",
-      "source_sha256": "3d2b2cf4fdde6dfa00f988d10fe4e243838c33bd0815e8e068d9f47251d188e9",
-      "review_evidence": "docs/quality/edexcel-mark-scheme-cell-wrapping-2026-11-03.md",
-      "review_evidence_sha256": "1802aa5724a2ca0b24d29b950273519f06009f09f88fe095e4193c2a58dd9ea4"
+      "status": "pending",
+      "reason": "No file-level semantic implementation review recorded in this ledger."
     },
     {
       "path": "tests/test_native_status_contrast.py",
