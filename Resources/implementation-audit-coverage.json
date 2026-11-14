@@ -6397,11 +6397,8 @@
     {
       "path": "macOS/Tests/DocumentRecoveryInteractiveTests.swift",
       "classification": "test",
-      "status": "reviewed",
-      "reason": "Complete 228-line opt-in fixture review, including guarded cleanup of only the owned OS picker-folder preference. Real Cancel/wrong/exact picker rerun passed against its captured baseline; first failed isolation trial retained. Isolated controller storage, not full Documents-view or sandbox coverage.",
-      "source_sha256": "59a9ad5fdca5a6e8a29257ea25c853f93fbee6809da9d0051cfceec414fab3c0",
-      "review_evidence": "docs/quality/document-recovery-interaction-review.md",
-      "review_evidence_sha256": "a264bec8f23192237e9c8c07adae5345156238b4fc87c656c63ad6aa1f451c0c"
+      "status": "pending",
+      "reason": "No file-level semantic implementation review recorded in this ledger."
     },
     {
       "path": "macOS/Tests/FailureHistoryTests.swift",
