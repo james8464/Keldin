@@ -6082,11 +6082,8 @@
     {
       "path": "macOS/Keldin/Features/Onboarding/WelcomeHelpViews.swift",
       "classification": "maintained-source",
-      "status": "reviewed",
-      "reason": "Complete-file EOF implementation review by quality_status_review within the documented scope; exact source identity checked after integration. Dependencies, runtime acceptance and whole-project completion remain separate.",
-      "source_sha256": "d198144fec061313f6eac38ef63f0b747ee62c3c19ddff962780c4dce79228c0",
-      "review_evidence": "docs/quality/native-interface-file-reviews-2026-11-02.md",
-      "review_evidence_sha256": "4665323a90eb980561527f316487a28a58b13867782b9f9d50847d66b6c390fd"
+      "status": "pending",
+      "reason": "No file-level semantic implementation review recorded in this ledger."
     },
     {
       "path": "macOS/Keldin/Features/Settings/HostedModelCandidatesView.swift",
