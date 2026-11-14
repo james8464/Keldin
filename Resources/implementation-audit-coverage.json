@@ -362,6 +362,12 @@
       "review_evidence_sha256": "c472b24feceb968224a9a24e3d19c1aa0187ed66cee254f050567baa498e57e7"
     },
     {
+      "path": "Backend/Core/custom_assessment_contract.py",
+      "classification": "maintained-source",
+      "status": "pending",
+      "reason": "No file-level semantic implementation review recorded in this ledger."
+    },
+    {
       "path": "Backend/Core/custom_assessment_evidence.py",
       "classification": "maintained-source",
       "status": "pending",
@@ -7197,6 +7203,12 @@
       "source_sha256": "a334c53011454b2b611350f3e1e1f32dd19540d47a175152ebdd397263e13d32",
       "review_evidence": "docs/quality/release-safety-tooling-review-2026-10-29.md",
       "review_evidence_sha256": "749f4a81589a0670a4310ea244f7052d0cfe012c1860b159aced7dc2bc3e6896"
+    },
+    {
+      "path": "tests/test_custom_assessment_contract.py",
+      "classification": "test",
+      "status": "pending",
+      "reason": "No file-level semantic implementation review recorded in this ledger."
     },
     {
       "path": "tests/test_custom_assessment_evidence.py",
