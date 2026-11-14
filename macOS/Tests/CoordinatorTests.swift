@@ -663,6 +663,24 @@ final class CoordinatorTests: XCTestCase {
         })
     }
 
+    @MainActor
+    func testSidebarUnmatchedSearchPreservesDocumentSelection() throws {
+        let suite = "KeldinSidebarSearchTests-\(UUID().uuidString)"
+        let defaults = try XCTUnwrap(UserDefaults(suiteName: suite))
+        defer { defaults.removePersistentDomain(forName: suite) }
+        let store = CatalogStore(subjects: ExamCatalog.subjects, defaults: defaults)
+        store.sidebarSelection = .documents
+        let originalIDs = store.filteredSubjects.map(\.id)
+
+        store.searchText = "  zzzxqnomatch  "
+        XCTAssertTrue(store.filteredSubjects.isEmpty)
+        XCTAssertEqual(store.sidebarSelection, .documents)
+
+        store.searchText = "  "
+        XCTAssertEqual(store.filteredSubjects.map(\.id), originalIDs)
+        XCTAssertEqual(store.sidebarSelection, .documents)
+    }
+
     func testSidebarSearchExpandsMatchingSubjectWithoutChangingSavedDisclosureState() {
         XCTAssertFalse(SidebarExpansionPolicy.isExpanded(
             subjectID: "biology", savedExpandedIDs: [], searchText: " "

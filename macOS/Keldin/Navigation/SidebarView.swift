@@ -90,7 +90,12 @@ private struct CatalogSidebarSections: View {
             }
 
             Section("A-level subjects") {
-                ForEach(store.filteredSubjects) { subject in
+                let subjects = store.filteredSubjects
+                if subjects.isEmpty, !store.searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                    Text("No matching subjects or boards")
+                        .foregroundStyle(.secondary)
+                }
+                ForEach(subjects) { subject in
                     DisclosureGroup(isExpanded: expansionBinding(for: subject.id)) {
                         ForEach(subject.boards) { board in
                             boardLink(board)
