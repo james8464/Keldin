@@ -206,6 +206,7 @@ final class ApplicationCoordinator: ObservableObject {
     }
 
     var frenchGenerationBlockerResource: LocalizedStringResource? {
+        if !distributionMode.canGenerateFrenchNSI { return "French NSI generation is coming soon." }
         if isImportingPreviousData { return "Previous app data is being imported." }
         if isRunning { return "Generation is already running." }
         if benchmarkCoordinator.isRunning { return "Benchmark is running." }
@@ -553,6 +554,7 @@ final class ApplicationCoordinator: ObservableObject {
     }
 
     func generateFrenchPaper(largePrint: Bool) {
+        guard distributionMode.canGenerateFrenchNSI else { return }
         guard !isRunning, !benchmarkCoordinator.isRunning, !isImportingPreviousData else { return }
         if aiProvider == .appleIntelligence {
             pendingFrenchLargePrint = nil

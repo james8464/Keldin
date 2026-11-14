@@ -663,6 +663,30 @@ final class CoordinatorTests: XCTestCase {
         })
     }
 
+    @MainActor
+    func testStoreFrenchHoldDoesNotStartGeneration() {
+        let backend = ControlledRunBackend()
+        let app = isolatedApplication(defaults: isolatedDefaults(), backend: backend, distributionMode: .appStore)
+        XCTAssertFalse(app.distributionMode.canGenerateFrenchNSI)
+        XCTAssertNotNil(app.frenchGenerationBlockerResource)
+        app.generateFrenchPaper(largePrint: false)
+        XCTAssertFalse(app.isRunning)
+        XCTAssertFalse(app.showHostedAIConsent)
+        XCTAssertTrue(backend.requests.isEmpty)
+        XCTAssertTrue(DistributionMode.direct.canGenerateFrenchNSI)
+    }
+
+    @MainActor
+    func testAdmissionsSelectionRestoresWithoutChangingBoard() {
+        let defaults = isolatedDefaults()
+        let store = CatalogStore(subjects: ExamCatalog.subjects, defaults: defaults)
+        let board = store.selectedBoardID
+        store.show(.admissionsTests)
+        let restored = CatalogStore(subjects: ExamCatalog.subjects, defaults: defaults)
+        XCTAssertEqual(restored.sidebarSelection, .admissionsTests)
+        XCTAssertEqual(restored.selectedBoardID, board)
+    }
+
     func testSidebarSearchExpandsMatchingSubjectWithoutChangingSavedDisclosureState() {
         XCTAssertFalse(SidebarExpansionPolicy.isExpanded(
             subjectID: "biology", savedExpandedIDs: [], searchText: " "

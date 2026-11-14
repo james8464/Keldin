@@ -3,6 +3,12 @@
 import SwiftUI
 
 struct ContentView: View {
+    private static let admissionsResources = [
+        (name: "TMUA", url: "https://esat-tmua.ac.uk/prepare/"),
+        (name: "UCAT", url: "https://www.ucat.ac.uk/prepare/practice-tests/"),
+        (name: "LNAT", url: "https://lnat.ac.uk/how-to-prepare/"),
+        (name: "TARA", url: "https://esat-tmua.ac.uk/tara-preparation-materials/")
+    ]
     @EnvironmentObject private var application: ApplicationCoordinator
     @Environment(CatalogStore.self) private var catalog
     @AppStorage(AppStorageKey.navigationColumnVisibility)
@@ -33,7 +39,30 @@ struct ContentView: View {
                     case .benchmark:
                         BenchmarkWorkspace()
                     case .frenchBaccalaureat:
-                        FrenchAssessmentWorkspace()
+                        if application.distributionMode.canGenerateFrenchNSI {
+                            FrenchAssessmentWorkspace()
+                        } else {
+                            ContentUnavailableView(
+                                "French NSI generation is coming soon.",
+                                systemImage: "graduationcap",
+                                description: Text("We’re still checking the questions, corrections and printable papers. Saved papers remain available in Documents.")
+                            )
+                            .navigationTitle("French Baccalauréat · NSI")
+                        }
+                    case .admissionsTests:
+                        Form {
+                            Section("Official preparation resources") {
+                                ForEach(Self.admissionsResources, id: \.name) { resource in
+                                    if let url = URL(string: resource.url) {
+                                        Link(resource.name, destination: url)
+                                    }
+                                }
+                            }
+                            Text("Practice generation for these tests is coming soon.")
+                                .foregroundStyle(.secondary)
+                        }
+                        .formStyle(.grouped)
+                        .navigationTitle("Admissions Tests")
                     case .documents:
                         DocumentPreviewView(
                             files: application.generatedFiles,
