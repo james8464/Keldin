@@ -6,6 +6,8 @@ from pathlib import Path
 
 import pymupdf as fitz
 
+TEXT_DICT_WITHOUT_IMAGES = fitz.TEXTFLAGS_DICT & ~fitz.TEXT_PRESERVE_IMAGES
+
 
 # Extract stable reading-order text without a Poppler CLI dependency.
 def extract_pdf_text(
@@ -37,7 +39,9 @@ def pdf_font_names(path: Path) -> set[str]:
         return {
             str(span.get("font", ""))
             for page in document
-            for block in page.get_text("dict").get("blocks", [])
+            for block in page.get_text("dict", flags=TEXT_DICT_WITHOUT_IMAGES).get(
+                "blocks", []
+            )
             for line in block.get("lines", [])
             for span in line.get("spans", [])
             if span.get("text", "").strip()

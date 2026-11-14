@@ -30,14 +30,7 @@ jobs:
       - name: Install test dependencies
         run: |
           python -m pip install --upgrade pip
-          python -m pip install -r requirements-test.txt \
-            -e Resources/accounting/aqa/generator \
-            -e Resources/business/aqa/generator \
-            -e Resources/computer-science/aqa/generator \
-            -e Resources/computer-science/ocr/generator \
-            -e Resources/economics/aqa/generator \
-            -e Resources/economics/edexcel-a/generator \
-            -e Resources/economics/ocr/generator
+          python tools/generator_development.py test
       - name: Reject unclassified repository debris
         run: python tools/repository_hygiene.py .
       - name: Verify release compliance metadata

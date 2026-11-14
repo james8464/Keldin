@@ -9,6 +9,7 @@ from PIL import Image
 from reportlab.pdfgen import canvas
 
 from Backend.Core.pdf_accessibility import add_page_structure_tree
+from Backend.Core.pdf_text import pdf_font_names
 from Backend.Core.pdf_validation import (
     GlyphMetric,
     _normalise_font,
@@ -93,6 +94,38 @@ def test_image_only_page_is_not_reported_as_empty(tmp_path: Path) -> None:
 
     assert result["pages"] == 1
     assert result["minimum_image_dpi"] == 200
+
+
+def test_text_inspection_never_materializes_image_payloads(tmp_path, monkeypatch):
+    path = tmp_path / "image-and-text.pdf"
+    pdf = _release_canvas(path)
+    pdf.drawString(24, 170, "Question 2 (3 marks)")
+    image = Image.new("RGB", (200, 200), "white")
+    image.paste("black", (60, 60, 140, 140))
+    pdf.drawInlineImage(image, 64, 64, width=72, height=72)
+    pdf.save()
+
+    original = fitz.Page.get_text
+    kinds_seen = []
+
+    def inspect_text(page, option="text", **kwargs):
+        result = original(page, option, **kwargs)
+        if option == "dict":
+            kinds = [block["type"] for block in result["blocks"]]
+            assert 1 not in kinds, "Text-only inspection loaded an image payload"
+            kinds_seen.extend(kinds)
+        return result
+
+    monkeypatch.setattr(fitz.Page, "get_text", inspect_text)
+    assert pdf_font_names(path) == {"Helvetica"}
+    assert (
+        validate_pdf_for_release(path, subject="business")["minimum_image_dpi"] == 200
+    )
+    print_evidence = extract_pdf_evidence(path)
+    assert print_evidence["pages"][0]["images"] == [
+        {"bbox": (64.0, 64.0, 136.0, 136.0), "pixel_width": 200, "pixel_height": 200}
+    ]
+    assert kinds_seen == [0, 0, 0]
 
 
 def test_standard_pdf_font_is_recorded_as_controlled_ci_fallback() -> None:

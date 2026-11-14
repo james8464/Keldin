@@ -508,6 +508,134 @@ def test_resume_backfills_qualification_evidence_without_regenerating(
 
 
 @pytest.mark.parametrize(
+    "change", ["none", "wrong_artifact", "manual_gate", "outside", "symlink"]
+)
+def test_resume_only_aggregates_current_automation_evidence(
+    tmp_path, monkeypatch, change
+):
+    job = jobs()[0]
+    output = tmp_path / "run"
+
+    def backend(command, **_kwargs):
+        run_dir = Path(command[command.index("--output") + 1])
+        files = {}
+        for role in (*job.expected_roles, "package_manifest"):
+            path = run_dir / f"{role}.json"
+            path.write_text(json.dumps({"reference_demand": {"passed": True}}))
+            files[role] = str(path)
+        return BackendRun(0, False, file_event_stream(files), "", 1000)
+
+    monkeypatch.setattr("tools.live_generation_matrix.run_backend", backend)
+    arguments = dict(
+        output_root=output,
+        command_prefix=["backend"],
+        model="gemma4:12b",
+        provider="ollama",
+        ollama_url="http://localhost:11434",
+        base_seed=42,
+        timeout_seconds=30,
+        dry_run=False,
+    )
+    first = run_matrix([job], resume=False, **arguments)["results"][0]
+    assert first["passed"]
+    manifest = Path(first["qualification_manifest"])
+    original = manifest.read_bytes()
+    payload = json.loads(original)
+    if change == "wrong_artifact":
+        payload["artifacts"][0]["sha256"] = "0" * 64
+        manifest.write_text(json.dumps(payload))
+    elif change == "manual_gate":
+        payload["gate_results"]["visual"] = "passed"
+        manifest.write_text(json.dumps(payload))
+    elif change in {"outside", "symlink"}:
+        unrelated = tmp_path / "unrelated.json"
+        unrelated.write_bytes(original)
+        if change == "outside":
+            result_path = manifest.with_name("matrix-result.json")
+            result = json.loads(result_path.read_bytes())
+            result["qualification_manifest"] = str(unrelated)
+            result_path.write_text(json.dumps(result))
+        else:
+            manifest.unlink()
+            manifest.symlink_to(unrelated)
+    old_evidence = manifest.read_bytes()
+
+    def no_inference(*_args, **_kwargs):
+        pytest.fail("verified paper should not regenerate because of stale evidence")
+
+    monkeypatch.setattr("tools.live_generation_matrix.run_backend", no_inference)
+    resumed = run_matrix([job], resume=True, **arguments)["results"][0]
+    assert resumed["passed"]
+    used = Path(resumed["qualification_manifest"])
+    assert used.is_relative_to(manifest.parent)
+    current = json.loads(used.read_bytes())
+    original_payload = json.loads(original)
+    assert current["artifacts"] == original_payload["artifacts"]
+    assert current["gate_results"] == original_payload["gate_results"]
+    assert current["evidence"] == original_payload["evidence"]
+    aggregate = json.loads((output / "qualification-run-manifest.json").read_bytes())
+    record = aggregate["paper_manifests"][0]
+    assert output / record["path"] == used
+    assert record["sha256"] == _sha256(used)
+    if change in {"wrong_artifact", "manual_gate"}:
+        assert any(
+            path.read_bytes() == old_evidence
+            for path in manifest.parent.glob("qualification-manifest*.json")
+        ), "external review or stale evidence should remain recoverable"
+    elif change in {"none", "outside"}:
+        assert used.read_bytes() == original
+    if change in {"outside", "symlink"}:
+        assert unrelated.read_bytes() == original
+    if change == "symlink":
+        assert manifest.is_symlink() and used != manifest
+
+
+def test_final_aggregate_does_not_reissue_an_edited_earlier_review(
+    tmp_path, monkeypatch
+):
+    selected = jobs()[:2]
+    earliest = (
+        tmp_path
+        / selected[0].backend_subject
+        / f"paper-{selected[0].paper}"
+        / "qualification-manifest.json"
+    )
+
+    def backend(command, **_kwargs):
+        run_dir = Path(command[command.index("--output") + 1])
+        job = next(job for job in selected if run_dir.name == f"paper-{job.paper}")
+        if job is selected[1]:
+            payload = json.loads(earliest.read_bytes())
+            payload["gate_results"]["visual"] = "passed"
+            earliest.write_text(json.dumps(payload))
+        files = {}
+        for role in (*job.expected_roles, "package_manifest"):
+            path = run_dir / f"{role}.json"
+            path.write_text(json.dumps({"reference_demand": {"passed": True}}))
+            files[role] = str(path)
+        return BackendRun(0, False, file_event_stream(files), "", 1000)
+
+    monkeypatch.setattr("tools.live_generation_matrix.run_backend", backend)
+    report = run_matrix(
+        selected,
+        output_root=tmp_path,
+        command_prefix=["backend"],
+        model="gemma4:12b",
+        provider="ollama",
+        ollama_url="http://localhost:11434",
+        base_seed=42,
+        timeout_seconds=30,
+        dry_run=False,
+        resume=False,
+    )
+    assert report["summary"]["passed"] == 2
+    fresh = Path(report["results"][0]["qualification_manifest"])
+    assert fresh.parent == earliest.parent and fresh != earliest
+    assert json.loads(fresh.read_bytes())["gate_results"]["visual"] == "not_run"
+    assert json.loads(earliest.read_bytes())["gate_results"]["visual"] == "passed"
+
+
+@pytest.mark.parametrize(
     "changed", ["model", "seed", "preview", "runtime", "artifact", "role", "events"]
 )
 def test_resume_never_reuses_a_different_generation_request(

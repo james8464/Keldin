@@ -7,8 +7,10 @@ import json
 import math
 import re
 from collections import Counter
+from collections.abc import Mapping
 from functools import lru_cache
 from pathlib import Path
+from types import MappingProxyType
 from typing import Any, Literal
 
 from pydantic import (
@@ -203,18 +205,36 @@ def _profile_fingerprint(payload: Any) -> str:
     return hashlib.sha256(canonical.encode()).hexdigest()
 
 
-# Read the authoritative profile record without retaining mutable authority.
+_profile_source_index: tuple[bytes, Mapping[tuple[str, str], str]] | None = None
+
+
+def _source_fingerprints(raw: bytes) -> Mapping[tuple[str, str], str]:
+    """Reuse digests, not mutable profiles; always key by the current bytes."""
+    global _profile_source_index
+    digest = hashlib.sha256(raw).digest()
+    cached = _profile_source_index
+    if cached is not None and cached[0] == digest:
+        return cached[1]
+    payload = json.loads(raw.decode("utf-8"))
+    fingerprints: dict[tuple[str, str], str] = {}
+    for record in payload["profiles"]:
+        key = (record["family_id"], record["paper_id"])
+        if key in fingerprints:
+            raise ValueError("checked-in reference evidence repeats a profile")
+        fingerprints[key] = _profile_fingerprint(record)
+    index = MappingProxyType(fingerprints)
+    _profile_source_index = digest, index
+    return index
+
+
+# Read the current authoritative bytes before using any derived fingerprints.
 def _checked_in_profile_fingerprint(family_id: str, paper_id: str) -> str:
     try:
-        payload = json.loads(PROFILES_PATH.read_text(encoding="utf-8"))
-        record = next(
-            profile
-            for profile in payload["profiles"]
-            if (profile["family_id"], profile["paper_id"]) == (family_id, str(paper_id))
-        )
-    except (FileNotFoundError, KeyError, StopIteration, TypeError) as error:
+        return _source_fingerprints(PROFILES_PATH.read_bytes())[
+            family_id, str(paper_id)
+        ]
+    except (OSError, KeyError, TypeError, ValueError) as error:
         raise ValueError("checked-in reference evidence is unavailable") from error
-    return _profile_fingerprint(record)
 
 
 # Accept only content that exactly matches the checked-in source record.
