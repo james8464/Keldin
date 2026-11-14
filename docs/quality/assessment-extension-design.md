@@ -51,9 +51,18 @@ an existing family until its prior acceptance fixtures still pass.
    memory on the same workload before claiming a performance gain.
 
 The first refactor covers the checkpoint boundary, preview inspection and
-artifact receipts. It is not a full repository review. Next, validate the
-extension path with a small configured family and advance the published
-live-paper evidence separately from the software checks.
+artifact receipts. A synthetic family now exercises the registry, the CLI,
+the configured-family adapter, PDF validation and atomic publication without
+changing shared generation code. Its preview and matrix registration are
+tested. It uses an existing subject engine and board profile; a genuinely
+new answer type or exam interface may need a new subject engine or renderer.
+The test family is not shipped or qualified for live generation.
+
+Configured syllabuses reject unknown fields and topic paper IDs at load
+time. A configured option uses its own question rules, so its credit can
+differ from another option without changing the printed tariff. Existing
+families still need their own reference evidence and live paper review.
+These checks do not substitute for those reviews or a full repository audit.
 
 The admissions formats exercise different contract features:
 

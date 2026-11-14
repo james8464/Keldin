@@ -15,6 +15,7 @@ from Backend.Core.exam_blueprints import (
     PaperRule,
     QuestionRule,
     SectionRule,
+    resolve_question_rules,
     validate_generated_paper,
     validate_rule,
 )
@@ -39,7 +40,8 @@ def build_paper(
 ) -> GeneratedPaper:
     run_seed = seed if seed is not None else secrets.randbits(64)
     rng = random.Random(run_seed)
-    validate_rule(rule, syllabus.topic_ids)
+    topic_ids = syllabus.topic_ids
+    validate_rule(rule, topic_ids)
     topics = [topic for topic in syllabus.topics if topic.id in rule.allowed_topic_ids]
     rng.shuffle(topics)
     cursor = 0
@@ -49,12 +51,12 @@ def build_paper(
         section_topic_ids = section_rule.allowed_topic_ids or rule.allowed_topic_ids
         section_topics = [topic for topic in topics if topic.id in section_topic_ids]
         options: list[GeneratedOption] = []
-        for option_index in range(section_rule.option_count):
+        for option_index in range(1, section_rule.option_count + 1):
             topic = section_topics[cursor % len(section_topics)]
             cursor += 1
             context = rng.choice(CONTEXTS)
             questions: list[GeneratedQuestion] = []
-            for question_rule in section_rule.questions:
+            for question_rule in resolve_question_rules(section_rule, option_index):
                 question_topic = section_topics[cursor % len(section_topics)]
                 cursor += 1
                 questions.append(
@@ -70,9 +72,9 @@ def build_paper(
                 number += 1
             options.append(
                 GeneratedOption(
-                    id=f"{section_rule.id}{option_index + 1}",
+                    id=f"{section_rule.id}{option_index}",
                     title=(
-                        f"{section_rule.title} – option {option_index + 1}"
+                        f"{section_rule.title} – option {option_index}"
                         if section_rule.option_count > 1
                         else section_rule.title
                     ),
@@ -103,7 +105,7 @@ def build_paper(
         seed=run_seed,
         sections=sections,
     )
-    validate_generated_paper(paper, rule, syllabus.topic_ids)
+    validate_generated_paper(paper, rule, topic_ids)
     return paper
 
 

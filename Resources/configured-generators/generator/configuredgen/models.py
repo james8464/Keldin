@@ -5,19 +5,23 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
-from Backend.Core.exam_blueprints import PaperRule, SectionRule
+from Backend.Core.exam_blueprints import PaperRule, SectionRule, validate_rule
 
 
-class Topic(BaseModel):
+class _ConfigurationRecord(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+
+class Topic(_ConfigurationRecord):
     id: str
     title: str
     points: list[str] = Field(min_length=3)
     papers: list[str] = Field(min_length=1)
 
 
-class PaperSpecification(BaseModel):
+class PaperSpecification(_ConfigurationRecord):
     id: str
     code: str
     title: str
@@ -34,7 +38,7 @@ class PaperSpecification(BaseModel):
     )
 
 
-class ConfiguredSyllabus(BaseModel):
+class ConfiguredSyllabus(_ConfigurationRecord):
     schema_version: int
     family_id: str
     backend_subject: str
@@ -77,11 +81,20 @@ def load_syllabus(path: Path) -> ConfiguredSyllabus:
     syllabus = ConfiguredSyllabus.model_validate(payload)
     if syllabus.schema_version != 1:
         raise ValueError("configured syllabus schema is unsupported")
-    if len({paper.id for paper in syllabus.papers}) != len(syllabus.papers):
+    papers = {paper.id for paper in syllabus.papers}
+    if len(papers) != len(syllabus.papers):
         raise ValueError("configured syllabus repeats a paper id")
-    if len(syllabus.topic_ids) != len(syllabus.topics):
+    topic_ids = syllabus.topic_ids
+    if len(topic_ids) != len(syllabus.topics):
         raise ValueError("configured syllabus repeats a topic id")
+    topic_papers = {paper_id for topic in syllabus.topics for paper_id in topic.papers}
+    if unknown_papers := topic_papers - papers:
+        raise ValueError(
+            f"configured syllabus references unknown papers: {sorted(unknown_papers)}"
+        )
     for paper in syllabus.papers:
-        if not any(paper.id in topic.papers for topic in syllabus.topics):
+        if paper.id not in topic_papers:
             raise ValueError(f"paper {paper.id} has no syllabus topics")
+        # The shared rule checker fills optional defaults; leave source records intact.
+        validate_rule(syllabus.rule(paper.id).model_copy(deep=True), topic_ids)
     return syllabus
