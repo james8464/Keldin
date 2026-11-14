@@ -21,6 +21,7 @@ MAX_TOTAL_BYTES = 80 * 1024 * 1024
 MAX_PAGES_PER_SOURCE = 80
 MAX_PAGE_CHARACTERS = 40_000
 MAX_TOTAL_CHARACTERS = 600_000
+_SCAN_FINGERPRINT_EDGE = 512
 
 
 @dataclass(frozen=True)
@@ -81,7 +82,10 @@ def _open_source(filename: str, flags: int) -> int:
     return os.open(filename, flags | os.O_NONBLOCK | os.O_NOFOLLOW)
 
 
-def _extract_pages(content: bytes, remaining: int) -> tuple[LocalPageEvidence, ...]:
+def _extract_pages(
+    source: LocalSource, remaining: int
+) -> tuple[tuple[LocalPageEvidence, ...], str | None]:
+    content = source.content
     if not content.startswith(b"%PDF-"):
         raise ValueError("Each source must be a readable PDF")
     try:
@@ -104,11 +108,42 @@ def _extract_pages(content: bytes, remaining: int) -> tuple[LocalPageEvidence, .
                     has_visual_content = bool(
                         page.get_image_info() or page.get_drawings()
                     )
+            has_text = any(page.text for page in pages)
+            if not has_visual_content and not has_text:
+                raise ValueError("A source has no extractable text or visual content")
+            scan_digest = (
+                _scan_fingerprint(document)
+                if source.role == "question-paper" and not has_text
+                else None
+            )
+            return tuple(pages), scan_digest
     except (pymupdf.FileDataError, RuntimeError) as error:
         raise ValueError("Each source must be a readable PDF") from error
-    if not has_visual_content and not any(page.text for page in pages):
-        raise ValueError("A source has no extractable text or visual content")
-    return tuple(pages)
+
+
+def _scan_fingerprint(document: pymupdf.Document) -> str:
+    """Compare bounded page rasters, ignoring metadata and PDF compression."""
+    digest = sha256()
+    for page in document:
+        edge = max(page.rect.width, page.rect.height)
+        if not 0 < edge < float("inf"):
+            raise ValueError("Invalid source page dimensions")
+        scale = min(1.0, (_SCAN_FINGERPRINT_EDGE - 2) / edge)
+        pixmap = page.get_pixmap(
+            matrix=pymupdf.Matrix(scale, scale),
+            colorspace=pymupdf.csRGB,
+            alpha=False,
+            annots=False,
+        )
+        if not all(
+            1 <= axis <= _SCAN_FINGERPRINT_EDGE
+            for axis in (pixmap.width, pixmap.height)
+        ):
+            raise ValueError("Invalid source scan dimensions")
+        digest.update(pixmap.width.to_bytes(2, "big"))
+        digest.update(pixmap.height.to_bytes(2, "big"))
+        digest.update(pixmap.samples_mv)
+    return digest.hexdigest()
 
 
 def build_custom_evidence(
@@ -133,15 +168,20 @@ def build_custom_evidence(
 
     seen_bytes: set[str] = set()
     seen_text: set[str] = set()
+    seen_scans: set[str] = set()
     evidence = []
     remaining = MAX_TOTAL_CHARACTERS
     for source in sources:
         digest = sha256(source.content).hexdigest()
         if digest in seen_bytes:
             raise ValueError("Duplicate assessment source")
-        pages = _extract_pages(source.content, remaining)
+        pages, scan_digest = _extract_pages(source, remaining)
         remaining -= sum(len(page.text) for page in pages)
-        if source.role == "question-paper" and any(page.text for page in pages):
+        if scan_digest is not None:
+            if scan_digest in seen_scans:
+                raise ValueError("Duplicate scanned question paper")
+            seen_scans.add(scan_digest)
+        elif source.role == "question-paper":
             normalized = unicodedata.normalize(
                 "NFKC", " ".join(page.text for page in pages)
             ).casefold()

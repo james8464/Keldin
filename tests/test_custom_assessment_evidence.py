@@ -109,6 +109,44 @@ def test_distinct_scan_sources_are_inspectable_without_text() -> None:
         build_custom_evidence([scans[0], scans[0], scans[1]])
 
 
+def test_resaved_scan_does_not_count_as_a_distinct_paper() -> None:
+    with pymupdf.open() as artwork:
+        page = artwork.new_page(width=160, height=160)
+        page.insert_text((20, 45), "Example question")
+        pixels = page.get_pixmap()
+        with pymupdf.open() as scan:
+            scan.new_page(width=160, height=160).insert_image(page.rect, pixmap=pixels)
+            first = scan.tobytes()
+            scan.set_metadata({"title": "Same scan, different metadata"})
+            second = scan.tobytes(deflate=True)
+    assert first != second
+    with pytest.raises(ValueError, match="Duplicate scanned question paper"):
+        build_custom_evidence(
+            [
+                LocalSource("question-paper", first),
+                LocalSource("question-paper", second),
+                paper("Different question"),
+            ]
+        )
+
+
+def test_scans_with_the_same_cover_and_different_questions_are_distinct() -> None:
+    def scanned_paper(question: str) -> LocalSource:
+        with pymupdf.open() as artwork, pymupdf.open() as scan:
+            for text in ("Common cover", question):
+                page = artwork.new_page(width=180, height=120)
+                page.insert_text((20, 45), text)
+                scan.new_page(width=180, height=120).insert_image(
+                    page.rect, pixmap=page.get_pixmap()
+                )
+            return LocalSource("question-paper", scan.tobytes())
+
+    evidence = build_custom_evidence(
+        [scanned_paper(f"Question {number}") for number in (1, 2, 3)]
+    )
+    assert [len(document.pages) for document in evidence] == [2, 2, 2]
+
+
 @pytest.mark.parametrize(
     ("limit", "value", "message"),
     [
