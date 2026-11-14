@@ -2,11 +2,14 @@
 
 from __future__ import annotations
 
+import os
+import stat
 import unicodedata
 from collections.abc import Sequence
 from dataclasses import dataclass
 from hashlib import sha256
-from typing import Literal
+from pathlib import Path
+from typing import Literal, cast
 
 import pymupdf
 
@@ -37,6 +40,45 @@ class LocalDocumentEvidence:
     role: SourceRole
     sha256: str
     pages: tuple[LocalPageEvidence, ...]
+
+
+def inspect_custom_files(
+    selections: Sequence[tuple[str, Path]],
+) -> tuple[LocalDocumentEvidence, ...]:
+    """Read selected local regular files without blocking on special files."""
+    if len(selections) > MAX_SOURCES:
+        raise ValueError("Too many assessment sources")
+    if any(role not in _ROLES for role, _ in selections):
+        raise ValueError("Unknown assessment source role")
+    if sum(role == "question-paper" for role, _ in selections) < 3:
+        raise ValueError("Provide at least three distinct question papers")
+    sources = []
+    remaining = MAX_TOTAL_BYTES
+    for number, (role, path) in enumerate(selections, start=1):
+        try:
+            with open(path, "rb", opener=_open_source) as stream:
+                metadata = os.fstat(stream.fileno())
+                if not stat.S_ISREG(metadata.st_mode):
+                    raise OSError("Not a regular file")
+                limit = min(MAX_SOURCE_BYTES, remaining)
+                if metadata.st_size > limit:
+                    raise ValueError(f"Source {number} exceeds the import size limit")
+                content = stream.read(limit + 1)
+        except OSError:
+            raise ValueError(
+                f"Could not read source {number}. Choose the file again."
+            ) from None
+        if len(content) > limit or len(content) != metadata.st_size:
+            raise ValueError(
+                f"Source {number} changed during import. Choose the file again."
+            )
+        sources.append(LocalSource(cast(SourceRole, role), content))
+        remaining -= len(content)
+    return build_custom_evidence(sources)
+
+
+def _open_source(filename: str, flags: int) -> int:
+    return os.open(filename, flags | os.O_NONBLOCK | os.O_NOFOLLOW)
 
 
 def _extract_pages(content: bytes, remaining: int) -> tuple[LocalPageEvidence, ...]:

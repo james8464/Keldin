@@ -1,5 +1,9 @@
 from __future__ import annotations
 
+import json
+import os
+from pathlib import Path
+
 import pymupdf
 import pytest
 
@@ -122,3 +126,54 @@ def test_password_protected_pdf_requires_an_unlocked_copy() -> None:
         build_custom_evidence(
             [paper("First"), paper("Second"), LocalSource("question-paper", locked)]
         )
+
+
+def test_cli_reports_source_metadata_without_exposing_pdf_text(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    from Backend.Core.cli import main
+
+    args = ["inspect-custom-assessment"]
+    for number in range(3):
+        path = tmp_path / f"private-{number}.pdf"
+        path.write_bytes(pdf(f"Private source content {number}", ""))
+        args.extend(("--source", "question-paper", str(path)))
+    assert main(args) == 0
+    captured = capsys.readouterr()
+    events = [json.loads(line) for line in captured.out.splitlines()]
+    assert [event["type"] for event in events] == ["hello", "custom_assessment_sources"]
+    assert [item["pages_without_text"] for item in events[1]["sources"]] == [[2]] * 3
+    assert all(len(item["sha256"]) == 64 for item in events[1]["sources"])
+    assert "Private source content" not in captured.out + captured.err
+    assert str(tmp_path) not in captured.out + captured.err
+
+
+def test_cli_handles_missing_file_without_leaking_its_path(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    from Backend.Core.cli import main
+
+    path = tmp_path / "private-name.pdf"
+    args = ["inspect-custom-assessment", "--source", "question-paper", str(path)] + [
+        "--source",
+        "question-paper",
+        str(path),
+    ] * 2
+    assert main(args) == 1
+    captured = capsys.readouterr()
+    event = json.loads(captured.out.splitlines()[-1])
+    assert event["type"] == "error"
+    assert event["message"] == "Could not read source 1. Choose the file again."
+    assert "private-name" not in captured.out + captured.err
+
+
+def test_file_inspection_accepts_only_selected_regular_files(tmp_path: Path) -> None:
+    target = tmp_path / "original.pdf"
+    target.write_bytes(pdf("Example"))
+    symlink = tmp_path / "linked.pdf"
+    symlink.symlink_to(target)
+    fifo = tmp_path / "pipe.pdf"
+    os.mkfifo(fifo)
+    for path in (symlink, fifo, tmp_path):
+        with pytest.raises(ValueError, match=r"Could not read source 1\."):
+            limits.inspect_custom_files([("question-paper", path)] * 3)

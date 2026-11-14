@@ -38,6 +38,12 @@ def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="JSON-lines bridge for Keldin.")
     subparsers = parser.add_subparsers(dest="command", required=True)
 
+    custom_sources = subparsers.add_parser("inspect-custom-assessment")
+    custom_sources.add_argument(
+        "--source", action="append", nargs=2, metavar=("ROLE", "PDF"), required=True
+    )
+    custom_sources.set_defaults(handler=handle_custom_assessment_sources)
+
     guidance = subparsers.add_parser("local-model-guidance")
     guidance.set_defaults(handler=handle_local_model_guidance)
 
@@ -175,6 +181,33 @@ def build_parser() -> argparse.ArgumentParser:
     review.add_argument("--notes", required=True)
     review.set_defaults(handler=handle_french_review)
     return parser
+
+
+def handle_custom_assessment_sources(args: argparse.Namespace) -> int:
+    from Backend.Core.custom_assessment_evidence import inspect_custom_files
+
+    try:
+        evidence = inspect_custom_files(
+            [(role, Path(filename)) for role, filename in args.source]
+        )
+    except ValueError as error:
+        emit("error", message=str(error))
+        return 1
+    emit(
+        "custom_assessment_sources",
+        sources=[
+            {
+                "role": doc.role,
+                "sha256": doc.sha256,
+                "page_count": len(doc.pages),
+                "pages_without_text": [
+                    page.number for page in doc.pages if not page.text
+                ],
+            }
+            for doc in evidence
+        ],
+    )
+    return 0
 
 
 def handle_framework_generate(args: argparse.Namespace) -> int:
