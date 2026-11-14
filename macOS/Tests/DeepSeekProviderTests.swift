@@ -191,6 +191,7 @@ final class DeepSeekProviderTests: XCTestCase {
             provider: "deepseek", model: "deepseek-v4-pro", seed: 42, dryRun: false,
             assessmentID: FrenchAssessmentRequest.assessmentID, authoringVersion: "v36")
         var identity: [String: Any] = ["provider": "deepseek", "model": "deepseek-v4-pro", "seed": 42,
+            "large_print": false, "layout_policy": FrenchLLMAssessmentRequest.layoutPolicy,
             "prompt_version": FrenchLLMAssessmentRequest.promptVersion, "print_policy": FrenchLLMAssessmentRequest.printPolicy,
             "sql_source_policy": FrenchLLMAssessmentRequest.sqlSourcePolicy,
             "review_recovery_policy": FrenchLLMAssessmentRequest.reviewRecoveryPolicy,
@@ -201,7 +202,8 @@ final class DeepSeekProviderTests: XCTestCase {
             try JSONSerialization.data(withJSONObject: ["schema_version": 1,
                 "assessment": FrenchAssessmentRequest.assessmentID, "status": "unreviewed_draft",
                 "generation_origin": "model_authored", "model_used": true,
-                "teacher_review": "not_run", "empirical_calibration": "not_run", "identity": identity]).write(to: file)
+                "teacher_review": "not_run", "empirical_calibration": "not_run",
+                "large_print": false, "identity": identity]).write(to: file)
         }
         try write()
         XCTAssertNoThrow(try FrenchLLMAssessmentRequest.validatePublication(at: file, configuration: configuration))

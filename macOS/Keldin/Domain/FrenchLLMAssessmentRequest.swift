@@ -5,6 +5,7 @@ import Foundation
 struct FrenchLLMAssessmentRequest {
     static let promptVersion = "fr-nsi-written-2027-v36-llm"
     static let printPolicy = "fr-nsi-v36-model-review-v6"
+    static let layoutPolicy = "fr-nsi-v36-code-layout-v1"
     static let sqlSourcePolicy = "fr-nsi-v36-sql-source-v1"
     static let sourcePolicy = "fr-nsi-v36-exercise-curriculum-scope-v2"
     static let reviewRecoveryPolicy = "fr-nsi-v36-whole-exercise-redraft-v1"
@@ -52,9 +53,13 @@ struct FrenchLLMAssessmentRequest {
     }
 
     static func validatePublication(at url: URL, configuration: GenerationConfiguration) throws {
+        try validatePublication(data: Data(contentsOf: url), configuration: configuration)
+    }
+
+    private static func validatePublication(data: Data, configuration: GenerationConfiguration) throws {
         let decoder = JSONDecoder()
         decoder.keyDecodingStrategy = .convertFromSnakeCase
-        let publication = try decoder.decode(Publication.self, from: Data(contentsOf: url))
+        let publication = try decoder.decode(Publication.self, from: data)
         guard publication.schemaVersion == 1,
               publication.assessment == FrenchAssessmentRequest.assessmentID,
               publication.status == "unreviewed_draft",
@@ -65,6 +70,9 @@ struct FrenchLLMAssessmentRequest {
               publication.identity.seed == configuration.seed,
               publication.identity.promptVersion == promptVersion,
               publication.identity.printPolicy == printPolicy,
+              publication.identity.layoutPolicy == layoutPolicy,
+              publication.largePrint == publication.identity.largePrint,
+              configuration.frenchLargePrint.map({ $0 == publication.largePrint }) ?? true,
               publication.identity.sqlSourcePolicy == sqlSourcePolicy,
               publication.identity.sourcePolicy == sourcePolicy,
               publication.identity.reviewRecoveryPolicy == reviewRecoveryPolicy else {
@@ -88,8 +96,8 @@ struct FrenchLLMAssessmentRequest {
                 throw CocoaError(.fileReadCorruptFile)
             }
         }
-        try validatePublication(at: manifest.url, configuration: configuration)
         let manifestData = try Data(contentsOf: manifest.url)
+        try validatePublication(data: manifestData, configuration: configuration)
         let decoder = JSONDecoder()
         let metadata = try decoder.decode(ArtifactManifest.self, from: manifestData)
         let recordedRoles = required.subtracting(["package_manifest"])
@@ -135,6 +143,7 @@ struct FrenchLLMAssessmentRequest {
         let modelUsed: Bool
         let teacherReview: String
         let empiricalCalibration: String
+        let largePrint: Bool
         let identity: Identity
 
         struct Identity: Decodable {
@@ -143,6 +152,8 @@ struct FrenchLLMAssessmentRequest {
             let seed: Int
             let promptVersion: String
             let printPolicy: String
+            let layoutPolicy: String
+            let largePrint: Bool
             let sqlSourcePolicy: String
             let sourcePolicy: String
             let reviewRecoveryPolicy: String

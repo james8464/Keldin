@@ -245,6 +245,78 @@ def assert_distinct_items(
     _checked_item_shingles(list(items), threshold=threshold, context=context)
 
 
+class ItemSimilarityIndex:
+    """Admit a paper's items without rechecking pairs it has already accepted."""
+
+    def __init__(self, *, threshold: float, context: str) -> None:
+        self.threshold = threshold
+        self.context = context
+        self._accepted: dict[str, tuple[str, Counter[tuple[str, ...]]]] = {}
+
+    def admit(self, prompts: Mapping[str, str]) -> None:
+        changed = {
+            item_id: prompt.strip()
+            for item_id, prompt in prompts.items()
+            if item_id not in self._accepted
+            or prompt.strip() != self._accepted[item_id][0]
+        }
+        if not changed:
+            return
+        if self._accepted.keys() & changed.keys():
+            # A replacement can introduce a conflict with a later item. Check
+            # the whole updated set in its original order before replacing it.
+            all_prompts = {
+                item_id: prompt for item_id, (prompt, _) in self._accepted.items()
+            } | changed
+            checked = _checked_item_shingles(
+                [
+                    {"id": item_id, "prompt": prompt}
+                    for item_id, prompt in all_prompts.items()
+                ],
+                threshold=self.threshold,
+                context=self.context,
+            )
+            self._accepted = {
+                item["id"]: (item["prompt"], shingles) for item, shingles in checked
+            }
+            return
+
+        pending: dict[str, tuple[str, Counter[tuple[str, ...]]]] = {}
+        for item_id, prompt in changed.items():
+            if not prompt:
+                raise ValueError(f"{self.context} item {item_id} has no prompt")
+            shingles = _shingles(normalise_item_text(prompt), width=3)
+            for previous in (self._accepted, pending):
+                for previous_id, (_, previous_shingles) in previous.items():
+                    _check_similarity(
+                        previous_id,
+                        item_id,
+                        previous_shingles,
+                        shingles,
+                        threshold=self.threshold,
+                        context=self.context,
+                    )
+            pending[item_id] = (prompt, shingles)
+        # A failed batch never changes the admitted set.
+        self._accepted.update(pending)
+
+
+def _check_similarity(
+    previous_id: object,
+    item_id: object,
+    previous_shingles: Counter[tuple[str, ...]],
+    shingles: Counter[tuple[str, ...]],
+    *,
+    threshold: float,
+    context: str,
+) -> None:
+    score = _shingle_similarity(shingles, previous_shingles)
+    if score >= threshold:
+        raise ValueError(
+            f"{context} items {previous_id} and {item_id} are too similar ({score:.3f})"
+        )
+
+
 def _checked_item_shingles(
     items: Sequence[dict[str, Any]], *, threshold: float, context: str
 ) -> list[tuple[dict[str, Any], Counter[tuple[str, ...]]]]:
@@ -255,12 +327,14 @@ def _checked_item_shingles(
             raise ValueError(f"{context} item {item.get('id', index)} has no prompt")
         shingles = _shingles(normalise_item_text(prompt), width=3)
         for previous, previous_shingles in checked:
-            score = _shingle_similarity(shingles, previous_shingles)
-            if score >= threshold:
-                raise ValueError(
-                    f"{context} items {previous.get('id')} and {item.get('id')} "
-                    f"are too similar ({score:.3f})"
-                )
+            _check_similarity(
+                previous.get("id"),
+                item.get("id"),
+                previous_shingles,
+                shingles,
+                threshold=threshold,
+                context=context,
+            )
         checked.append((item, shingles))
     return checked
 

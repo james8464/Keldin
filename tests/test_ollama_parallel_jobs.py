@@ -138,6 +138,7 @@ def test_shared_pipeline_overlaps_two_jobs_preserving_order_and_checkpoints(
     # Scheduling probe uses unchanged blueprint items, not AI-quality evidence.
     monkeypatch.setattr(subject, "_generate_batch", generate)
     monkeypatch.setattr(subject, "assert_distinct_items", lambda *args, **kwargs: None)
+    monkeypatch.setattr(subject.ItemSimilarityIndex, "admit", lambda *_: None)
     monkeypatch.setenv("KELDIN_PARALLEL_LOCAL_REVIEWS", "1")
     client = HostedLLMClient(provider="ollama", model="fixture", api_key="")
     events = []

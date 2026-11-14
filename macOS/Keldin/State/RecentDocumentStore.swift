@@ -24,6 +24,8 @@ struct GenerationConfiguration: Codable, Equatable, Hashable {
     var assessmentID: String? = nil
     var documentLanguage: String? = nil
     var authoringVersion: String? = nil
+    // Absent in older records, which never recorded the requested print size.
+    var frenchLargePrint: Bool? = nil
 }
 
 struct GenerationProvenance: Codable, Equatable {
@@ -318,7 +320,9 @@ final class RecentDocumentStore {
             dryRun: record.configuration.dryRun,
             educationSystem: record.configuration.educationSystem,
             assessmentID: record.configuration.assessmentID,
-            documentLanguage: record.configuration.documentLanguage
+            documentLanguage: record.configuration.documentLanguage,
+            authoringVersion: record.configuration.authoringVersion,
+            frenchLargePrint: record.configuration.frenchLargePrint
         )
         return GenerationJobRecord(
             configuration: configuration,

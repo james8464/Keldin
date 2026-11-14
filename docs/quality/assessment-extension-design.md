@@ -119,6 +119,18 @@ median comparison time across three runs fell from 2.73 s to 0.40 s. All
 was roughly 22 MB in both runs. This measures the overlap check only; it
 does not measure inference or end-to-end generation.
 
+Within a paper, the shared authoring runner also keeps a per-run index
+of accepted question text. It compares new items with accepted items
+and with one another before writing their checkpoints. A failed batch
+does not change the index. A replacement is checked against the full
+updated set, and final paper validation still runs in blueprint order.
+The threshold and comparison score are unchanged.
+
+In a synthetic serial benchmark of 80 accepted items, including the
+repeated checks at batch completion, pair comparisons fell from
+170,640 to 3,160. Median time across three runs was 1.24 s before and
+0.022 s after. This measures the admission check only.
+
 The admissions formats exercise different contract features:
 
 - [TMUA](https://esat-tmua.ac.uk/about-the-tests/tmua-test/): two timed maths

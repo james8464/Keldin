@@ -19,6 +19,7 @@ from Backend.Core.assessment_checkpoints import (
 )
 from Backend.Core.assessment_contracts import EvidenceRecord, contract_for_question
 from Backend.Core.assessment_quality import (
+    ItemSimilarityIndex,
     assert_distinct_items,
     content_similarity,
     numeric_tokens,
@@ -166,20 +167,20 @@ def generate_unique_paper(
         for batch in batches
     ]
     tasks_by_key = {task.key: task for task in tasks}
+    admission = ItemSimilarityIndex(
+        threshold=policy.paper_similarity_limit, context="accepted AI items"
+    )
     completed_items = 0
     completed_batches = 0
 
     def admit_items(result, deferred, *, item_id=None):
         nonlocal completed_items
-        combined = generated | result
         try:
-            assert_distinct_items(
-                (
-                    {"id": tasks_by_key[key].id, "prompt": question.prompt}
-                    for key, question in combined.items()
-                ),
-                threshold=policy.paper_similarity_limit,
-                context="accepted AI items",
+            admission.admit(
+                {
+                    tasks_by_key[key].id: question.prompt
+                    for key, question in result.items()
+                }
             )
         except ValueError:
             if checkpoint_store is not None:

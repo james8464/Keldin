@@ -636,7 +636,8 @@ final class ApplicationCoordinator: ObservableObject {
             configuration: GenerationConfiguration(
                 boardID: "fr-national-nsi", paperID: "written-2027", provider: request.provider.backendID,
                 model: request.model, seed: request.seed, dryRun: false, educationSystem: "fr-national",
-                assessmentID: FrenchAssessmentRequest.assessmentID, documentLanguage: "fr-FR", authoringVersion: "v36"
+                assessmentID: FrenchAssessmentRequest.assessmentID, documentLanguage: "fr-FR",
+                authoringVersion: "v36", frenchLargePrint: request.largePrint
             ),
             provenance: GenerationProvenance(
                 appVersion: Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "development",

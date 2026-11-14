@@ -24,7 +24,10 @@ final class UKArtifactPublisherTests: XCTestCase {
 
     @MainActor
     func testFrenchAndUKCompletionExportDocumentsButRetainPrivateManifests() throws {
-        for french in [false, true] {
+        for (french, requestedLarge, publishedLarge) in [
+            (false, false, false), (true, false, false), (true, true, true),
+            (true, true, false), (true, false, true),
+        ] {
             let backend = ControlledRunBackend()
             let defaults = isolatedDefaults()
             defaults.set(true, forKey: AppStorageKey.hasSeenWelcome)
@@ -32,9 +35,9 @@ final class UKArtifactPublisherTests: XCTestCase {
             let application = isolatedApplication(defaults: defaults, backend: backend)
             application.selectBoard(try XCTUnwrap(ExamCatalog.readyBoards.first { $0.usesAI }))
             application.setDryRun(true)
-            let output = directory.appendingPathComponent(french ? "french-exports" : "uk-exports")
+            let output = directory.appendingPathComponent("exports-\(french)-\(requestedLarge)-\(publishedLarge)")
             application.outputFolder = output
-            if french { application.generateFrenchFixture(largePrint: false) }
+            if french { application.generateFrenchFixture(largePrint: requestedLarge) }
             else { application.generate() }
             let run = try XCTUnwrap(backend.requests.first)
             let outputIndex = try XCTUnwrap(run.arguments.firstIndex(of: "--output"))
@@ -47,12 +50,14 @@ final class UKArtifactPublisherTests: XCTestCase {
             var metadata: [String: Any] = [
                 "schema_version": 1, "assessment": FrenchAssessmentRequest.assessmentID,
                 "status": "unreviewed_draft", "generation_origin": "model_authored", "model_used": true,
+                "large_print": publishedLarge,
                 "teacher_review": "not_run", "empirical_calibration": "not_run",
                 "identity": ["provider": application.aiProvider.backendID, "model": application.activeModelName,
                     "prompt_version": FrenchLLMAssessmentRequest.promptVersion, "print_policy": FrenchLLMAssessmentRequest.printPolicy,
                     "sql_source_policy": FrenchLLMAssessmentRequest.sqlSourcePolicy,
                     "review_recovery_policy": FrenchLLMAssessmentRequest.reviewRecoveryPolicy,
-                    "source_policy": FrenchLLMAssessmentRequest.sourcePolicy, "seed": seed],
+                    "source_policy": FrenchLLMAssessmentRequest.sourcePolicy, "seed": seed,
+                    "large_print": publishedLarge, "layout_policy": FrenchLLMAssessmentRequest.layoutPolicy],
             ]
             var bytes = try JSONSerialization.data(withJSONObject: metadata, options: [.sortedKeys])
             try bytes.write(to: manifest)
@@ -78,6 +83,12 @@ final class UKArtifactPublisherTests: XCTestCase {
             run.onEvent(.file(role: "package_manifest", path: manifest.path))
             run.onFinish(.success(0))
 
+            if requestedLarge != publishedLarge {
+                XCTAssertTrue(application.showError)
+                XCTAssertEqual(application.recentDocumentStore.records.first?.state, .failed)
+                XCTAssertFalse(manager.fileExists(atPath: output.path))
+                continue
+            }
             XCTAssertFalse(application.showError, application.errorMessage)
             XCTAssertEqual(application.recentDocumentStore.records.first?.state, .completed)
             let retained = try XCTUnwrap(application.currentGenerationFiles.first { $0.role == "package_manifest" })
