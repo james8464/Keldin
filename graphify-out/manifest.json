@@ -4020,7 +4020,7 @@
     "semantic_hash": ""
   },
   "Resources/implementation-audit-coverage.json": {
-    "mtime": 1794659918.9410403,
+    "mtime": 1794662477.705086,
     "ast_hash": "840dc951d2692c6d5aaf49e2221463dc",
     "semantic_hash": ""
   },
@@ -4760,8 +4760,8 @@
     "semantic_hash": ""
   },
   "Backend/Core/france/llm_runtime.py": {
-    "mtime": 1794396196.5026987,
-    "ast_hash": "bc6337248f3fbbd9e97bf44a1f89d46f",
+    "mtime": 1794662451.2862391,
+    "ast_hash": "d0ace6656ebf648ef318faab82fa61fe",
     "semantic_hash": ""
   },
   "macOS/Keldin/Domain/FrenchDraftQualityReport.swift": {
@@ -4810,8 +4810,8 @@
     "semantic_hash": ""
   },
   "tests/test_french_llm_runtime.py": {
-    "mtime": 1794396196.5311074,
-    "ast_hash": "ec5797e0e66eacd689949e8a528a4450",
+    "mtime": 1794662477.4085534,
+    "ast_hash": "ef0773c0ccf5c5c9374b670b44d27511",
     "semantic_hash": ""
   },
   "tests/test_french_model_capability.py": {

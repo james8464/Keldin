@@ -69,6 +69,10 @@ def publication(tmp_path, monkeypatch):
     monkeypatch.setattr(llm_runtime, "HostedLLMClient", lambda **kwargs: Client())
     monkeypatch.setattr(llm_runtime, "_model_snapshot", lambda args: "a" * 64)
     monkeypatch.setattr(
+        "Backend.Core.ollama_admission.require_local_ollama_capacity",
+        lambda *_args: None,
+    )
+    monkeypatch.setattr(
         llm_runtime,
         "emit",
         lambda kind, **fields: events.append({"type": kind, **fields}),
@@ -89,6 +93,30 @@ def test_local_memory_refusal_has_a_distinct_terminal_code(publication, monkeypa
     assert events[-1]["type"] == "error"
     assert events[-1]["code"] == "local_memory_unavailable"
     assert not any(event["type"] in {"done", "file"} for event in events)
+
+
+def test_ollama_memory_refusal_precedes_authoring(publication, monkeypatch):
+    from Backend.Core.ollama_admission import ResourceAdmissionError
+
+    subject, args, events = publication
+    calls = []
+
+    def refuse(url, model):
+        calls.append((url, model))
+        raise ResourceAdmissionError("Not enough memory")
+
+    monkeypatch.setattr(
+        "Backend.Core.ollama_admission.require_local_ollama_capacity", refuse
+    )
+    monkeypatch.setattr(
+        subject.llm_pipeline,
+        "generate",
+        lambda **kwargs: pytest.fail("Authoring started"),
+    )
+    assert subject.handle_generate_llm_assessment(args) == 1
+    assert calls == [(args.ollama_url, args.model)]
+    assert [event.get("code") for event in events] == ["local_memory_unavailable"]
+    assert not args.output.exists()
 
 
 @pytest.mark.parametrize("workers", [1, 2])
