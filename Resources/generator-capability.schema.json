@@ -22,6 +22,7 @@
     "python_path": {"$ref": "#/$defs/safePath"},
     "package": {"type": "string", "pattern": "^[a-z][a-z0-9_]*$"},
     "entry_point": {"type": "string", "pattern": "^[a-z][a-z0-9_.]*:[a-z][a-z0-9_]*$"},
+    "entry_point_contract": {"enum": ["keywords-v1", "request-v1"]},
     "syllabus_path": {"$ref": "#/$defs/safePath"},
     "subject_plugin": {"type": "string", "pattern": "^[a-z0-9-]+$"},
     "board_profile": {"type": "string", "pattern": "^[a-z0-9-]+$"},

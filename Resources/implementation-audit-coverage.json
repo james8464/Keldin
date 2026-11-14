@@ -1502,6 +1502,12 @@
       "review_evidence_sha256": "b7a3ff04f6a4a638cef56a16de250d8632a243968adb58aecc5b36d92fdd2755"
     },
     {
+      "path": "Backend/Core/generator_entry_points.py",
+      "classification": "maintained-source",
+      "status": "pending",
+      "reason": "No file-level semantic implementation review recorded in this ledger."
+    },
+    {
       "path": "Backend/Core/generator_registry.py",
       "classification": "maintained-source",
       "status": "pending",
@@ -1888,11 +1894,8 @@
     {
       "path": "Backend/Core/subject_plugins.py",
       "classification": "maintained-source",
-      "status": "reviewed",
-      "reason": "Complete file-level review at the recorded source hash; scope and limits are in the linked note. Not whole-project or live-quality certification.",
-      "source_sha256": "58d5480336582153f8511f87410732a1c26e92d8d7ceb7e226a0eff79e359fde",
-      "review_evidence": "docs/quality/shared-generation-boundary-audit.md",
-      "review_evidence_sha256": "10afd18fa24faad1a480e60634761cb46ebf9d6d32668062f3ef2f4ed8f0426f"
+      "status": "pending",
+      "reason": "No file-level semantic implementation review recorded in this ledger."
     },
     {
       "path": "Backend/Core/subjects/__init__.py",
@@ -2206,11 +2209,8 @@
     {
       "path": "Resources/business/aqa/generator/aqabizgen/cli.py",
       "classification": "maintained-source",
-      "status": "reviewed",
-      "reason": "Attributed prior complete-file EOF semantic review, not a fresh full read. Current 92-line source SHA and count match the explicit positive item nov7-entrypoint-eof-audit.json/files/0; exact provenance/ranges and limitations in tracked note. Complete selected entrypoint/model/date/syllabus leaf only. Active wrapper/standalone roles are distinguished in the cited row; no downstream runtime, official-date or syllabus-semantic certification. No execution, broad dependency, official-equivalence or whole-project-quality claim.",
-      "source_sha256": "0df49e3d1b36160b43a4977feef86fcebefc51dae5d9f78f25c797d2f4f79dd2",
-      "review_evidence": "docs/quality/attributed-eof-backfill-review-2026-11-07.md",
-      "review_evidence_sha256": "92d4635ed7b71056840a08929f060b7e4f7fa4a1476142c950761a291aff42a0"
+      "status": "pending",
+      "reason": "No file-level semantic implementation review recorded in this ledger."
     },
     {
       "path": "Resources/business/aqa/generator/aqabizgen/configs.py",
@@ -2623,11 +2623,8 @@
     {
       "path": "Resources/configured-generators/generator/configuredgen/cli.py",
       "classification": "maintained-source",
-      "status": "reviewed",
-      "reason": "Independent complete-file EOF review of dispatch, configured-role admission, deferred rendering and failure propagation. Dependencies were read only in scope; not paper or whole-project qualification.",
-      "source_sha256": "9a02e63d6e3307392c5764be11c25523f9dddbaee4a641ad6d5b0107966da0e4",
-      "review_evidence": "docs/quality/cli-dispatch-boundary-review.md",
-      "review_evidence_sha256": "49b70a3ee627724b19a1f396acc4aa4c73fd04571b07297e4d164fc0bee3f27f"
+      "status": "pending",
+      "reason": "No file-level semantic implementation review recorded in this ledger."
     },
     {
       "path": "Resources/configured-generators/generator/configuredgen/generator.py",
@@ -8245,11 +8242,8 @@
     {
       "path": "tests/test_generator_migration.py",
       "classification": "test",
-      "status": "reviewed",
-      "reason": "Complete file review with explicit registry and migration report case pairing; no live-paper qualification.",
-      "source_sha256": "1ce103a942f41bcbbcdee06c06dd908d64dc05ce07d7290f98cfe6dd5743a600",
-      "review_evidence": "docs/quality/generator-development-inventory-review.md",
-      "review_evidence_sha256": "302b1eee3bd00c35602f0a7d1212677a617756c87d706d839489e9d82cf9ce0f"
+      "status": "pending",
+      "reason": "No file-level semantic implementation review recorded in this ledger."
     },
     {
       "path": "tests/test_generator_registry.py",
@@ -9199,11 +9193,8 @@
     {
       "path": "tools/validate_generator_migration.py",
       "classification": "maintained-source",
-      "status": "reviewed",
-      "reason": "Complete EOF static review recorded; dependencies and runtime/model/qualification limits remain explicit.",
-      "source_sha256": "e9668ddefa377a0c749e3b61642722723ae559b4a46e670740a240daabe9a697",
-      "review_evidence": "docs/quality/model-download-and-packaging-input-review-2026-11-02.md",
-      "review_evidence_sha256": "9f13e6fbd83877c17dbad7659d266ce11619458437938f95242ecd585565908e"
+      "status": "pending",
+      "reason": "No file-level semantic implementation review recorded in this ledger."
     }
   ]
 }

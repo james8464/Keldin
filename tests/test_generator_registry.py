@@ -98,6 +98,16 @@ def test_schema_v3_family_metadata_migrates_deterministically() -> None:
     assert capability.board_profile == "aqa"
     assert capability.specification_version == "legacy-registry-v3"
     assert capability.blueprint_version == "legacy-registry-v3"
+    assert capability.entry_point_contract == "keywords-v1"
+
+
+@pytest.mark.parametrize("contract", [True, None, "request-v2"])
+def test_unrecognised_entry_point_contract_is_rejected(contract: object) -> None:
+    payload = json.loads(REGISTRY_PATH.read_text(encoding="utf-8"))
+    family = payload["families"][0] | {"entry_point_contract": contract}
+
+    with pytest.raises(ValueError, match="unsupported generator entry-point contract"):
+        _capability(family)
 
 
 def test_every_current_paper_has_truthful_qualification_levels() -> None:

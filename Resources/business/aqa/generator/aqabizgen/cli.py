@@ -14,6 +14,7 @@ from aqabizgen.render_pdf import (
 )
 from aqabizgen.syllabus import load_syllabus
 from Backend.Core.family_adapter import ArtifactSpec, FamilyAdapter, run_family_adapter
+from Backend.Core.generator_entry_points import FamilyGenerationRequest
 from Backend.Core.json_client import JSONGenerationClient
 from Backend.Core.model_recommendations import default_ollama_model
 
@@ -77,16 +78,33 @@ def generate_package(
     client: JSONGenerationClient | None = None,
     checkpoint_path: Path | None = None,
 ) -> dict[str, Path]:
+    return generate_request(
+        FamilyGenerationRequest(
+            paper=paper,
+            syllabus_path=syllabus_path,
+            output_dir=output_dir,
+            seed=seed,
+            model=model,
+            ollama_url=ollama_url,
+            dry_run=dry_run,
+            progress=progress,
+            client=client,
+            checkpoint_path=checkpoint_path,
+        )
+    )
+
+
+def generate_request(request: FamilyGenerationRequest) -> dict[str, Path]:
     return run_family_adapter(
         ADAPTER,
-        paper=paper,
-        syllabus_path=syllabus_path,
-        output_dir=output_dir,
-        seed=seed,
-        model=model,
-        ollama_url=ollama_url,
-        dry_run=dry_run,
-        progress=progress,
-        client=client,
-        checkpoint_path=checkpoint_path,
+        paper=request.paper,
+        syllabus_path=request.syllabus_path,
+        output_dir=request.output_dir,
+        seed=request.seed,
+        model=request.model,
+        ollama_url=request.ollama_url,
+        dry_run=request.dry_run,
+        progress=request.progress,
+        client=request.client,
+        checkpoint_path=request.checkpoint_path,
     )

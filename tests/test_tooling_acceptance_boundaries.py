@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import importlib.util
-import inspect
 import json
 from pathlib import Path
 
@@ -78,15 +77,12 @@ def test_generated_fail_closed_test_actually_calls_the_adapter(tmp_path, monkeyp
     )
     module = importlib.util.module_from_spec(specification)
     specification.loader.exec_module(module)
-    module.generate_package = lambda **_kwargs: {}
-    arguments = (
-        {"tmp_path": tmp_path / "output"}
-        if "tmp_path"
-        in inspect.signature(module.test_scaffold_is_fail_closed).parameters
-        else {}
-    )
+    output = tmp_path / "output"
+    output.mkdir()
+    module.test_scaffold_is_fail_closed(output)
+    monkeypatch.setattr(module, "generate_request", lambda _request: {})
     with pytest.raises(pytest.fail.Exception, match="DID NOT RAISE"):
-        module.test_scaffold_is_fail_closed(**arguments)
+        module.test_scaffold_is_fail_closed(output)
 
 
 def test_dependency_gate_states_its_actual_manifest_scope():

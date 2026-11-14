@@ -10,6 +10,7 @@ from Backend.Core.family_adapter import (
     FamilyAdapter,
     run_family_adapter,
 )
+from Backend.Core.generator_entry_points import FamilyGenerationRequest
 from Backend.Core.json_client import JSONGenerationClient
 from Backend.Core.model_recommendations import default_ollama_model
 from configuredgen.generator import build_paper
@@ -30,21 +31,37 @@ def generate_package(
     client: JSONGenerationClient | None = None,
     checkpoint_path: Path | None = None,
 ) -> dict[str, Path]:
-    syllabus = load_syllabus(syllabus_path)
-    specification = syllabus.paper(paper)
-    adapter = _adapter(syllabus, specification.id)
+    return generate_request(
+        FamilyGenerationRequest(
+            paper=paper,
+            syllabus_path=syllabus_path,
+            output_dir=output_dir,
+            seed=seed,
+            model=model,
+            ollama_url=ollama_url,
+            dry_run=dry_run,
+            progress=progress,
+            client=client,
+            checkpoint_path=checkpoint_path,
+        )
+    )
+
+
+def generate_request(request: FamilyGenerationRequest) -> dict[str, Path]:
+    syllabus = load_syllabus(request.syllabus_path)
+    adapter = _adapter(syllabus, request.paper)
     return run_family_adapter(
         adapter,
-        paper=paper,
-        syllabus_path=syllabus_path,
-        output_dir=output_dir,
-        seed=seed,
-        model=model,
-        ollama_url=ollama_url,
-        dry_run=dry_run,
-        progress=progress,
-        client=client,
-        checkpoint_path=checkpoint_path,
+        paper=request.paper,
+        syllabus_path=request.syllabus_path,
+        output_dir=request.output_dir,
+        seed=request.seed,
+        model=request.model,
+        ollama_url=request.ollama_url,
+        dry_run=request.dry_run,
+        progress=request.progress,
+        client=request.client,
+        checkpoint_path=request.checkpoint_path,
     )
 
 

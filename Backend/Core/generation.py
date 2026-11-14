@@ -4,19 +4,15 @@ from __future__ import annotations
 
 import argparse
 import hashlib
-import importlib
-import inspect
 import json
 import os as os
 import shutil
 import signal
 import subprocess
-import sys
 import tempfile
 import time as time
 import tomllib
 import traceback
-from collections.abc import Callable
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
@@ -42,6 +38,11 @@ from Backend.Core.events import (
     progress_emitter,
 )
 from Backend.Core.generation_diagnostics import save_failure_diagnostic
+from Backend.Core.generator_entry_points import (
+    FamilyGenerationRequest,
+    bind_generator_entry_point,
+    load_generator_entry_point,
+)
 from Backend.Core.generator_registry import (
     GeneratorCapability,
     PaperContract,
@@ -209,53 +210,45 @@ def _invoke_plugin(
     checkpoint_path: Path,
 ) -> dict[str, Path]:
     generator_root = REPO_ROOT / "Resources" / capability.python_path
-    if str(generator_root) not in sys.path:
-        sys.path.insert(0, str(generator_root))
-    entry_point = _load_entry_point(capability.entry_point)
-    parameters = inspect.signature(entry_point).parameters
-    candidate_arguments: dict[str, Any] = {
-        "paper": args.paper,
-        "syllabus_path": REPO_ROOT / "Resources" / capability.syllabus_path,
-        "output_dir": output_dir,
-        "seed": args.seed,
-        "model": args.model,
-        "ollama_url": args.ollama_url,
-        "dry_run": args.dry_run,
-        "progress": progress_emitter(),
-        "checkpoint_path": checkpoint_path,
-    }
-    if args.notes:
-        candidate_arguments["notes_source"] = Path(args.notes).expanduser()
-    if capability.uses_ai:
-        candidate_arguments["client"] = hosted_client(
+    entry_point = load_generator_entry_point(generator_root, capability.entry_point)
+    client = (
+        hosted_client(
             provider=args.provider,
             dry_run=args.dry_run,
             model=args.model,
             api_key=args.api_key,
             ollama_url=args.ollama_url,
         )
-    keyword_arguments = {
-        name: value for name, value in candidate_arguments.items() if name in parameters
-    }
-    missing = [
-        name
-        for name, parameter in parameters.items()
-        if parameter.default is inspect.Parameter.empty
-        and parameter.kind
-        in {inspect.Parameter.KEYWORD_ONLY, inspect.Parameter.POSITIONAL_OR_KEYWORD}
-        and name not in keyword_arguments
-    ]
-    if missing:
-        raise RuntimeError(
-            f"{capability.id} entry point requires unsupported arguments: {missing}"
-        )
+        if capability.uses_ai
+        else None
+    )
+    request = FamilyGenerationRequest(
+        paper=args.paper,
+        syllabus_path=REPO_ROOT / "Resources" / capability.syllabus_path,
+        output_dir=output_dir,
+        seed=args.seed,
+        model=args.model,
+        ollama_url=args.ollama_url,
+        dry_run=args.dry_run,
+        progress=progress_emitter(),
+        checkpoint_path=checkpoint_path,
+        notes_source=Path(args.notes).expanduser() if args.notes else None,
+        client=client,
+    )
 
+    generate = bind_generator_entry_point(
+        entry_point,
+        request,
+        contract=capability.entry_point_contract,
+        family_id=capability.id,
+        uses_ai=capability.uses_ai,
+    )
     emit_progress(
         f"Creating {capability.id} paper {args.paper}",
         stage="start",
         progress=0.02,
     )
-    result = entry_point(**keyword_arguments)
+    result = generate()
     if not isinstance(result, dict):
         raise TypeError(f"{capability.id} entry point did not return document paths")
     return {str(role): Path(path) for role, path in result.items()}
@@ -286,14 +279,6 @@ def checkpoint_path_for_job(
         / f"{args.subject}-paper-{args.paper}-{digest}.json"
     )
     return namespace.apply(path) if namespace is not None else path
-
-
-def _load_entry_point(value: str) -> Callable[..., dict[str, Path]]:
-    module_name, function_name = value.split(":", maxsplit=1)
-    function = getattr(importlib.import_module(module_name), function_name, None)
-    if not callable(function):
-        raise TypeError(f"generator entry point is not callable: {value}")
-    return function
 
 
 def finalize_generated_documents(

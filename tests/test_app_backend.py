@@ -168,11 +168,33 @@ def test_bundle_check_loads_every_advertised_generator() -> None:
     assert status["type"] == "bundle_status"
     assert status["healthy"] is True
     assert status["errors"] == []
-    assert len(status["generators"]) == 7
     from Backend.Core.france.expanded_pipeline import FAMILY_COUNT, VERSION
+    from Backend.Core.generator_registry import generator_subjects
 
+    assert status["generators"] == list(generator_subjects())
     assert status["french_case_families"] == FAMILY_COUNT
     assert status["french_prompt_version"] == VERSION
+
+
+def test_bundle_check_rejects_unavailable_declared_subject_engine(
+    monkeypatch, capsys
+) -> None:
+    from argparse import Namespace
+
+    from Backend.Core import cli
+    from Backend.Core.subject_plugins import discover_subject_plugin
+
+    def missing_computer_science(identifier):
+        if identifier == "computer-science":
+            raise ImportError("subject engine not bundled")
+        return discover_subject_plugin(identifier)
+
+    monkeypatch.setattr(cli, "discover_subject_plugin", missing_computer_science)
+    assert cli.handle_bundle_check(Namespace()) == 1
+    status = json.loads(capsys.readouterr().out.splitlines()[-1])
+    assert status["healthy"] is False
+    assert "computer_science" not in status["generators"]
+    assert any("subject engine not bundled" in error for error in status["errors"])
 
 
 @pytest.mark.parametrize("missing", ["fourth", "fifth", "catalogue", "typed"])

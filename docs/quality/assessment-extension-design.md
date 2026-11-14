@@ -94,9 +94,9 @@ These checks do not substitute for those reviews or a full repository audit.
   answer rules; measured exact and range templates still use page-count checks.
   Keep new question and marking rules in family modules, separate from PDF
   layout.
-- Give future family adapters an explicit request interface. Migrate one
-  family at a time and compare seeded output, event order and checkpoint
-  recovery before removing the existing signature adapter.
+- AQA Business and the configurable family use the typed request interface.
+  Migrate the other families separately and compare seeded output, event
+  order and checkpoint recovery before removing the keyword adapter.
 - Group tests by behaviour. Keep cheap validation failures in unit tests,
   with at least one CLI and frozen-build check per shared path. Remove a test
   only when its behaviour, failure modes and supported entry points have
@@ -104,6 +104,21 @@ These checks do not substitute for those reviews or a full repository audit.
 - Profile the active generation path before tuning it. Record wall time and
   peak memory for the same seed and options, separating PDF work from model
   time. Before adding a cache, state its bound, lifetime and invalidation rule.
+
+### Catalogue startup
+
+The catalogue validates subject identifiers without importing subject engines.
+An engine loads only when requested and is cached for the process lifetime.
+The cache is bounded by the fixed list of subject identifiers. Generation,
+bundle validation and the migration tool use the same entry-point loader.
+The bundle check still fails if an advertised engine cannot be loaded.
+
+In five fresh processes per version on the same Mac and Python installation,
+median catalogue startup fell from 0.23 s to 0.03 s and peak resident memory
+from 55.3 MiB to 19.9 MiB. CLI help fell from 0.43 s and 102.3 MiB to 0.24 s
+and 69.2 MiB. These are startup measurements, not generation benchmarks.
+The import-order tests now run two clean interpreters instead of fourteen;
+they still check each of the seven engine mappings in both orders.
 
 ### Paper history comparison
 

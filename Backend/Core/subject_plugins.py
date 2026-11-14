@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
+from functools import cache, partial
 from typing import Any
 
 from Backend.Core.subject_contracts import SubjectPlugin as SubjectPlugin
@@ -53,67 +55,87 @@ class ContractSubjectPlugin:
         }
 
 
-_PLUGINS: dict[str, SubjectPlugin] = {
-    identifier: ContractSubjectPlugin(identifier)
-    for identifier in ("accounting", "business", "computer-science", "economics")
+def _biology() -> SubjectPlugin:
+    from Backend.Core.subjects.biology import BiologyPlugin
+
+    return BiologyPlugin()
+
+
+def _chemistry() -> SubjectPlugin:
+    from Backend.Core.subjects.chemistry import ChemistryPlugin
+
+    return ChemistryPlugin()
+
+
+def _computer_science() -> SubjectPlugin:
+    from Backend.Core.subjects.computer_science import ComputerSciencePlugin
+
+    return ComputerSciencePlugin()
+
+
+def _essay(identifier: str) -> SubjectPlugin:
+    from Backend.Core.subjects.essay import EssaySubjectPlugin
+
+    return EssaySubjectPlugin(identifier)
+
+
+def _further_mathematics() -> SubjectPlugin:
+    from Backend.Core.subjects.mathematics import FurtherMathematicsPlugin
+
+    return FurtherMathematicsPlugin()
+
+
+def _mathematics() -> SubjectPlugin:
+    from Backend.Core.subjects.mathematics import MathematicsPlugin
+
+    return MathematicsPlugin()
+
+
+def _physics() -> SubjectPlugin:
+    from Backend.Core.subjects.physics import PhysicsPlugin
+
+    return PhysicsPlugin()
+
+
+# Keep imports explicit so the frozen helper includes the engines even though
+# reading the catalogue does not load them.
+_SUBJECT_FACTORIES: dict[str, Callable[[], SubjectPlugin]] = {
+    "accounting": partial(ContractSubjectPlugin, "accounting"),
+    "biology": _biology,
+    "business": partial(ContractSubjectPlugin, "business"),
+    "chemistry": _chemistry,
+    "computer-science": _computer_science,
+    "economics": partial(ContractSubjectPlugin, "economics"),
+    "english-literature": partial(_essay, "english-literature"),
+    "further-mathematics": _further_mathematics,
+    "geography": partial(_essay, "geography"),
+    "history": partial(_essay, "history"),
+    "mathematics": _mathematics,
+    "physics": _physics,
+    "psychology": partial(_essay, "psychology"),
+    "sociology": partial(_essay, "sociology"),
 }
 
 
-def register_subject_plugin(plugin: SubjectPlugin) -> None:
-    identifier = _normalise_identifier(plugin.id)
-    if identifier in _PLUGINS:
-        raise ValueError(f"subject plugin already registered: {identifier}")
-    _PLUGINS[identifier] = plugin
-
-
-def discover_subject_plugin(identifier: str) -> SubjectPlugin:
-    normalized = _normalise_identifier(identifier)
-    try:
-        return _PLUGINS[normalized]
-    except KeyError as error:
-        raise ValueError(f"unknown subject plugin: {identifier}") from error
-
-
-def subject_plugin_ids() -> tuple[str, ...]:
-    return tuple(sorted(_PLUGINS))
-
-
-def _normalise_identifier(identifier: str) -> str:
+def _registered_identifier(identifier: str) -> str:
     normalized = identifier.strip().lower()
-    if (
-        not normalized
-        or normalized.startswith(".")
-        or "/" in normalized
-        or "\\" in normalized
-        or ":" in normalized
-        or normalized.endswith(".py")
-    ):
+    if normalized not in _SUBJECT_FACTORIES:
         raise ValueError(f"unknown subject plugin: {identifier}")
     return normalized
 
 
-# Subject engines depend only on subject_contracts, never on this registry.
-from Backend.Core.subjects.biology import BiologyPlugin  # noqa: E402
-from Backend.Core.subjects.chemistry import ChemistryPlugin  # noqa: E402
-from Backend.Core.subjects.computer_science import ComputerSciencePlugin  # noqa: E402
-from Backend.Core.subjects.essay import EssaySubjectPlugin  # noqa: E402
-from Backend.Core.subjects.mathematics import (  # noqa: E402
-    FurtherMathematicsPlugin,
-    MathematicsPlugin,
-)
-from Backend.Core.subjects.physics import PhysicsPlugin  # noqa: E402
+def subject_plugin_ids() -> tuple[str, ...]:
+    return tuple(sorted(_SUBJECT_FACTORIES))
 
-_PLUGINS[MathematicsPlugin.id] = MathematicsPlugin()
-_PLUGINS[BiologyPlugin.id] = BiologyPlugin()
-_PLUGINS[ChemistryPlugin.id] = ChemistryPlugin()
-_PLUGINS[PhysicsPlugin.id] = PhysicsPlugin()
-_PLUGINS[ComputerSciencePlugin.id] = ComputerSciencePlugin()
-_PLUGINS[FurtherMathematicsPlugin.id] = FurtherMathematicsPlugin()
-for _essay_subject in (
-    "english-literature",
-    "geography",
-    "history",
-    "psychology",
-    "sociology",
-):
-    _PLUGINS[_essay_subject] = EssaySubjectPlugin(_essay_subject)
+
+def validate_subject_plugin(identifier: str) -> None:
+    _registered_identifier(identifier)
+
+
+@cache
+def _load_subject_plugin(identifier: str) -> SubjectPlugin:
+    return _SUBJECT_FACTORIES[identifier]()
+
+
+def discover_subject_plugin(identifier: str) -> SubjectPlugin:
+    return _load_subject_plugin(_registered_identifier(identifier))

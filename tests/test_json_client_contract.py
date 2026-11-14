@@ -1,9 +1,9 @@
 from __future__ import annotations
 
-import importlib
 import sys
 from dataclasses import replace
 from typing import get_args, get_type_hints
+from unittest.mock import patch
 
 import pytest
 
@@ -59,20 +59,34 @@ def test_adapter_annotations_retain_the_json_client_boundary():
     assert get_args(factory)[1] is JSONGenerationClient
 
 
-def test_every_dynamic_entrypoint_keeps_optional_client_signature():
+def test_every_dynamic_entrypoint_keeps_typed_client_boundary():
+    from Backend.Core.family_contracts import ProgressCallback
+    from Backend.Core.generator_entry_points import (
+        FamilyGenerationRequest,
+        load_generator_entry_point,
+    )
     from Backend.Core.generator_registry import generator_capabilities
     from Backend.Core.json_client import JSONGenerationClient
     from Backend.Core.paths import REPO_ROOT
 
+    request_hints = get_type_hints(
+        FamilyGenerationRequest,
+        localns={
+            "ProgressCallback": ProgressCallback,
+            "JSONGenerationClient": JSONGenerationClient,
+        },
+    )
+    assert request_hints["client"] == JSONGenerationClient | None
+
     for capability in generator_capabilities().values():
-        root = str(REPO_ROOT / "Resources" / capability.python_path)
-        sys.path.insert(0, root)
-        try:
-            module_name, function_name = capability.entry_point.split(":", 1)
-            function = getattr(importlib.import_module(module_name), function_name)
-            assert get_type_hints(function)["client"] == JSONGenerationClient | None
-        finally:
-            sys.path.remove(root)
+        root = REPO_ROOT / "Resources" / capability.python_path
+        with patch.object(sys, "path", sys.path.copy()):
+            function = load_generator_entry_point(root, capability.entry_point)
+        hints = get_type_hints(function)
+        if capability.entry_point_contract == "request-v1":
+            assert hints["request"] is FamilyGenerationRequest, capability.id
+        else:
+            assert hints["client"] == JSONGenerationClient | None, capability.id
 
 
 @pytest.mark.parametrize("supplied", [True, False])

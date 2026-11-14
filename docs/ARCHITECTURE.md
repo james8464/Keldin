@@ -97,6 +97,13 @@ The backend dispatcher, macOS capability model, bundle script, and tests all
 consume this record. Adding a family requires a registry entry and conforming
 entry point, not another hard-coded dispatch branch.
 
+Reading the catalogue validates subject identifiers without loading their
+engines. Use an existing subject engine when it fits. Add a factory to
+`Backend/Core/subject_plugins.py` only for a new domain engine. Keep its
+import explicit so the frozen helper can include it. The bundle check resolves
+each advertised family's engine and uses the same entry-point loader as the
+generation command and the migration tool.
+
 All seven current entry points are small adapters over
 `Backend.Core.family_adapter`. That boundary owns provider creation, durable
 checkpoints, independent item review, atomic role rendering, and assessment
@@ -183,10 +190,13 @@ drawings, images, overlap counts, and whether this narrow contract applied.
 ## Extension contract
 
 A family entry point returns `dict[str, Path]` and must include at least
-`question_paper`, `mark_scheme`, and `assessment_package`. It accepts the
-registry-dispatched paper ID, output directory, seed, preview flag, and the
-selected provider client. Family renderers may add source booklets or practical
-support files, but cannot weaken shared release validation.
+`question_paper`, `mark_scheme`, and `assessment_package`. New families should
+declare `"entry_point_contract": "request-v1"` and accept a single
+`FamilyGenerationRequest`. The bridge owns provider selection and sends the
+prepared client, paper ID, paths, seed and preview flag. Older family entry
+points keep their keyword contract by default. Family renderers may add
+source booklets or practical support files, but cannot weaken shared release
+validation.
 
 `tools/live_generation_matrix.py` derives its job list and expected roles from
 the same registry. A new advertised family therefore enters app navigation,
