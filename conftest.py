@@ -3,20 +3,50 @@
 from __future__ import annotations
 
 import os
+import sys
 from pathlib import Path
 
 import pytest
 
+from tools.generator_development import generator_roots
+
 ROOT = Path(__file__).resolve().parent
-ECONOMICS_ROOT = ROOT / "Resources" / "economics" / "edexcel-a" / "generator"
-AQA_ECONOMICS_ROOT = ROOT / "Resources" / "economics" / "aqa" / "generator"
-OCR_ECONOMICS_ROOT = ROOT / "Resources" / "economics" / "ocr" / "generator"
-COMPUTER_SCIENCE_ROOT = ROOT / "Resources" / "computer-science" / "aqa" / "generator"
-OCR_COMPUTER_SCIENCE_ROOT = (
-    ROOT / "Resources" / "computer-science" / "ocr" / "generator"
-)
-BUSINESS_ROOT = ROOT / "Resources" / "business" / "aqa" / "generator"
-ACCOUNTING_ROOT = ROOT / "Resources" / "accounting" / "aqa" / "generator"
+_GENERATOR_TESTS = pytest.StashKey[tuple[tuple[Path, ...], frozenset[Path]]]()
+_SUBPROCESS_PATH = pytest.StashKey[str]()
+
+
+def pytest_configure(config: pytest.Config) -> None:
+    roots = generator_roots(ROOT)
+    test_roots = tuple(root / "tests" for root in roots)
+    missing = [str(root) for root in test_roots if not root.is_dir()]
+    if missing:
+        raise pytest.UsageError(
+            "Missing advertised generator tests: " + ", ".join(missing)
+        )
+    ancestors = frozenset(parent for root in test_roots for parent in root.parents)
+    config.stash[_GENERATOR_TESTS] = (test_roots, ancestors)
+    python_path = tuple(map(str, (ROOT, *roots)))
+    config.stash[_SUBPROCESS_PATH] = os.pathsep.join(python_path)
+    added = [location for location in python_path if location not in sys.path]
+    sys.path[:0] = added
+
+    def clean_paths() -> None:
+        for location in added:
+            if location in sys.path:
+                sys.path.remove(location)
+
+    config.add_cleanup(clean_paths)
+
+
+def pytest_ignore_collect(collection_path: Path, config: pytest.Config) -> bool | None:
+    if not collection_path.is_relative_to(ROOT / "Resources"):
+        return None
+    test_roots, ancestors = config.stash[_GENERATOR_TESTS]
+    if collection_path in ancestors or any(
+        collection_path.is_relative_to(root) for root in test_roots
+    ):
+        return None
+    return True
 
 
 @pytest.fixture
@@ -36,35 +66,10 @@ def mlx_snapshot(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
 def generator_working_directory(
     request: pytest.FixtureRequest, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    test_path = Path(str(request.fspath)).resolve()
-    if ECONOMICS_ROOT in test_path.parents:
-        working_directory = ECONOMICS_ROOT
-    elif AQA_ECONOMICS_ROOT in test_path.parents:
-        working_directory = AQA_ECONOMICS_ROOT
-    elif OCR_ECONOMICS_ROOT in test_path.parents:
-        working_directory = OCR_ECONOMICS_ROOT
-    elif COMPUTER_SCIENCE_ROOT in test_path.parents:
-        working_directory = COMPUTER_SCIENCE_ROOT
-    elif OCR_COMPUTER_SCIENCE_ROOT in test_path.parents:
-        working_directory = OCR_COMPUTER_SCIENCE_ROOT
-    elif BUSINESS_ROOT in test_path.parents:
-        working_directory = BUSINESS_ROOT
-    elif ACCOUNTING_ROOT in test_path.parents:
-        working_directory = ACCOUNTING_ROOT
-    else:
-        working_directory = ROOT
-
-    monkeypatch.chdir(working_directory)
-    python_path = os.pathsep.join(
-        (
-            str(ROOT),
-            str(ECONOMICS_ROOT),
-            str(AQA_ECONOMICS_ROOT),
-            str(OCR_ECONOMICS_ROOT),
-            str(COMPUTER_SCIENCE_ROOT),
-            str(OCR_COMPUTER_SCIENCE_ROOT),
-            str(BUSINESS_ROOT),
-            str(ACCOUNTING_ROOT),
-        )
+    test_path = request.path
+    test_roots, _ = request.config.stash[_GENERATOR_TESTS]
+    working_directory = next(
+        (root.parent for root in test_roots if test_path.is_relative_to(root)), ROOT
     )
-    monkeypatch.setenv("PYTHONPATH", python_path)
+    monkeypatch.chdir(working_directory)
+    monkeypatch.setenv("PYTHONPATH", request.config.stash[_SUBPROCESS_PATH])

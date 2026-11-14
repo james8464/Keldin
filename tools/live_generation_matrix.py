@@ -9,6 +9,7 @@ import json
 import os
 import signal
 import sys
+import tempfile
 import time
 import urllib.error
 import urllib.request
@@ -147,18 +148,10 @@ def run_matrix(
         if resume:
             previous = _resumable_result(result_path, request_identity=request_identity)
             if previous is not None:
-                qualification_path = previous.get("qualification_manifest")
-                if (
-                    not qualification_path
-                    or not Path(str(qualification_path)).is_file()
-                ):
-                    qualification_path = _write_qualification_manifest(
-                        job=job,
-                        result=previous,
-                        result_path=result_path,
-                        run_dir=run_dir,
-                        output_root=output_root,
-                    )
+                qualification_path = _resume_qualification_manifest(
+                    job, previous, run_dir, output_root
+                )
+                if previous.get("qualification_manifest") != str(qualification_path):
                     previous["qualification_manifest"] = str(qualification_path)
                     write_json_atomically(result_path, previous)
                 print(f"[{index + 1}/{len(jobs)}] {job.id}: already passed", flush=True)
@@ -411,14 +404,14 @@ def _save_matrix_report(
             result["errors"].append(
                 "qualification evidence is stale, incomplete or unverifiable; rerun this route"
             )
+        # Later jobs must not cause an edited record to enter the final
+        # aggregate. Preserve earlier evidence even if a new check fails.
+        manifest = str(
+            _resume_qualification_manifest(job, result, run_dir, output_root)
+        )
+        if not result["passed"] or result.get("qualification_manifest") != manifest:
+            result["qualification_manifest"] = manifest
             write_json_atomically(result_path, result, ensure_ascii=True)
-            _write_qualification_manifest(
-                job=job,
-                result=result,
-                result_path=result_path,
-                run_dir=run_dir,
-                output_root=output_root,
-            )
     passed_count = sum(bool(result["passed"]) for result in results)
     report = {
         "schema_version": 1,
@@ -754,26 +747,39 @@ def _process_failure_message(
     return f"backend exited with status {return_code}"
 
 
-def _write_qualification_manifest(
+def _qualification_manifest(
     *,
     job: MatrixJob,
     result: dict[str, Any],
-    result_path: Path,
     run_dir: Path,
     output_root: Path,
-) -> Path:
+    verified_artifacts: bool = False,
+) -> QualificationManifest:
     package = _read_package_manifest(result.get("files", {}).get("package_manifest"))
     inputs = package.get("inputs", {})
     generator = package.get("generator", {})
     backend = package.get("backend", {})
-    passed = bool(result["passed"])
     running = result.get("status") == "running"
-    generation_passed = bool(result.get("generation_passed", passed))
-    artifacts = [
-        ArtifactEvidence.from_path(role, Path(path))
-        for role, path in result.get("files", {}).items()
-        if Path(path).is_file()
-    ]
+    generation_passed = result.get("generation_passed", result["passed"]) is True
+    demand_passed = result.get("reference_demand_passed") is True
+    artifacts = []
+    for role, value in result.get("files", {}).items():
+        path = Path(value)
+        if not path.is_file():
+            continue
+        # The resumed result was checked against both the event paths and file
+        # hashes. Do not reread the same PDFs merely to build another receipt.
+        artifact = (
+            ArtifactEvidence(
+                role=role,
+                filename=path.name,
+                sha256=result["artifact_sha256"][role],
+                bytes=path.stat().st_size,
+            )
+            if verified_artifacts
+            else ArtifactEvidence.from_path(role, path)
+        )
+        artifacts.append(artifact)
     events_path = run_dir / "events.jsonl"
     evidence = [
         EvidenceRecord(
@@ -784,14 +790,15 @@ def _write_qualification_manifest(
         )
     ]
     unavailable = "not-recorded"
-    manifest = QualificationManifest(
+    identity = result["request_identity"]
+    return QualificationManifest(
         generator_id=job.family_id,
         paper_id=job.paper,
-        seed=int(result["seed"]),
+        seed=identity["seed"],
         model=ModelIdentity(
-            provider=result.get("provider"),
-            name=result.get("model"),
-            digest=result.get("model_digest"),
+            provider=identity["provider"],
+            name=identity["model"],
+            digest=identity["model_digest"],
         ),
         versions=VersionIdentity(
             contract=str(inputs.get("assessment_schema", unavailable)),
@@ -821,7 +828,7 @@ def _write_qualification_manifest(
                 GateState.NOT_RUN
                 if running
                 else GateState.PASSED
-                if result.get("reference_demand_passed")
+                if demand_passed
                 else GateState.FAILED
             ),
             "visual": GateState.NOT_RUN,
@@ -836,9 +843,68 @@ def _write_qualification_manifest(
         },
         created_at=datetime.now(UTC),
     )
+
+
+def _write_qualification_manifest(
+    *,
+    job: MatrixJob,
+    result: dict[str, Any],
+    result_path: Path,
+    run_dir: Path,
+    output_root: Path,
+) -> Path:
+    manifest = _qualification_manifest(
+        job=job, result=result, run_dir=run_dir, output_root=output_root
+    )
     path = result_path.with_name("qualification-manifest.json")
     manifest.save(path)
     return path
+
+
+def _resume_qualification_manifest(
+    job: MatrixJob, result: dict[str, Any], run_dir: Path, output_root: Path
+) -> Path:
+    """Recover automation evidence without discarding an existing review."""
+    expected = _qualification_manifest(
+        job=job,
+        result=result,
+        run_dir=run_dir,
+        output_root=output_root,
+        verified_artifacts=result["passed"] is True,
+    )
+    canonical = run_dir / "qualification-manifest.json"
+    value = result.get("qualification_manifest")
+    recorded = Path(value) if isinstance(value, str) else canonical
+    for candidate in dict.fromkeys((recorded, canonical)):
+        if (
+            candidate.parent != run_dir
+            or not candidate.name.startswith("qualification-manifest")
+            or candidate.suffix != ".json"
+            or candidate.is_symlink()
+        ):
+            continue
+        try:
+            observed = QualificationManifest.load(candidate)
+        except (OSError, ValueError):
+            continue
+        if observed.model_dump(exclude={"created_at"}) == expected.model_dump(
+            exclude={"created_at"}
+        ):
+            return candidate
+    if not canonical.exists() and not canonical.is_symlink():
+        expected.save(canonical)
+        return canonical
+    descriptor, name = tempfile.mkstemp(
+        prefix="qualification-manifest-recovered-", suffix=".json", dir=run_dir
+    )
+    os.close(descriptor)
+    recovered = Path(name)
+    try:
+        expected.save(recovered)
+    except BaseException:
+        recovered.unlink(missing_ok=True)
+        raise
+    return recovered
 
 
 def _write_run_qualification_manifest(

@@ -15,7 +15,12 @@ def test_all_current_families_pass_declarative_migration_validation() -> None:
 
     reports = validator.validate_all()
 
-    assert len(reports) == 7
+    expected_ids = {
+        capability["id"] for capability in validator.advertised_capabilities()
+    }
+    assert expected_ids
+    assert {report.family_id for report in reports} == expected_ids
+    assert len(reports) == len(expected_ids)
     assert all(report.passed for report in reports), {
         report.family_id: [issue.code for issue in report.issues]
         for report in reports

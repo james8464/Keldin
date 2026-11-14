@@ -35,6 +35,14 @@ an existing family until its prior acceptance fixtures still pass.
    may also declare a `checkpoint_namespace`: its identity key and version
    belong to the family. The shared runner should not branch on a subject ID.
    Preserve existing checkpoint names and identities during a refactor.
+   Keep family tests in the generator's `tests/` directory. Test collection,
+   subprocess imports and both dependency installers use the advertised
+   registry paths. Do not add the family to pytest or CI by hand. Unadvertised
+   modules are excluded from those default paths.
+   If a family links a calibration report, add its evidence case to
+   `tests/test_difficulty_calibration.py`. Keep any checks specific to the
+   report's format or source, and do not treat structural checks as learner
+   calibration.
 2. Keep paper-specific values in rules and source data. Keep calculations,
    credited answers and subject validators in the subject module, separate
    from PDF layout and AI transport. Prefer an existing family adapter to a

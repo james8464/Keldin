@@ -16,6 +16,7 @@ from typing import Any
 import pymupdf as fitz
 
 from Backend.Core.paths import REPO_ROOT
+from Backend.Core.pdf_text import TEXT_DICT_WITHOUT_IMAGES
 
 CONTROLLED_FONT_PREFIXES = {
     "economics": (
@@ -189,7 +190,9 @@ def _font_evidence(document: fitz.Document) -> list[dict[str, Any]]:
     for page in document:
         used_fonts = {
             _normalise_font(str(span.get("font", "")))
-            for block in page.get_text("dict").get("blocks", [])
+            for block in page.get_text("dict", flags=TEXT_DICT_WITHOUT_IMAGES).get(
+                "blocks", []
+            )
             if block.get("type") == 0
             for line in block.get("lines", [])
             for span in line.get("spans", [])
@@ -725,7 +728,10 @@ def validate_pdf_for_release(
             page_has_text = False
             page_characters = 0
             text_spans: list[tuple[str, fitz.Rect]] = []
-            for block in page.get_text("dict").get("blocks", []):
+            # Image geometry and DPI are checked separately, without image bytes.
+            for block in page.get_text("dict", flags=TEXT_DICT_WITHOUT_IMAGES).get(
+                "blocks", []
+            ):
                 for line in block.get("lines", []):
                     for span in line.get("spans", []):
                         text = str(span.get("text", ""))

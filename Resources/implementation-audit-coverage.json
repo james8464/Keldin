@@ -119,10 +119,10 @@
       "path": ".github/workflows/ci.yml",
       "classification": "configuration-or-runtime-data",
       "status": "reviewed",
-      "reason": "Explicit completed EOF or documented full baseline plus entire delta review; source ownership, retry or required-check preservation and reviewer attribution are bounded in the evidence.",
-      "source_sha256": "71c1904866032c85045edadffabe9df5c375495448b5ac42675f9c107e098985",
-      "review_evidence": "docs/quality/macos-backend-runner-capacity-review-2026-11-02.md",
-      "review_evidence_sha256": "234ce7506ecd1286d4a54e91ed3e2e655c13a931e7dd3fc21ee35a49af98dc1e"
+      "reason": "Complete workflow read and scoped install-command delta review; job names and required gates are unchanged.",
+      "source_sha256": "d568366a44929e6701c1275fcb8e3578dcff8a8fe665360db067e97b1d9aefb8",
+      "review_evidence": "docs/quality/generator-development-inventory-review.md",
+      "review_evidence_sha256": "302b1eee3bd00c35602f0a7d1212677a617756c87d706d839489e9d82cf9ce0f"
     },
     {
       "path": ".gitignore",
@@ -1754,19 +1754,19 @@
       "path": "Backend/Core/pdf_text.py",
       "classification": "maintained-source",
       "status": "reviewed",
-      "reason": "Complete-file semantic review within the documented scope, with exact-byte evidence; remaining release gates and broader project audit are separate.",
-      "source_sha256": "40e982b1cda2415dc50c7b9c4bcee56a80590af378dcd893917c116637998b55",
-      "review_evidence": "docs/quality/release-safety-python-review-2026-10-29.md",
-      "review_evidence_sha256": "b997baa2bc32df2ea3571e6453175065c54bad7174c67d459bb54cfb53af9809"
+      "reason": "Complete current text/font module review. Text-only image flag preserves font extraction; evidence does not cover arbitrary PDF reading order.",
+      "source_sha256": "e38c7b4472e8bd70de329787d24f6699018a20a1bcabc32eb462cf5f2afbf742",
+      "review_evidence": "docs/quality/pdf-text-inspection-memory-review.md",
+      "review_evidence_sha256": "6d1791c9c5ded24228f90cbd0d28464bebe14c8190a8e4a6429b103df33beb36"
     },
     {
       "path": "Backend/Core/pdf_validation.py",
       "classification": "maintained-source",
       "status": "reviewed",
-      "reason": "Prior full-file baseline and geometry review extended by complete widget-clearance delta, call-site and test review. Independent review, rotation/crop/filled-field controls and actual retained covered-text refusal passed. This is bounded layout admission, not full print safety or paper-quality qualification.",
-      "source_sha256": "01ae5b27da03669c1ef41d11604c3f178d14e0abdc55e2df05ce0f4f9adfe234",
-      "review_evidence": "docs/quality/answer-field-clearance-review.md",
-      "review_evidence_sha256": "328fa48c5bc800695ba936748766ae885d29062b1f825bd7216c4794cd29823c"
+      "reason": "Existing complete baseline (answer-field-clearance review) plus complete text extraction delta; image resolution, positions, visible marks and explicit padding checks remain separate.",
+      "source_sha256": "558e10e939519c9768c9dc3423b99aae12453b1ddd919e79477a0dfd12f935cd",
+      "review_evidence": "docs/quality/pdf-text-inspection-memory-review.md",
+      "review_evidence_sha256": "6d1791c9c5ded24228f90cbd0d28464bebe14c8190a8e4a6429b103df33beb36"
     },
     {
       "path": "Backend/Core/preview_presentation.py",
@@ -1813,11 +1813,8 @@
     {
       "path": "Backend/Core/reference_demand.py",
       "classification": "maintained-source",
-      "status": "reviewed",
-      "reason": "Reference-demand reviewer read original 867 lines through EOF; author, root and independent reviewer reviewed the exact two-line collision check and complete new tests. Composite review pinned to current 869 lines; root did not read the complete original module. No live paper-quality guarantee.",
-      "source_sha256": "3066ce169e5c8b254d4ac265be499d8a3e68e5dfe81df24e6698113c5f3ac95c",
-      "review_evidence": "docs/quality/reference-and-slot-boundary-review.md",
-      "review_evidence_sha256": "ff98e4bb5e3ec2be7218c3f16bc6ecef8cc83426408de1a1a202fb7228c0ec6b"
+      "status": "pending",
+      "reason": "No file-level semantic implementation review recorded in this ledger."
     },
     {
       "path": "Backend/Core/reference_evidence.py",
@@ -3487,8 +3484,11 @@
     {
       "path": "conftest.py",
       "classification": "maintained-source",
-      "status": "pending",
-      "reason": "No file-level semantic implementation review recorded in this ledger."
+      "status": "reviewed",
+      "reason": "Complete root fixture and collection-hook review; synthetic subprocess discovery, cwd, import and hidden-family controls.",
+      "source_sha256": "286405fd60ada6cfff5073d7feb9398ec528f8b570e421bc55fd30d4f0ac6900",
+      "review_evidence": "docs/quality/generator-development-inventory-review.md",
+      "review_evidence_sha256": "302b1eee3bd00c35602f0a7d1212677a617756c87d706d839489e9d82cf9ce0f"
     },
     {
       "path": "docs/ARCHITECTURE.md",
@@ -3774,6 +3774,12 @@
     },
     {
       "path": "docs/quality/cached-mlx-preparation-and-solver-audit-2026-11-03.md",
+      "classification": "historical-evidence",
+      "status": "excluded",
+      "reason": "Retained diagnostic/review evidence, not maintained executable implementation; exclusion does not certify its claims."
+    },
+    {
+      "path": "docs/quality/calibration-test-consolidation-review.md",
       "classification": "historical-evidence",
       "status": "excluded",
       "reason": "Retained diagnostic/review evidence, not maintained executable implementation; exclusion does not certify its claims."
@@ -4451,6 +4457,12 @@
       "reason": "Retained diagnostic/review evidence, not maintained executable implementation; exclusion does not certify its claims."
     },
     {
+      "path": "docs/quality/generator-development-inventory-review.md",
+      "classification": "historical-evidence",
+      "status": "excluded",
+      "reason": "Retained diagnostic/review evidence, not maintained executable implementation; exclusion does not certify its claims."
+    },
+    {
       "path": "docs/quality/hosted-and-french-full-file-review-2026-10-30.md",
       "classification": "historical-evidence",
       "status": "excluded",
@@ -4554,6 +4566,12 @@
     },
     {
       "path": "docs/quality/macro-equilibrium-and-fiscal-geometry-review.md",
+      "classification": "historical-evidence",
+      "status": "excluded",
+      "reason": "Retained diagnostic/review evidence, not maintained executable implementation; exclusion does not certify its claims."
+    },
+    {
+      "path": "docs/quality/matrix-manifest-evidence-review.md",
       "classification": "historical-evidence",
       "status": "excluded",
       "reason": "Retained diagnostic/review evidence, not maintained executable implementation; exclusion does not certify its claims."
@@ -4854,6 +4872,12 @@
     },
     {
       "path": "docs/quality/pdf-loading-isolation-review.md",
+      "classification": "historical-evidence",
+      "status": "excluded",
+      "reason": "Retained diagnostic/review evidence, not maintained executable implementation; exclusion does not certify its claims."
+    },
+    {
+      "path": "docs/quality/pdf-text-inspection-memory-review.md",
       "classification": "historical-evidence",
       "status": "excluded",
       "reason": "Retained diagnostic/review evidence, not maintained executable implementation; exclusion does not certify its claims."
@@ -6554,10 +6578,10 @@
       "path": "macOS/scripts/bootstrap_backend.sh",
       "classification": "maintained-source",
       "status": "reviewed",
-      "reason": "Complete EOF static review recorded; dependencies and runtime/model/qualification limits remain explicit.",
-      "source_sha256": "820536924577dcedc980bd55800f17e91f9f85b22ea824db456512631a11122a",
-      "review_evidence": "docs/quality/model-download-and-packaging-input-review-2026-11-02.md",
-      "review_evidence_sha256": "9f13e6fbd83877c17dbad7659d266ce11619458437938f95242ecd585565908e"
+      "reason": "Complete bootstrap review; virtual environment setup and installer arguments exercised against local stand-ins.",
+      "source_sha256": "f85a7ce5fc4892200c32d7d6bcbe0028e96657cc2362147a37555184f5556750",
+      "review_evidence": "docs/quality/generator-development-inventory-review.md",
+      "review_evidence_sha256": "302b1eee3bd00c35602f0a7d1212677a617756c87d706d839489e9d82cf9ce0f"
     },
     {
       "path": "macOS/scripts/build_apple_intelligence.sh",
@@ -6641,10 +6665,10 @@
       "path": "pytest.ini",
       "classification": "configuration-or-runtime-data",
       "status": "reviewed",
-      "reason": "Root complete 20-line EOF review and bounded import/export or test-discovery review; exact bytes rechecked in integration worktree. Imported dependency implementations, model quality and final release gates remain separate.",
-      "source_sha256": "b15224b7fbca53313c819b34b0e3e3c6e1a2e349d18ae1dafadaa54ab185de35",
-      "review_evidence": "docs/quality/entrypoint-topic-evidence-review.md",
-      "review_evidence_sha256": "dff7a5c51d4b12804c7ac1a1c0803fc26b0fd494344c4fe888a6bcdf41bd23f8"
+      "reason": "Complete collection configuration read and before/after test identity comparison.",
+      "source_sha256": "2a667089c7a7b5c7aa55ba1b45ee33495df3a7ff30696b30a9c74eb3d47a0da8",
+      "review_evidence": "docs/quality/generator-development-inventory-review.md",
+      "review_evidence_sha256": "302b1eee3bd00c35602f0a7d1212677a617756c87d706d839489e9d82cf9ce0f"
     },
     {
       "path": "requirements-build.txt",
@@ -6828,18 +6852,6 @@
     },
     {
       "path": "tests/test_apple_owned_helper_shutdown.py",
-      "classification": "test",
-      "status": "pending",
-      "reason": "No file-level semantic implementation review recorded in this ledger."
-    },
-    {
-      "path": "tests/test_aqa_accounting_calibration.py",
-      "classification": "test",
-      "status": "pending",
-      "reason": "No file-level semantic implementation review recorded in this ledger."
-    },
-    {
-      "path": "tests/test_aqa_business_calibration.py",
       "classification": "test",
       "status": "pending",
       "reason": "No file-level semantic implementation review recorded in this ledger."
@@ -7228,8 +7240,11 @@
     {
       "path": "tests/test_difficulty_calibration.py",
       "classification": "test",
-      "status": "pending",
-      "reason": "No file-level semantic implementation review recorded in this ledger."
+      "status": "reviewed",
+      "reason": "Complete test and replacement review covering all five linked reports, with explicit evidence boundaries and per-family cases.",
+      "source_sha256": "3c785e5f39787d5e7f3f5859ef13e4ac7f5d41da3ebb674059c311c2f638ae52",
+      "review_evidence": "docs/quality/calibration-test-consolidation-review.md",
+      "review_evidence_sha256": "e5a1aaa612e5cfe9b99d0e282688e6bce2e6750aebc22c1b7b52ade2bb57bcbb"
     },
     {
       "path": "tests/test_document_dsl.py",
@@ -8389,14 +8404,20 @@
     {
       "path": "tests/test_generator_configuration_parity.py",
       "classification": "test",
-      "status": "pending",
-      "reason": "No file-level semantic implementation review recorded in this ledger."
+      "status": "reviewed",
+      "reason": "Complete behaviour-test review; synthetic collection, subprocess imports, pinned installer sets and invalid-path controls.",
+      "source_sha256": "b7ba36a23fb7bbe43aeb61f25577efdf757b0c4bcf727cf429cb1f627b31bd41",
+      "review_evidence": "docs/quality/generator-development-inventory-review.md",
+      "review_evidence_sha256": "302b1eee3bd00c35602f0a7d1212677a617756c87d706d839489e9d82cf9ce0f"
     },
     {
       "path": "tests/test_generator_migration.py",
       "classification": "test",
-      "status": "pending",
-      "reason": "No file-level semantic implementation review recorded in this ledger."
+      "status": "reviewed",
+      "reason": "Complete file review with explicit registry and migration report case pairing; no live-paper qualification.",
+      "source_sha256": "1ce103a942f41bcbbcdee06c06dd908d64dc05ce07d7290f98cfe6dd5743a600",
+      "review_evidence": "docs/quality/generator-development-inventory-review.md",
+      "review_evidence_sha256": "302b1eee3bd00c35602f0a7d1212677a617756c87d706d839489e9d82cf9ce0f"
     },
     {
       "path": "tests/test_generator_registry.py",
@@ -8675,12 +8696,6 @@
       "reason": "No file-level semantic implementation review recorded in this ledger."
     },
     {
-      "path": "tests/test_ocr_computer_science_calibration.py",
-      "classification": "test",
-      "status": "pending",
-      "reason": "No file-level semantic implementation review recorded in this ledger."
-    },
-    {
       "path": "tests/test_ocr_cs_render_immutability.py",
       "classification": "test",
       "status": "reviewed",
@@ -8688,12 +8703,6 @@
       "source_sha256": "c01258a52bbfd8dfa24709d3098535ba1bae3c563cae25ca226c5feef2bd0e42",
       "review_evidence": "docs/quality/renderer-eof-audit-and-release-follow-ups.md",
       "review_evidence_sha256": "bb98a3b38c4795e8b83ad544940570d72884305e0cb6edbe836c7081490fe8f6"
-    },
-    {
-      "path": "tests/test_ocr_economics_calibration.py",
-      "classification": "test",
-      "status": "pending",
-      "reason": "No file-level semantic implementation review recorded in this ledger."
     },
     {
       "path": "tests/test_ocr_economics_printed_credit.py",
@@ -8794,11 +8803,8 @@
     {
       "path": "tests/test_pdf_validation.py",
       "classification": "test",
-      "status": "reviewed",
-      "reason": "Complete baseline EOF and entire final delta reviewed; owned red and green render-integrity fixtures, intentional-blank replay and bounded pixel-budget controls.",
-      "source_sha256": "d3d57ba2f016ddbb3a2e8b697c7cbbbc59691054bcb78ef1adc3d3d7e97664a6",
-      "review_evidence": "docs/quality/pdf-visible-page-review-2026-11-03.md",
-      "review_evidence_sha256": "8b5ec3b73e37822f9941734681d6872c1db4af688e6e5f128818a3fc0cbe1f60"
+      "status": "pending",
+      "reason": "No file-level semantic implementation review recorded in this ledger."
     },
     {
       "path": "tests/test_pdf_widget_clearance.py",
@@ -8895,6 +8901,12 @@
       "source_sha256": "6be17c84d9df7549b81f448d00ac46dbc592028f2370efa7f4662de6abdabb18",
       "review_evidence": "docs/quality/reference-evidence-eof-review.md",
       "review_evidence_sha256": "4416890da66204aeb8968a576e827b8df93936a3884d5903ace3c16404873061"
+    },
+    {
+      "path": "tests/test_reference_profile_reads.py",
+      "classification": "test",
+      "status": "pending",
+      "reason": "No file-level semantic implementation review recorded in this ledger."
     },
     {
       "path": "tests/test_release_compliance.py",
@@ -9231,6 +9243,15 @@
       "source_sha256": "653ee3c0b1cdcd411df0ae250676d4519ad8deab2e5a7f003eae5d4df8a43f1c",
       "review_evidence": "docs/quality/tooling-file-review-batch-2-2026-10-28.md",
       "review_evidence_sha256": "5055be3d7421e1e582497896542594cb2359172304511e22a2811c6c4eff0439"
+    },
+    {
+      "path": "tools/generator_development.py",
+      "classification": "maintained-source",
+      "status": "reviewed",
+      "reason": "Complete standard-library reader and installer review; registry exclusions, argument construction, invalid paths and requirements scope verified.",
+      "source_sha256": "7107625b4ea9b7a0ebe3a55b15af458a5db8e8345f6369db44304909f89c829d",
+      "review_evidence": "docs/quality/generator-development-inventory-review.md",
+      "review_evidence_sha256": "302b1eee3bd00c35602f0a7d1212677a617756c87d706d839489e9d82cf9ce0f"
     },
     {
       "path": "tools/live_generation_matrix.py",
