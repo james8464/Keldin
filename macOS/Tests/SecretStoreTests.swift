@@ -472,7 +472,7 @@ final class SecretStoreTests: XCTestCase {
         let defaults = isolatedDefaults()
         defaults.set(AIProvider.openAI.rawValue, forKey: AppStorageKey.aiProvider)
         defaults.set(true, forKey: AppStorageKey.hasSeenWelcome)
-        defaults.set(true, forKey: AppStorageKey.hostedAIConsentAccepted)
+        defaults.set(AppDefaults.openAIConsentVersion, forKey: AppStorageKey.openAIConsentVersion)
         defaults.set(false, forKey: AppStorageKey.notificationsEnabled)
         let history = FileManager.default.temporaryDirectory.appendingPathComponent("KeldinSecretTests-\(UUID().uuidString)")
         addTeardownBlock { try? FileManager.default.removeItem(at: history) }
