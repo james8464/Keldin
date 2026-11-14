@@ -1,6 +1,12 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Admissions": {"localizations":{"fr":{"stringUnit":{"state":"translated","value":"Admissions"}}}},
+    "Admissions Tests": {"localizations":{"fr":{"stringUnit":{"state":"translated","value":"Tests d’admission"}}}},
+    "French NSI generation is coming soon.": {"localizations":{"fr":{"stringUnit":{"state":"translated","value":"La génération de sujets de NSI sera bientôt disponible."}}}},
+    "Official preparation resources": {"localizations":{"fr":{"stringUnit":{"state":"translated","value":"Ressources officielles de préparation"}}}},
+    "Practice generation for these tests is coming soon.": {"localizations":{"fr":{"stringUnit":{"state":"translated","value":"La génération de sujets d’entraînement pour ces tests sera bientôt disponible."}}}},
+    "We’re still checking the questions, corrections and printable papers. Saved papers remain available in Documents.": {"localizations":{"fr":{"stringUnit":{"state":"translated","value":"Nous vérifions encore les questions, les corrigés et les versions imprimables. Les sujets enregistrés restent disponibles dans Documents."}}}},
     "Check this Mac": {"localizations":{"fr":{"stringUnit":{"state":"translated","value":"Vérifier ce Mac"}}}},
     "Checking memory and disk space…": {"localizations":{"fr":{"stringUnit":{"state":"translated","value":"Vérification de la mémoire et de l’espace disque…"}}}},
     "Estimated to fit now": {"localizations":{"fr":{"stringUnit":{"state":"translated","value":"Compatible selon l’estimation actuelle"}}}},
