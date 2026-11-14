@@ -3,15 +3,19 @@
 from __future__ import annotations
 
 import argparse
-import importlib
 import json
-import sys
 import tempfile
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
 from Backend.Core.board_profiles import board_profile
+from Backend.Core.generator_entry_points import (
+    FamilyGenerationRequest,
+    bind_generator_entry_point,
+    load_generator_entry_point,
+    parse_entry_point_contract,
+)
 from Backend.Core.paths import REPO_ROOT
 from Backend.Core.subject_plugins import discover_subject_plugin
 
@@ -277,17 +281,16 @@ class MigrationValidator:
             return "deterministic preview has no declared paper"
         python_root = self.resources / str(family.get("python_path", ""))
         syllabus = self.resources / str(family.get("syllabus_path", ""))
-        module_name, separator, function_name = str(
-            family.get("entry_point", "")
-        ).partition(":")
-        if not separator or not python_root.is_dir() or not syllabus.is_file():
+        entry_point = str(family.get("entry_point", ""))
+        if not entry_point or not python_root.is_dir() or not syllabus.is_file():
             return "deterministic preview inputs are incomplete"
         try:
-            if str(python_root) not in sys.path:
-                sys.path.insert(0, str(python_root))
-            function = getattr(importlib.import_module(module_name), function_name)
+            contract = parse_entry_point_contract(
+                family.get("entry_point_contract", "keywords-v1")
+            )
+            function = load_generator_entry_point(python_root, entry_point)
             with tempfile.TemporaryDirectory(prefix="keldin-migration-") as temporary:
-                result = function(
+                request = FamilyGenerationRequest(
                     paper=papers[0],
                     syllabus_path=syllabus,
                     output_dir=Path(temporary),
@@ -296,6 +299,14 @@ class MigrationValidator:
                     ollama_url="http://127.0.0.1:11434",
                     dry_run=True,
                 )
+                generate = bind_generator_entry_point(
+                    function,
+                    request,
+                    contract=contract,
+                    family_id=str(family.get("id", "")),
+                    uses_ai=family.get("content_mode") == "ai-assisted",
+                )
+                result = generate()
                 expected = set(output_map.get(papers[0], []))
                 if not isinstance(result, dict) or set(result) != expected:
                     return (

@@ -3,15 +3,14 @@
 from __future__ import annotations
 
 import argparse
-import importlib
 import os
-import sys
 from collections.abc import Callable
 from pathlib import Path
 
 from Backend.Core.benchmark import handle_benchmark
 from Backend.Core.events import BACKEND_VERSION, emit
 from Backend.Core.generation import handle_generate
+from Backend.Core.generator_entry_points import load_generator_entry_point
 from Backend.Core.generator_registry import generator_capabilities, generator_subjects
 from Backend.Core.legacy_migration import environment_value
 from Backend.Core.mlx_download_info import handle_mlx_download_info
@@ -27,6 +26,7 @@ from Backend.Core.ollama import (
     handle_pull_model,
 )
 from Backend.Core.paths import REPO_ROOT
+from Backend.Core.subject_plugins import discover_subject_plugin
 
 DEFAULT_OUTPUT_DIR = Path.home() / "Downloads"
 DEFAULT_MODEL = environment_value("KELDIN_DEFAULT_MODEL", default_ollama_model())
@@ -293,14 +293,9 @@ def handle_bundle_check(_args: argparse.Namespace) -> int:
         errors.append(f"UK marking policy: {error}")
     for capability in generator_capabilities().values():
         generator_root = REPO_ROOT / "Resources" / capability.python_path
-        root_text = str(generator_root)
-        if root_text not in sys.path:
-            sys.path.insert(0, root_text)
-        module_name, function_name = capability.entry_point.split(":", maxsplit=1)
         try:
-            module = importlib.import_module(module_name)
-            if not callable(getattr(module, function_name, None)):
-                raise TypeError(f"missing callable {function_name}")
+            discover_subject_plugin(capability.subject_plugin)
+            load_generator_entry_point(generator_root, capability.entry_point)
             syllabus = REPO_ROOT / "Resources" / capability.syllabus_path
             if not syllabus.is_file():
                 raise FileNotFoundError(f"missing syllabus {capability.syllabus_path}")

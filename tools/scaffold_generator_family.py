@@ -60,7 +60,8 @@ def scaffold_family(request: ScaffoldRequest) -> Path:
         "resource_path": f"{request.subject}/{request.board}",
         "python_path": f"{request.subject}/{request.board}/generator",
         "package": package,
-        "entry_point": f"{package}.cli:generate_package",
+        "entry_point": f"{package}.cli:generate_request",
+        "entry_point_contract": "request-v1",
         "syllabus_path": f"{request.subject}/{request.board}/generator/data/syllabus.json",
         "subject_plugin": request.subject,
         "board_profile": request.board,
@@ -102,7 +103,7 @@ def scaffold_family(request: ScaffoldRequest) -> Path:
         "[project]\n"
         f'name = "{package}"\n'
         'version = "0.1.0"\n'
-        'requires-python = ">=3.11"\n',
+        'requires-python = ">=3.12"\n',
         encoding="utf-8",
     )
     (package_root / "__init__.py").write_text(
@@ -125,22 +126,14 @@ def _cli_template() -> str:
     return """from __future__ import annotations
 
 from pathlib import Path
-from typing import Any
+
+from Backend.Core.generator_entry_points import FamilyGenerationRequest
 
 
-def generate_package(
-    *,
-    paper: str,
-    syllabus_path: Path,
-    output_dir: Path,
-    seed: int,
-    dry_run: bool,
-    **_kwargs: Any,
-) -> dict[str, Path]:
+def generate_request(request: FamilyGenerationRequest) -> dict[str, Path]:
     # Fail closed until this family has real contracts and renderers.
-
     raise RuntimeError(
-        f"Paper {paper} is scaffolded but not qualified for generation."
+        f"Paper {request.paper} is scaffolded but not qualified for generation."
     )
 """
 
@@ -150,15 +143,22 @@ def _test_template(package: str) -> str:
 
 import pytest
 
-from {package}.cli import generate_package
+from Backend.Core.generator_entry_points import FamilyGenerationRequest
+from {package}.cli import generate_request
 
 
 def test_scaffold_is_fail_closed(tmp_path: Path) -> None:
+    request = FamilyGenerationRequest(
+        paper="1",
+        syllabus_path=tmp_path / "syllabus.json",
+        output_dir=tmp_path,
+        seed=1,
+        model="preview-only",
+        ollama_url="http://localhost:11434",
+        dry_run=True,
+    )
     with pytest.raises(RuntimeError, match="not qualified"):
-        generate_package(
-            paper="1", syllabus_path=tmp_path / "syllabus.json",
-            output_dir=tmp_path, seed=1, dry_run=True,
-        )
+        generate_request(request)
     assert list(tmp_path.iterdir()) == []
 """
 

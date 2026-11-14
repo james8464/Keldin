@@ -1,10 +1,15 @@
 from __future__ import annotations
 
 import json
+import sys
 from pathlib import Path
 
 import pytest
 
+from Backend.Core.generator_entry_points import (
+    FamilyGenerationRequest,
+    load_generator_entry_point,
+)
 from Backend.Core.paths import REPO_ROOT
 from tools.scaffold_generator_family import ScaffoldRequest, scaffold_family
 from tools.validate_generator_migration import MigrationValidator
@@ -97,7 +102,7 @@ def test_broken_fixture_reports_every_onboarding_surface(tmp_path: Path) -> None
 
 
 def test_scaffold_emits_complete_unadvertised_family_and_refuses_overwrite(
-    tmp_path: Path,
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     request = ScaffoldRequest(
         subject="geology",
@@ -115,6 +120,29 @@ def test_scaffold_emits_complete_unadvertised_family_and_refuses_overwrite(
     payload = json.loads((root / "generator" / "capability.json").read_text())
     assert payload["advertised"] is False
     assert payload["declared_papers"] == ["1", "2"]
+    assert payload["entry_point_contract"] == "request-v1"
+
+    output = tmp_path / "export"
+    generation = FamilyGenerationRequest(
+        paper="1",
+        syllabus_path=tmp_path / payload["syllabus_path"],
+        output_dir=output,
+        seed=1,
+        model="preview-only",
+        ollama_url="http://localhost:11434",
+        dry_run=True,
+    )
+    monkeypatch.syspath_prepend(str(root / "generator"))
+    try:
+        entry_point = load_generator_entry_point(
+            root / "generator", payload["entry_point"]
+        )
+        with pytest.raises(RuntimeError, match=r"Paper 1.*not qualified"):
+            entry_point(generation)
+        assert not output.exists()
+    finally:
+        for module in (payload["package"], f"{payload['package']}.cli"):
+            sys.modules.pop(module, None)
 
     with pytest.raises(FileExistsError, match="already exists"):
         scaffold_family(request)

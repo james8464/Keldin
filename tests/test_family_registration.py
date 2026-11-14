@@ -106,10 +106,21 @@ def _offline_client(*, dry_run, **_kwargs):
 
 
 def test_data_only_family_runs_through_publication(
-    experimental_family, tmp_path, capsys
+    experimental_family, tmp_path, capsys, monkeypatch
 ):
     subject, paper, syllabus, registry = experimental_family
     assert [job.id for job in matrix_jobs(registry)] == [f"{subject}:{paper}"]
+    assert generator_registry.generator_capability(subject).entry_point_contract == (
+        "request-v1"
+    )
+
+    def accidental_legacy_dispatch(*_args, **_kwargs):
+        pytest.fail("the configured family must not use legacy signature inspection")
+
+    monkeypatch.setattr(
+        "Backend.Core.generator_entry_points._legacy_arguments",
+        accidental_legacy_dispatch,
+    )
     output = tmp_path / "export"
     assert (
         main(

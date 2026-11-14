@@ -12,8 +12,12 @@ from types import MappingProxyType
 from typing import Any
 
 from Backend.Core.board_profiles import board_profile as load_board_profile
+from Backend.Core.generator_entry_points import (
+    EntryPointContract,
+    parse_entry_point_contract,
+)
 from Backend.Core.paths import REPO_ROOT
-from Backend.Core.subject_plugins import discover_subject_plugin
+from Backend.Core.subject_plugins import validate_subject_plugin
 
 REGISTRY_PATH = REPO_ROOT / "Resources" / "generator-registry.json"
 KNOWN_PROVIDERS = frozenset(
@@ -71,6 +75,7 @@ class GeneratorCapability:
     supported_providers: tuple[str, ...]
     paper_contracts: Mapping[str, PaperContract]
     checkpoint_namespace: CheckpointNamespace | None = None
+    entry_point_contract: EntryPointContract = "keywords-v1"
 
     @property
     def uses_ai(self) -> bool:
@@ -222,7 +227,7 @@ def _capability(raw: dict[str, Any]) -> GeneratorCapability:
         (subject_plugin, board_profile, specification_version, blueprint_version)
     ):
         raise ValueError(f"{raw['id']} has incomplete declarative capability metadata")
-    discover_subject_plugin(subject_plugin)
+    validate_subject_plugin(subject_plugin)
     load_board_profile(board_profile)
     return GeneratorCapability(
         manifest_version=manifest_version,
@@ -242,6 +247,9 @@ def _capability(raw: dict[str, Any]) -> GeneratorCapability:
         supported_providers=providers,
         paper_contracts=paper_contracts,
         checkpoint_namespace=_checkpoint_namespace(raw),
+        entry_point_contract=parse_entry_point_contract(
+            raw.get("entry_point_contract", "keywords-v1")
+        ),
     )
 
 
