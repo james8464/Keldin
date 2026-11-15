@@ -15,6 +15,7 @@ from Backend.Core.france.network import open_ollama_request
 
 GIB = 1 << 30
 METADATA_LIMIT = 4 * 1024 * 1024
+PAPER_OLLAMA_CONTEXT_TOKENS = 16_384
 
 
 class ResourceAdmissionError(RuntimeError):
@@ -60,12 +61,16 @@ def _is_local_endpoint(base_url: str) -> bool:
         return False
 
 
-def require_local_ollama_capacity(base_url: str, model: str) -> None:
+def require_local_ollama_capacity(
+    base_url: str, model: str, context_tokens: int = PAPER_OLLAMA_CONTEXT_TOKENS
+) -> None:
     if not _is_local_endpoint(base_url):
         return
     require_local_ollama_route(base_url, model)
+    if type(context_tokens) is not int or context_tokens <= 0:
+        raise ResourceAdmissionError("Could not verify the requested Ollama context.")
     physical = _checked_physical_memory()
-    size, resident = _installed_model_state(base_url, model)
+    size, resident = _installed_model_state(base_url, model, context_tokens)
     if type(size) is not int or size <= 0 or type(resident) is not bool:
         raise ResourceAdmissionError("Could not verify installed model size/residency.")
     reserve = max(4 * GIB, (physical + 3) // 4)
@@ -227,7 +232,9 @@ def local_ollama_cached_sizes() -> dict[str, int]:
     return sizes
 
 
-def _installed_model_state(base_url: str, model: str) -> tuple[int, bool]:
+def _installed_model_state(
+    base_url: str, model: str, context_tokens: int = PAPER_OLLAMA_CONTEXT_TOKENS
+) -> tuple[int, bool]:
     try:
         candidates = _names({"name": model})
         matches = [
@@ -244,6 +251,7 @@ def _installed_model_state(base_url: str, model: str) -> tuple[int, bool]:
         digest = _digest(matches[0])
         seen_names: set[str] = set()
         seen_digests: set[str] = set()
+        reusable = False
         for item in _model_metadata(base_url, "ps"):
             if not isinstance(item, dict):
                 raise ValueError("Invalid resident model")
@@ -252,9 +260,16 @@ def _installed_model_state(base_url: str, model: str) -> tuple[int, bool]:
                 raise ValueError("Ambiguous resident models")
             if candidates.intersection(names) and loaded_digest != digest:
                 raise ValueError("Resident model digest changed")
+            if loaded_digest == digest:
+                # A different num_ctx can reload the runner. Missing or
+                # differently typed context metadata earns no warm credit.
+                loaded_context = item.get("context_length")
+                reusable = (
+                    type(loaded_context) is int and loaded_context == context_tokens
+                )
             seen_names.update(names)
             seen_digests.add(loaded_digest)
-        return size, digest in seen_digests
+        return size, reusable
     except (ValueError, TypeError) as error:
         raise ResourceAdmissionError(
             "Could not verify installed model size/residency."

@@ -107,7 +107,8 @@ def test_explicit_cloud_model_is_refused_before_request(monkeypatch, source, mod
 def test_resource_refusal_sends_no_pixels_and_remains_actionable(monkeypatch, source):
     calls = responses(monkeypatch)
 
-    def refuse(*_):
+    def refuse(*args):
+        assert args[-1] == 4096
         raise ResourceAdmissionError("Insufficient local memory")
 
     monkeypatch.setattr(vision, "require_local_ollama_capacity", refuse)

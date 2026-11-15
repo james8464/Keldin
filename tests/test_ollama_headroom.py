@@ -70,7 +70,12 @@ def require():
 
 
 def resident():
-    return {"name": "fixture:latest", "model": "fixture:latest", "digest": DIGEST}
+    return {
+        "name": "fixture:latest",
+        "model": "fixture:latest",
+        "digest": DIGEST,
+        "context_length": 16_384,
+    }
 
 
 def test_cold_load_refuses_current_headroom_shortfall(machine):
@@ -125,6 +130,32 @@ def test_other_digest_does_not_grant_warm_credit(machine):
     machine.update(free=3 * GIB, ps=[{"name": "other:latest", "digest": "b" * 64}])
     with pytest.raises(admission.ResourceAdmissionError, match="headroom"):
         require()
+
+
+@pytest.mark.parametrize("reported_context", [4096, 32768, None, True, "16384"])
+def test_unproven_context_reuse_charges_cold_load_before_chat(
+    machine, monkeypatch, reported_context
+):
+    loaded = resident()
+    if reported_context is None:
+        del loaded["context_length"]
+    else:
+        loaded["context_length"] = reported_context
+    machine.update(free=3 * GIB, ps=[loaded])
+
+    def forbidden(*args, **kwargs):
+        pytest.fail("Inference must not start when model context reuse is unverified")
+
+    monkeypatch.setattr(providers.OllamaClient, "_ollama_thinking_policy", forbidden)
+    with pytest.raises(admission.ResourceAdmissionError, match="headroom"):
+        providers.OllamaClient("http://localhost:11434", "fixture")._ollama(
+            "unchanged", schema={"type": "object"}, request_function=forbidden
+        )
+
+
+def test_matching_vision_context_still_gets_warm_credit(machine):
+    machine.update(free=2 * GIB, ps=[{**resident(), "context_length": 4096}])
+    admission.require_local_ollama_capacity("http://localhost:11434", "fixture", 4096)
 
 
 @pytest.mark.parametrize(
