@@ -6,6 +6,7 @@ from pathlib import Path
 
 import pytest
 
+from tests.test_live_generation_matrix import file_event_stream, jobs, published_files
 from tools.live_generation_matrix import (
     MatrixJob,
     _model_digest,
@@ -81,39 +82,24 @@ def test_request_identity_binds_local_scheduling_mode(provider, flag, monkeypatc
 
 @pytest.mark.parametrize("pin,expected", [(None, False), ("a" * 64, True)])
 def test_mlx_result_requires_model_pin_before_resume(tmp_path, pin, expected):
-    identity = {
-        "provider": "apple",
-        "model_digest": pin,
-        "expected_roles": ["assessment_package"],
-    }
-    files = {}
-    for role in ["assessment_package", "package_manifest"]:
-        path = tmp_path / f"{role}.json"
-        path.write_text(json.dumps({"reference_demand": {"passed": True}}))
-        files[role] = str(path)
-    events = tmp_path / "events.jsonl"
-    events.write_text(
-        "\n".join(
-            json.dumps(event)
-            for event in (
-                {
-                    "type": "file",
-                    "role": "assessment_package",
-                    "path": files["assessment_package"],
-                },
-                {
-                    "type": "file",
-                    "role": "package_manifest",
-                    "path": files["package_manifest"],
-                },
-                {"type": "done"},
-            )
-        )
-        + "\n",
-        encoding="utf-8",
+    job = jobs()[0]
+    identity = _request_identity(
+        job,
+        seed=42,
+        model="cached/model",
+        provider="apple",
+        ollama_url="http://unused",
+        dry_run=False,
+        command_prefix=["backend"],
+        model_digest=pin,
+        runtime_sha256="b" * 64,
     )
+    files = published_files(tmp_path, job, model="cached/model", provider="apple")
+    events = tmp_path / "events.jsonl"
+    events.write_text(file_event_stream(files), encoding="utf-8")
     result = {
         "passed": True,
+        "family_id": job.family_id,
         "request_identity": identity,
         "files": files,
         "artifact_sha256": {role: _sha256(Path(path)) for role, path in files.items()},
