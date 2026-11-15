@@ -173,6 +173,7 @@ def test_closed_slot_solver_does_not_gain_choice_only_field():
     [
         "assessment-review-v7-trusted-generation-requests",
         "assessment-review-v11-accounting-equal-priority",
+        "assessment-review-v12-exact-review-rows",
     ],
 )
 def test_stricter_review_keeps_old_checkpoints_out_of_current_job(

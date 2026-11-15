@@ -9,6 +9,7 @@ from aqaaccountgen.generator import build_paper
 from aqaaccountgen.syllabus import load_syllabus
 
 from Backend.Core.ai_assessment import _independently_validate_candidate, _tasks
+from Backend.Core.assessment_prompts import review_prompt
 from Backend.Core.independent_solver import IndependentSolver, reconcile_solution
 from Backend.Core.numeric_integrity import (
     NUMBER,
@@ -215,6 +216,33 @@ def test_priority_is_a_requested_closed_output_not_unchecked_prose():
     assert not reconcile_solution(solution, raw).passed
 
 
+def test_editorial_numeric_evidence_keeps_mixed_closed_answers():
+    task = next(t for t in accounting_tasks() if t.question.rule_id == "costing_3")
+    candidate = task.question
+    solution = IndependentSolver().solve(candidate, [])
+    assert reconcile_solution(solution, candidate).passed
+    prompt = review_prompt(
+        [task],
+        [candidate],
+        subject="Accounting",
+        canonical_solutions={task.id: solution},
+    )
+    review = json.loads(prompt.split("\nREVIEW_DATA=", 1)[1])[0]["independent_solution"]
+    role_a = "product_a_contribution_per_scarce_hour"
+    role_b = "product_b_contribution_per_scarce_hour"
+    expected_format = {"unit": "GBP/scarce hour", "decimal_places": 2, "sign": "signed"}
+    assert review["answer"] == {
+        role_a: "£4.07/scarce hour",
+        role_b: "£3.47/scarce hour",
+        "ranked_first": "Product A",
+    }
+    assert review["numeric_formats"] == {
+        role_a: expected_format,
+        role_b: expected_format,
+    }
+    assert "numeric_results" not in review
+
+
 def test_legacy_canonical_numeric_solution_cannot_replay_approval():
     from Backend.Core.independent_solver import CanonicalSolution
 
@@ -240,6 +268,47 @@ def test_expression_recomputation_has_no_model_work_or_draft_points():
     assert not reconcile_solution(
         solution, {"mark_scheme": ["Inputs: 5.0%. Answer: 100%."]}
     ).passed
+
+
+@pytest.mark.parametrize(
+    ("paper_id", "seed", "answer"),
+    [("paper_1", 26080102, "−0.6%"), ("paper_2", 26080103, "0.5%")],
+)
+def test_verified_percentage_review_has_one_answer_and_declared_precision(
+    paper_id, seed, answer
+):
+    from aqaecongen.configs import RULES as ECON_RULES
+    from aqaecongen.generator import build_paper as build_economics
+    from aqaecongen.syllabus import load_syllabus as load_economics
+
+    syllabus = load_economics(
+        Path(__file__).resolve().parents[1]
+        / "Resources/economics/aqa/generator/data/syllabus.json"
+    )
+    paper = build_economics(ECON_RULES[paper_id], syllabus, seed)
+    task = next(
+        t
+        for t in _tasks(paper, {topic.id: topic for topic in syllabus.topics})
+        if t.question.number == "1"
+    )
+    candidate = task.question
+    solution = IndependentSolver().solve(candidate, [])
+    assert reconcile_solution(solution, candidate).passed
+    before = solution.model_dump()
+    prompt = review_prompt(
+        [task],
+        [candidate],
+        subject="Economics",
+        canonical_solutions={task.id: solution},
+    )
+    review = json.loads(prompt.split("\nREVIEW_DATA=", 1)[1])[0]["independent_solution"]
+    assert review["answer"] == {"percentage_change": answer}
+    assert review["numeric_formats"] == {
+        "percentage_change": {"unit": "%", "decimal_places": 1, "sign": "signed"}
+    }
+    assert "numeric_results" not in review
+    assert review["steps"] == solution.steps
+    assert solution.model_dump() == before
 
 
 def test_percentage_contract_locks_requested_direction_to_candidate_prompt():

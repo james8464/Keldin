@@ -226,11 +226,8 @@
     {
       "path": "Backend/Core/assessment_prompts.py",
       "classification": "maintained-source",
-      "status": "reviewed",
-      "reason": "french_run23_review: EOF. Exact source identity verified at e4649b83; selective dependencies and broader runtime/qualification limits are documented separately.",
-      "source_sha256": "d9a8b444b7387b4b20d1c72a809ef119354fbedbb5c31f1906eb022d648c10cc",
-      "review_evidence": "docs/quality/remaining-native-backend-boundaries-review-2026-11-02.md",
-      "review_evidence_sha256": "af676cdb6e47d3d6e61361f2722f7b605c0ef7b3db9afeefcfd5562776c7787d"
+      "status": "pending",
+      "reason": "No file-level semantic implementation review recorded in this ledger."
     },
     {
       "path": "Backend/Core/assessment_quality.py",
