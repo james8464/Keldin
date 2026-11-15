@@ -8,6 +8,7 @@ from dataclasses import replace
 from pathlib import Path
 
 from reportlab.lib import colors
+from reportlab.lib.units import mm
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfgen import canvas
 
@@ -801,13 +802,15 @@ def _draw_question_page_header(
         return
     pdf.setFont(FONT, 10)
     pdf.drawCentredString(297, 805, str(page))
+    frame_right = 539
+    warning_centre = (frame_right + AQA_A4[0] - 5 * mm) / 2
     pdf.setFont(FONT, 7)
-    pdf.drawCentredString(564, 780, "Do not write")
-    pdf.drawCentredString(564, 769, "outside the")
-    pdf.drawCentredString(564, 758, "box")
+    pdf.drawCentredString(warning_centre, 780, "Do not write")
+    pdf.drawCentredString(warning_centre, 769, "outside the")
+    pdf.drawCentredString(warning_centre, 758, "box")
     pdf.setLineWidth(0.7)
     pdf.rect(39, 76, 500, 713, stroke=1, fill=0)
-    pdf.line(39, 751, 539, 751)
+    pdf.line(39, 751, frame_right, 751)
     if page == 2:
         pdf.setFont(FONT, 11)
         instruction = (

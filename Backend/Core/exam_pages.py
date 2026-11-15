@@ -9,6 +9,7 @@ from typing import Literal
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.units import mm
+from reportlab.lib.utils import simpleSplit
 from reportlab.pdfgen.canvas import Canvas
 from reportlab.platypus import Flowable
 
@@ -16,6 +17,22 @@ from Backend.Core.document_dsl import BlankPage, ContinuationPage, RuleSet
 
 Board = Literal["aqa", "ocr"]
 PageVariant = Literal["additional", "continuation", "blank"]
+
+
+def draw_aqa_gutter_warning(
+    pdf: Canvas, *, width: float, height: float, font: str
+) -> None:
+    """Wrap the external answer-frame label inside the 5 mm print inset."""
+    left = width - 11.5 * mm
+    # Leave half a point beyond the advance widths for glyph overhang.
+    text_width = width - 5 * mm - left - 0.5
+    font_size = 5.6
+    lines = simpleSplit("Do not write outside the box", font, font_size, text_width)
+    pdf.saveState()
+    pdf.setFont(font, font_size)
+    for index, line in enumerate(lines):
+        pdf.drawString(left, height - (19 + 3 * index) * mm, line)
+    pdf.restoreState()
 
 
 @dataclass(frozen=True)

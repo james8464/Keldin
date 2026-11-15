@@ -4,6 +4,7 @@ from pathlib import Path
 import pymupdf as fitz
 import pytest
 from reportlab.lib.pagesizes import A4
+from reportlab.lib.units import mm
 from reportlab.pdfgen import canvas
 
 from Backend.Core.exam_pages import ExamPageProfile, draw_exam_page
@@ -32,6 +33,60 @@ def _horizontal_lines(page: fitz.Page) -> list[fitz.Rect]:
         for drawing in page.get_drawings()
         if drawing["rect"].height <= 1 and drawing["rect"].width > 100
     ]
+
+
+def test_aqa_cs_print_warning_fits_between_frame_and_safe_margin(tmp_path: Path):
+    from types import SimpleNamespace
+
+    from cspapergen.render_pdf import _draw_question_page_header
+
+    path = tmp_path / "aqa-cs-gutter.pdf"
+    pdf = canvas.Canvas(str(path), pagesize=A4)
+    _draw_question_page_header(
+        pdf, 2, SimpleNamespace(delivery_mode="written", paper_code="7517/2")
+    )
+    pdf.save()
+    with fitz.open(path) as document:
+        page = document[0]
+        gutter = [
+            word for word in page.get_text("words") if word[0] > 539 and word[1] < 100
+        ]
+        assert " ".join(word[4] for word in gutter) == "Do not write outside the box"
+        assert all(word[2] <= page.rect.x1 - 5 * mm for word in gutter)
+        assert any(
+            drawing["rect"].width == pytest.approx(500, abs=0.1)
+            and drawing["rect"].height == pytest.approx(713, abs=0.1)
+            and drawing["rect"].x0 == pytest.approx(39, abs=0.1)
+            and drawing["rect"].x1 == pytest.approx(539, abs=0.1)
+            for drawing in page.get_drawings()
+        )
+
+
+@pytest.mark.parametrize("page_number", [2, 3])
+def test_edexcel_economics_print_labels_clear_both_margins_and_the_frame(
+    tmp_path: Path, page_number: int
+):
+    from pastpapergen.render_pdf import _draw_do_not_write_rail
+
+    path = tmp_path / "edexcel-economics-rail.pdf"
+    pdf = canvas.Canvas(str(path), pagesize=A4)
+    _draw_do_not_write_rail(pdf, page_number)
+    pdf.save()
+    with fitz.open(path) as document:
+        page = document[0]
+        spans = [
+            span
+            for block in page.get_text("dict")["blocks"]
+            for line in block.get("lines", [])
+            for span in line["spans"]
+            if span["text"] == "DO NOT WRITE IN THIS AREA"
+        ]
+        assert len(spans) == 3
+        for span in spans:
+            start, _, end, _ = span["bbox"]
+            assert span["size"] == pytest.approx(12, abs=0.1)
+            assert start >= 5 * mm and end <= page.rect.x1 - 5 * mm
+            assert (end < 34) if page_number % 2 else (start > 534)
 
 
 def test_aqa_additional_page_matches_measured_response_grid(tmp_path: Path) -> None:
@@ -128,6 +183,39 @@ def test_aqa_final_blank_uses_page_coordinates_not_remaining_flow_height(
         assert len(diagonal) == 1
         assert tuple(diagonal[0]) == pytest.approx((114, 54, 538.6, 662.1), abs=3)
         assert "Independent practice material" in page.get_text()
+
+
+@pytest.mark.parametrize(
+    ("module_name", "paper_code"),
+    [("aqaaccountgen.render_pdf", "7127/2"), ("aqabizgen.render_pdf", "7132/2")],
+)
+def test_aqa_answer_frame_warning_stays_inside_print_margin(
+    tmp_path: Path, module_name: str, paper_code: str
+) -> None:
+    from importlib import import_module
+    from types import SimpleNamespace
+
+    path = tmp_path / "question-chrome.pdf"
+    pdf = canvas.Canvas(str(path), pagesize=A4)
+    import_module(module_name)._chrome(
+        pdf, SimpleNamespace(page=2), paper_code, "Question paper"
+    )
+    pdf.save()
+
+    with fitz.open(path) as document:
+        page = document[0]
+        warning = [
+            word
+            for word in page.get_text("words")
+            if word[0] > 198 * mm and word[1] < 32 * mm
+        ]
+        assert " ".join(word[4] for word in warning) == "Do not write outside the box"
+        assert min(page.rect.x1 - word[2] for word in warning) >= 5 * mm
+        assert any(
+            draw["rect"].x1 == pytest.approx(198 * mm, abs=0.2)
+            and draw["rect"].width == pytest.approx(184 * mm, abs=0.2)
+            for draw in page.get_drawings()
+        )
 
 
 def test_accounting_first_mcq_page_explains_selection_and_correction_before_questions(

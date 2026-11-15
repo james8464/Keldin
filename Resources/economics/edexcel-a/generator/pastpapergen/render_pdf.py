@@ -1437,16 +1437,17 @@ def _prepare_answer_page(
 def _draw_do_not_write_rail(pdf: canvas.Canvas, page_number: int) -> None:
     width, _height = A4
     is_left = page_number % 2 == 1
-    rail_x = -2.7 if is_left else width - 36.8
+    # Keep the labels inside the print-safe area without moving the answer frame.
+    rail_x, rail_width = (8, 22) if is_left else (width - 36.8, 21)
     label_positions = (182.5, 426.3, 673.0) if is_left else (178.9, 425.6, 669.4)
     pdf.setFillColor(colors.HexColor("#f0f0f0"))
-    pdf.rect(rail_x, RAIL_Y, 21, RAIL_H, stroke=0, fill=1)
-    _draw_hatched_rail(pdf, rail_x, RAIL_Y, 21, RAIL_H)
+    pdf.rect(rail_x, RAIL_Y, rail_width, RAIL_H, stroke=0, fill=1)
+    _draw_hatched_rail(pdf, rail_x, RAIL_Y, rail_width, RAIL_H)
     pdf.setFillColor(colors.HexColor("#666666"))
     pdf.setFont(FONT_BOLD, 12)
     for y in label_positions:
         pdf.saveState()
-        pdf.translate(rail_x + 14, y)
+        pdf.translate(rail_x + 10, y)
         pdf.rotate(270)
         pdf.drawCentredString(0, 0, "DO NOT WRITE IN THIS AREA")
         pdf.restoreState()
