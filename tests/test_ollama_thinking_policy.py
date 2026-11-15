@@ -51,6 +51,22 @@ def test_absent_metadata_is_explicitly_unknown(envelope):
     assert policy["metadata"] == ("unavailable" if envelope is None else "absent")
 
 
+def test_local_generation_does_not_send_prompt_to_show_declared_cloud_model():
+    paths = []
+
+    def transport(url, data, headers, **settings):
+        path = url.rsplit("/", 1)[-1]
+        paths.append(path)
+        if path == "show":
+            return io.BytesIO(b'{"remote_model":"upstream"}')
+        raise AssertionError("Cloud-routed model must not receive the paper prompt")
+
+    client = HostedLLMClient(provider="ollama", model="fixture:latest", api_key="")
+    with pytest.raises(RuntimeError, match="Ollama cloud"):
+        client._ollama("synthetic paper question", request_function=transport)
+    assert paths == ["show"]
+
+
 @pytest.mark.parametrize(
     "metadata",
     [

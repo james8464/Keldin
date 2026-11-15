@@ -27,6 +27,45 @@ def test_public_cli_defaults_to_model_authored_french():
     assert args.authoring_version == "v36"
 
 
+@pytest.mark.parametrize("model", ["fixture:cloud", "fixture:preview-cloud"])
+def test_french_cli_reports_cloud_route_before_model_identity(
+    tmp_path, monkeypatch, capsys, model
+):
+    from Backend.Core.france import runtime
+    from bridge import main
+
+    def forbidden(*args, **kwargs):
+        pytest.fail("A cloud-tagged model must not reach the Ollama API")
+
+    monkeypatch.setattr(runtime, "open_ollama_request", forbidden)
+    index = tmp_path / "references.sqlite"
+    index.touch()
+    output = tmp_path / "output"
+    assert (
+        main(
+            [
+                "generate-assessment",
+                "--assessment",
+                "fr-bac-general-nsi-written-2027",
+                "--reference-index",
+                str(index),
+                "--seed",
+                "42",
+                "--model",
+                model,
+                "--output",
+                str(output),
+            ]
+        )
+        == 1
+    )
+    events = [json.loads(line) for line in capsys.readouterr().out.splitlines()]
+    assert events[-1]["type"] == "error"
+    assert events[-1]["code"] == "local_ollama_cloud_route"
+    assert not any(event["type"] in {"file", "done"} for event in events)
+    assert not output.exists()
+
+
 @pytest.mark.parametrize(
     "provider", ["ollama", "apple", "openai", "anthropic", "deepseek"]
 )

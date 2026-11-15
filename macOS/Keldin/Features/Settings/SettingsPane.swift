@@ -549,6 +549,15 @@ private struct PrivacySettingsTab: View {
     @EnvironmentObject private var application: ApplicationCoordinator
     @Environment(\.locale) private var locale
 
+    private var hostedProviders: [AIProvider] {
+        AIProvider.allCases.filter { provider in
+            provider.sendsPromptsOffDevice && (
+                provider != .deepSeek || application.distributionMode.canGenerateFrenchNSI
+                    || application.hasHostedAIConsent(for: provider)
+            )
+        }
+    }
+
     var body: some View {
         Form {
             Section("Privacy") {
@@ -559,12 +568,36 @@ private struct PrivacySettingsTab: View {
                     Text(InterfaceText.localizedResource(PrivacySettingsText.accounts, locale: locale))
                 }
                 LabeledContent("API keys", value: "Keychain")
-                LabeledContent("Hosted AI consent") {
-                    Text(InterfaceText.localizedResource(PrivacySettingsText.hostedConsent(accepted: application.hasHostedAIConsent), locale: locale))
-                }
                 Link("Privacy Policy", destination: AppLinks.privacyPolicy)
                     .foregroundStyle(Color("ForegroundAccent"))
                 Text("Ollama generation is local. Hosted providers send prompts to the provider you select.")
+                    .foregroundStyle(.secondary)
+            }
+
+            Section("Hosted AI consent") {
+                ForEach(hostedProviders) { provider in
+                    let accepted = application.hasHostedAIConsent(for: provider)
+                    LabeledContent {
+                        HStack {
+                            Text(InterfaceText.localizedResource(PrivacySettingsText.hostedConsent(accepted: accepted), locale: locale))
+                            if accepted {
+                                Button("Withdraw Consent") {
+                                    application.withdrawHostedAIConsent(for: provider)
+                                }
+                                .disabled(application.isRunning)
+                            } else if provider == application.aiProvider,
+                                      provider != .deepSeek || application.distributionMode.canGenerateFrenchNSI {
+                                Button("Review Disclosure") {
+                                    application.reviewHostedAIConsent(for: provider)
+                                }
+                                .disabled(application.isRunning || application.isImportingPreviousData)
+                            }
+                        }
+                    } label: {
+                        Text(provider.title)
+                    }
+                }
+                Text("Cancel any running generation before withdrawing consent. This does not delete data already sent to a provider.")
                     .foregroundStyle(.secondary)
             }
 

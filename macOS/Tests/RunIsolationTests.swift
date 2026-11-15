@@ -164,6 +164,42 @@ final class RunIsolationTests: XCTestCase {
     }
 
     @MainActor
+    func testHostedConsentWithdrawalRespectsRunningJobAndBlocksLaterLiveGeneration() throws {
+        let defaults = isolatedDefaults()
+        defaults.set(AIProvider.openAI.rawValue, forKey: AppStorageKey.aiProvider)
+        defaults.set(AppDefaults.openAIConsentVersion, forKey: AppStorageKey.openAIConsentVersion)
+        let backend = ControlledRunBackend()
+        let history = try temporaryHistoryURL()
+        let application = application(backend: backend, defaults: defaults, historyDirectory: history)
+        application.outputFolder = history.deletingLastPathComponent().appendingPathComponent("exports")
+        try FileManager.default.createDirectory(at: application.outputFolder, withIntermediateDirectories: true)
+        application.setDryRun(true)
+        application.generate()
+        XCTAssertTrue(application.isRunning)
+        XCTAssertEqual(backend.requests.count, 1)
+
+        application.withdrawHostedAIConsent(for: .openAI)
+        XCTAssertTrue(application.hasHostedAIConsent)
+        XCTAssertTrue(application.isRunning)
+        application.cancelGeneration()
+        application.withdrawHostedAIConsent(for: .openAI)
+        XCTAssertFalse(application.hasHostedAIConsent)
+
+        application.setDryRun(false)
+        application.generate()
+        XCTAssertEqual(backend.requests.count, 1)
+        XCTAssertFalse(application.isRunning)
+
+        application.cancelHostedAIConsent()
+        application.setDryRun(true)
+        application.generate()
+        XCTAssertEqual(backend.requests.count, 2)
+        XCTAssertTrue(backend.requests.last?.arguments.contains("--dry-run") == true)
+        XCTAssertEqual(backend.requests.last?.environment["KELDIN_API_KEY"] ?? "", "")
+        application.cancelGeneration()
+    }
+
+    @MainActor
     func testUnusableExportFolderRefusesUKAndFrenchBeforeBackendOrJobCreation() throws {
         for french in [false, true] {
             let defaults = isolatedDefaults()

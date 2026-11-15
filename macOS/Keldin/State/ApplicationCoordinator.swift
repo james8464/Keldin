@@ -265,6 +265,25 @@ final class ApplicationCoordinator: ObservableObject {
         return defaults.string(forKey: consent.key) == consent.version
     }
 
+    func withdrawHostedAIConsent(for provider: AIProvider) {
+        // Running jobs own a frozen provider configuration. Cancel the job first.
+        guard !isRunning, let consent = hostedConsentRecord(for: provider) else { return }
+        if pendingHostedProvider == provider { cancelHostedAIConsent() }
+        if let request = settingsPresentation.request, request.kind == .hostedConsent(provider) {
+            settingsPresentation.dismiss(id: request.id)
+        }
+        guard defaults.object(forKey: consent.key) != nil else { return }
+        objectWillChange.send()
+        defaults.removeObject(forKey: consent.key)
+    }
+
+    func reviewHostedAIConsent(for provider: AIProvider) {
+        guard !isRunning, !isImportingPreviousData, provider == aiProvider,
+              provider.sendsPromptsOffDevice, !hasHostedAIConsent(for: provider),
+              provider != .deepSeek || distributionMode.canGenerateFrenchNSI else { return }
+        requestHostedAIConsent(for: provider, presentation: settingsPresentation)
+    }
+
     var pendingHostedDisclosureResource: LocalizedStringResource {
         (pendingHostedProvider ?? aiProvider).hostedDisclosureResource
     }
@@ -890,12 +909,10 @@ final class ApplicationCoordinator: ObservableObject {
     }
 
     func acceptHostedAIConsent() {
-        guard !isRunning else { return }
-        recordHostedAIConsent(for: pendingHostedProvider ?? aiProvider)
-        if let provider = pendingHostedProvider {
-            aiProvider = provider
-            modelCoordinator.provider = provider
-        }
+        guard !isRunning, let provider = pendingHostedProvider else { return }
+        recordHostedAIConsent(for: provider)
+        aiProvider = provider
+        modelCoordinator.provider = provider
         pendingHostedProvider = nil
         showHostedAIConsent = false
         persistSettings()

@@ -25,7 +25,10 @@ from Backend.Core.generation_diagnostics import (
     save_failure_diagnostic,
 )
 from Backend.Core.generator_registry import assessment_framework
-from Backend.Core.ollama_admission import ResourceAdmissionError
+from Backend.Core.ollama_admission import (
+    ResourceAdmissionError,
+    require_local_ollama_route,
+)
 from Backend.Core.providers import HostedLLMClient
 from Backend.Core.render_transaction import render_pdf_atomically
 from Backend.Core.temporary_cleanup import remove_owned_staging
@@ -46,6 +49,7 @@ def _model_snapshot(args) -> str | None:
         validate_endpoint(
             args.ollama_url, allow_remote=getattr(args, "allow_remote", False)
         )
+        require_local_ollama_route(args.ollama_url, args.model)
         return model_identity(args.ollama_url, args.model)
     if args.provider == "apple":
         from Backend.Core.mlx_setup import MLX_MODEL_PATTERNS, resolve_local_mlx_model

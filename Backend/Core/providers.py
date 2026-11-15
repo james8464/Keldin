@@ -29,7 +29,10 @@ from Backend.Core.mlx_batching import (
 )
 from Backend.Core.mlx_setup import ensure_mlx_memory_capacity, resolve_local_mlx_model
 from Backend.Core.model_review import CANONICAL_COGNITIVE_OPERATIONS
-from Backend.Core.ollama_admission import require_local_ollama_capacity
+from Backend.Core.ollama_admission import (
+    require_local_ollama_capacity,
+    require_local_ollama_route,
+)
 from Backend.Core.ollama_thinking import structured_thinking_policy
 
 
@@ -259,6 +262,7 @@ class HostedLLMClient:
                         raise
                     if interruption is not None:
                         raise interruption from error
+                require_local_ollama_route(self.base_url, self.model, envelope)
                 try:
                     self._ollama_policies[self.model] = structured_thinking_policy(
                         envelope

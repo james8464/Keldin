@@ -122,6 +122,9 @@ enum GenerationPresentation {
         if code == "local_memory_unavailable" {
             return localized("Local generation couldn't start within the memory checks. Choose a smaller model, close memory-heavy apps, or use a remote provider.", language: language)
         }
+        if code == "local_ollama_cloud_route" {
+            return localized("This Ollama model runs in the cloud. Choose an installed local model or a hosted provider in Settings. No paper was saved.", language: language)
+        }
         if code == "french_model_context_unavailable" {
             return localized("Keldin couldn't confirm that the full exercise fits the model's context window. Try a different model or provider in Settings. No paper was saved.", language: language)
         }
