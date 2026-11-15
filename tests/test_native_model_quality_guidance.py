@@ -13,11 +13,15 @@ def test_uk_model_accessibility_refresh_is_scoped_to_the_read_only_row():
     assert ".id(" not in model_row
     assert "Text(application.activeModelName)" in model_row
     assert ".help(application.activeModelName)" in model_row
-    assert 'Text("Memory fit")' in model_row
+    assert 'Text("From model guide")' in model_row
+    assert 'Text("Memory fit")' not in model_row
     assert ".accessibilityElement(children: .ignore)" in model_row
     assert '.accessibilityLabel("Model")' in model_row
     assert ".accessibilityValue(Text(verbatim: modelAccessibilityValue))" in model_row
-    assert 'InterfaceText.localizedResource("Memory fit", locale: locale)' in workspace
+    assert (
+        'InterfaceText.localizedResource("From model guide", locale: locale)'
+        in workspace
+    )
     assert (
         "guard application.aiProvider == .ollama, application.selectedModelIsRecommended"
         in workspace
@@ -83,11 +87,35 @@ def test_model_quality_guidance_is_separate_from_memory_suggestions():
         assert "application.activeModelName" in source
     workspace = (APP / "Features/Generation/GeneratorWorkspaceView.swift").read_text()
     settings = (APP / "Features/Settings/SettingsPane.swift").read_text()
-    assert 'Text("Memory fit")' in workspace
+    assert 'Text("From model guide")' in workspace
     assert 'Text("Recommended")' not in workspace
-    assert 'LabeledContent("Suggestion based on total memory")' in settings
+    assert 'LabeledContent("Model guide suggestion")' in settings
     assert 'LabeledContent("Estimated to fit now"' in settings
     assert 'Label("Recommended model selected"' not in settings
+
+
+def test_suggested_download_waits_for_the_same_models_current_estimate():
+    settings = (APP / "Features/Settings/SettingsPane.swift").read_text()
+    assert (
+        "localGuidance?.fittingModels.contains(application.ollamaRecommendation.model) == true"
+        in settings
+    )
+    suggested = settings.split('Button("Download suggested model…")', 1)[1].split(
+        'Button("Open Model Guide")', 1
+    )[0]
+    assert (
+        "!application.canRequestModelDownload || !canDownloadSuggestedModel"
+        in suggested
+    )
+    assert 'Button("Check this Mac")' in settings
+    assert (
+        '!checkedLocalGuidance {\n                    Text("Check this Mac before downloading the suggested model.")'
+        in settings
+    )
+    assert 'Button("Download")' in settings  # The manual path remains available.
+    help_view = (APP / "Features/Onboarding/WelcomeHelpViews.swift").read_text()
+    assert 'GroupBox("Model guide suggestion")' in help_view
+    assert "Check this Mac" in help_view
 
 
 def test_qwen_warning_is_scoped_to_tested_nsi_probe_not_full_paper_qualification():
@@ -162,8 +190,10 @@ def test_quality_guidance_copy_has_french_translations():
         "Known answer-check failure",
         "Paper-quality review incomplete",
         "Paper quality unverified",
-        "Memory-fit suggestion",
-        "Memory fit",
+        "From model guide",
+        "Model guide suggestion",
+        "Model from the guide selected",
+        "Check this Mac before downloading the suggested model.",
         "Reported issues",
         "Warnings",
         "Not checked",

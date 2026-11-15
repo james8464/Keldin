@@ -195,10 +195,10 @@ private struct HelpTopicPage: View {
 
     private var choosingAModel: some View {
         Group {
-            Text("The app chooses a model suggestion from this Mac's unified memory. This is not a ranking of paper quality.")
+            Text("The guide uses total memory. In Settings, choose Check this Mac to estimate fit under current conditions. Neither is a paper-quality check.")
                 .foregroundStyle(.secondary)
 
-            GroupBox("Recommended for this Mac") {
+            GroupBox("Model guide suggestion") {
                 VStack(alignment: .leading, spacing: 10) {
                     LabeledContent("Model", value: application.ollamaRecommendation.model)
                     LabeledContent("Download size") {
