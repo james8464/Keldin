@@ -166,6 +166,30 @@ final class PDFDocumentAccessTests: XCTestCase {
     }
 
     @MainActor
+    func testInactiveQuickLookInvocationDoesNotStartAnActionRead() async throws {
+        let file = GeneratedFile(role: "question_paper", url: try makePDF())
+        let reads = Mutex(0)
+        var presented = 0
+        let isActive = Mutex(false)
+        let controller = DocumentActionController(access: PDFDocumentAccess(defaults: defaults(), readData: { url in
+            reads.withLock { $0 += 1 }
+            return try Data(contentsOf: url)
+        }), applicationIsActive: { isActive.withLock { $0 } }, presentAction: { _, _, _ in presented += 1 })
+        defer { controller.clear() }
+        controller.update(file: file, provenance: nil)
+        await controller.waitForPendingLoad()
+        XCTAssertTrue(controller.canAccessDocument)
+
+        controller.quickLookSelected()
+        isActive.withLock { $0 = true }
+        await controller.waitForPendingLoad()
+        XCTAssertEqual(reads.withLock { $0 }, 1, "An inactive command must not re-read the PDF")
+        XCTAssertEqual(presented, 0, "Focus returning does not revive an inactive command")
+        XCTAssertNotNil(controller.exportError)
+        XCTAssertTrue(controller.canAccessDocument)
+    }
+
+    @MainActor
     func testAllActionsRevalidateOriginalBytesBeforeCallingNativePresenter() async throws {
         let url = try makePDF()
         let currentBytes = try Data(contentsOf: makePDF(name: "action-current.pdf", pages: 2))
@@ -175,7 +199,7 @@ final class PDFDocumentAccessTests: XCTestCase {
         let controller = DocumentActionController(access: PDFDocumentAccess(defaults: defaults(), readData: { url in
             reads.withLock { $0 += 1 }
             return try Data(contentsOf: url)
-        }), presentAction: { action, selected, pdf in
+        }), applicationIsActive: { true }, presentAction: { action, selected, pdf in
             presented.append(action)
             XCTAssertEqual(selected, file)
             XCTAssertEqual(pdf.bytes, currentBytes)
@@ -303,7 +327,8 @@ final class PDFDocumentAccessTests: XCTestCase {
             let reader = GatedPDFReader(started: began, blockedCalls: [2]) { _, _ in bytes }
             var presented = 0
             let controller = DocumentActionController(access: PDFDocumentAccess(defaults: defaults(),
-                readData: { try reader.read($0) }), presentAction: { _, _, _ in presented += 1 })
+                readData: { try reader.read($0) }), applicationIsActive: { true },
+                presentAction: { _, _, _ in presented += 1 })
             controller.update(file: GeneratedFile(role: "question_paper", url: first), provenance: nil)
             await controller.waitForPendingLoad()
             invoke(action, on: controller)
@@ -376,6 +401,29 @@ final class PDFDocumentAccessTests: XCTestCase {
         XCTAssertEqual(stops.count, 2, "The failed new bookmark must release its lease before completion")
         controller.clear()
         XCTAssertEqual(stops.count, 3)
+    }
+
+    @MainActor
+    func testInactiveQuickLookDoesNotDisplaceAnExistingPreviewRequest() {
+        let state = QuickLookPresentationState()
+        let active = UUID(), pending = UUID(), declined = UUID()
+        let preview = root.appendingPathComponent("active.pdf")
+        let next = root.appendingPathComponent("pending.pdf")
+        var stops = [0, 0, 0]
+        XCTAssertTrue(state.stage(url: preview, claimant: active, lease: PDFReadLease { stops[0] += 1 }))
+        XCTAssertTrue(state.activate(active))
+        XCTAssertTrue(state.stage(url: next, claimant: pending, lease: PDFReadLease { stops[1] += 1 }))
+
+        XCTAssertFalse(state.stage(
+            url: root.appendingPathComponent("declined.pdf"), claimant: declined,
+            lease: PDFReadLease { stops[2] += 1 }, applicationActive: false
+        ))
+        XCTAssertFalse(state.accepts(declined))
+        XCTAssertEqual(state.url, preview)
+        XCTAssertEqual(state.pendingClaimant, pending)
+        XCTAssertEqual(stops, [0, 0, 1])
+        state.close()
+        XCTAssertEqual(stops, [1, 1, 1])
     }
 
     @MainActor
@@ -1030,6 +1078,9 @@ final class PDFDocumentAccessTests: XCTestCase {
     }
 
     func testFailureNoticesHaveFrenchTranslations() {
+        XCTAssertEqual(InterfaceText.resolve(
+            "Bring Keldin to the front, then choose Quick Look again.", language: "fr"
+        ), "Placez Keldin au premier plan, puis choisissez de nouveau Coup d’œil.")
         XCTAssertEqual(InterfaceText.resolve(
             "The PDFs were saved, but access couldn't be remembered for some files. If a PDF becomes unavailable, choose it again in Documents.", language: "fr"
         ), "Les PDF ont été enregistrés, mais l’accès à certains fichiers n’a pas pu être mémorisé. Si un PDF devient indisponible, sélectionnez-le à nouveau dans Documents.")
