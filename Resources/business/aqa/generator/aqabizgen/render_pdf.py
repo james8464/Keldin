@@ -51,7 +51,7 @@ from Backend.Core.exam_cover import (
     aqa_question_cover,
     mark_scheme_cover,
 )
-from Backend.Core.exam_pages import ExamPage, ExamPageProfile
+from Backend.Core.exam_pages import ExamPage, ExamPageProfile, draw_aqa_gutter_warning
 from Backend.Core.fonts import register_fonts
 from Backend.Core.generation_date import formatted_generation_date
 from Backend.Core.mark_scheme_front_matter import aqa_front_matter_pages
@@ -1517,10 +1517,7 @@ def _chrome(canvas, doc, code: str, kind: str) -> None:
         canvas.setFillColor(INK)
         canvas.setFont(FONT, 9)
         canvas.drawCentredString(PAGE_WIDTH / 2, PAGE_HEIGHT - 10 * mm, str(doc.page))
-        canvas.setFont(FONT, 5.8)
-        canvas.drawString(198.5 * mm, PAGE_HEIGHT - 19 * mm, "Do not write")
-        canvas.drawString(198.5 * mm, PAGE_HEIGHT - 22 * mm, "outside the")
-        canvas.drawString(198.5 * mm, PAGE_HEIGHT - 25 * mm, "box")
+        draw_aqa_gutter_warning(canvas, width=PAGE_WIDTH, height=PAGE_HEIGHT, font=FONT)
         canvas.setFont(FONT_BOLD, 9)
         if code == "7132/1" and doc.page == 27:
             canvas.drawCentredString(PAGE_WIDTH / 2, 17 * mm, "END OF QUESTIONS")

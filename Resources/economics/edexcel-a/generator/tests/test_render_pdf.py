@@ -170,7 +170,7 @@ def test_cover_matches_measured_typographic_hierarchy(tmp_path):
         assert turn_over["bbox"][2] == pytest.approx(556.2, abs=2)
 
 
-def test_even_answer_pages_match_single_official_right_do_not_write_rail(tmp_path):
+def test_even_answer_pages_keep_one_right_rail_with_print_safe_labels(tmp_path):
     syllabus = load_syllabus(Path("data/syllabus_seed.json"))
     config = load_builtin_paper_config("paper_1")
     blueprint = build_paper_blueprint(config, syllabus, seed=42)
@@ -179,19 +179,32 @@ def test_even_answer_pages_match_single_official_right_do_not_write_rail(tmp_pat
     render_question_paper(blueprint, output)
 
     import pymupdf as fitz
+    from reportlab.lib.units import mm
 
     with fitz.open(output) as document:
+        page = document[1]
         spans = [
             span
-            for block in document[1].get_text("dict")["blocks"]
+            for block in page.get_text("dict")["blocks"]
             for line in block.get("lines", [])
             for span in line.get("spans", [])
             if "DO NOT WRITE IN THIS AREA" in span.get("text", "")
         ]
+        rail = next(
+            item["rect"]
+            for item in page.get_drawings()
+            if item["rect"].x0 == pytest.approx(page.rect.width - 36.8, abs=0.1)
+            and item["rect"].width == pytest.approx(21, abs=0.1)
+            and item["rect"].height == pytest.approx(RAIL_H, abs=0.1)
+        )
+        safe_right = page.rect.x1 - 5 * mm
 
     assert len(spans) == 3
     assert all(span["size"] == pytest.approx(12, abs=0.1) for span in spans)
-    assert all(span["bbox"][0] == pytest.approx(570.8, abs=1) for span in spans)
+    assert all(
+        rail.x0 <= span["bbox"][0] < span["bbox"][2] <= min(rail.x1, safe_right)
+        for span in spans
+    )
 
 
 def test_cover_inner_boxes_stay_inside_outer_panel(tmp_path):

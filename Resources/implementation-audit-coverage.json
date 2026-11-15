@@ -512,10 +512,10 @@
       "path": "Backend/Core/exam_pages.py",
       "classification": "maintained-source",
       "status": "reviewed",
-      "reason": "quality_status_review: complete-file EOF of page furniture; dependencies inspected selectively.",
-      "source_sha256": "d38aa5051bab598ef9ef0c1ab9010e905c69d67babfea6bb9cba7838974d8350",
-      "review_evidence": "docs/quality/reference-readmission-and-runtime-audit-2026-11-03.md",
-      "review_evidence_sha256": "f15b829e2e5718086b47e04b7f6c8df0ae974dbda426290c80fd2728f036b5b9"
+      "reason": "Complete-file review of current page furniture, canvas state, and shared print-safe AQA gutter.",
+      "source_sha256": "2d7f66c6f775210ef47d7205bceac7b1cd5f5c4d588e95cb95aeb34f98d45036",
+      "review_evidence": "docs/quality/print-safe-answer-gutters-review.md",
+      "review_evidence_sha256": "395b36494b5e8eac725f06af0c699687afacfd84bf59747db79f7bd5b3ff4c77"
     },
     {
       "path": "Backend/Core/family_adapter.py",
@@ -2399,10 +2399,10 @@
       "path": "Resources/computer-science/aqa/generator/cspapergen/render_pdf.py",
       "classification": "maintained-source",
       "status": "reviewed",
-      "reason": "Earlier complete 2,266-line review plus the complete source-flow/resource and declared-marking deltas. Composite coverage of the current 1,995 lines, not a fresh whole-file read.",
-      "source_sha256": "33156cc03706b553adb41406fc7751835fbed8945a6bcebd228499d1bc07fc52",
-      "review_evidence": "docs/quality/implementation-audit-reconciliation-2026-11-10.md",
-      "review_evidence_sha256": "799d0c38f8fce9352aa3b7697bae3e7e9bd9ccf480cafc45c12e94e6d1582c10"
+      "reason": "Prior hash-matched composite review plus the complete print-gutter delta and both delivery branches. Not a fresh whole-file read.",
+      "source_sha256": "be1ef5a698e5f28536084d9c2c4170ec4eeae1cf37a6d82b566d74d93454fea1",
+      "review_evidence": "docs/quality/print-safe-answer-gutters-review.md",
+      "review_evidence_sha256": "395b36494b5e8eac725f06af0c699687afacfd84bf59747db79f7bd5b3ff4c77"
     },
     {
       "path": "Resources/computer-science/aqa/generator/cspapergen/syllabus.py",
@@ -4749,6 +4749,12 @@
     },
     {
       "path": "docs/quality/preview-raster-order-review.md",
+      "classification": "historical-evidence",
+      "status": "excluded",
+      "reason": "Retained diagnostic/review evidence, not maintained executable implementation; exclusion does not certify its claims."
+    },
+    {
+      "path": "docs/quality/print-safe-answer-gutters-review.md",
       "classification": "historical-evidence",
       "status": "excluded",
       "reason": "Retained diagnostic/review evidence, not maintained executable implementation; exclusion does not certify its claims."
