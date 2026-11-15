@@ -3755,6 +3755,12 @@
       "reason": "Retained diagnostic/review evidence, not maintained executable implementation; exclusion does not certify its claims."
     },
     {
+      "path": "docs/quality/document-action-cancellation-review-2026-11-15.md",
+      "classification": "historical-evidence",
+      "status": "excluded",
+      "reason": "Retained diagnostic/review evidence, not maintained executable implementation; exclusion does not certify its claims."
+    },
+    {
       "path": "docs/quality/document-picker-print-review-2026-11-15.md",
       "classification": "historical-evidence",
       "status": "excluded",
@@ -5903,10 +5909,10 @@
       "path": "macOS/Keldin/Features/Documents/DocumentPreviewView.swift",
       "classification": "maintained-source",
       "status": "reviewed",
-      "reason": "Previously reviewed full-file baseline and complete delta; no old document presentation while the picker tracks or after intervening tracking invalidates a read.",
-      "source_sha256": "f026b84daf825c9f9d5219aa4c2274a3cab85abf726cbca7262d3f9570b3427c",
-      "review_evidence": "docs/quality/document-picker-print-review-2026-11-15.md",
-      "review_evidence_sha256": "22cf09d25dcb7a1a306f30e0681590f9f13f64dd6401debf65f38e9cb1d7858b"
+      "reason": "Prior source-bound full-file and picker reviews plus the complete failure-alert cancellation delta; inline recovery status and scoped access unchanged.",
+      "source_sha256": "1673f4a3a38ce01122e59e67f3228d4a7b8ebc54051cea36070dbdf414898f23",
+      "review_evidence": "docs/quality/document-action-cancellation-review-2026-11-15.md",
+      "review_evidence_sha256": "ed3614622805a021d302529b553f5f8258c04070753d136e001ea6ac67fe7953"
     },
     {
       "path": "macOS/Keldin/Features/Documents/JobHistoryView.swift",

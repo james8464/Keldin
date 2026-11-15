@@ -268,6 +268,32 @@ final class PDFDocumentAccessTests: XCTestCase {
     }
 
     @MainActor
+    func testCancelledPrintReadDoesNotRaiseAlertOverDocumentPicker() async throws {
+        let url = try makePDF()
+        let bytes = try Data(contentsOf: url)
+        let began = expectation(description: "Print revalidation entered")
+        let reader = GatedPDFReader(started: began, blockedCalls: [2]) { _, call in
+            if call == 2 { throw CocoaError(.fileReadNoPermission) }
+            return bytes
+        }
+        let controller = DocumentActionController(access: PDFDocumentAccess(defaults: defaults(),
+            readData: { try reader.read($0) }), presentAction: { _, _, _ in XCTFail("No print should start") })
+        controller.update(file: GeneratedFile(role: "question_paper", url: url), provenance: nil)
+        await controller.waitForPendingLoad()
+        XCTAssertTrue(controller.canAccessDocument)
+
+        controller.printSelected()
+        await fulfillment(of: [began], timeout: 3)
+        controller.setDocumentPickerTracking(true)
+        reader.gate.signal()
+        await controller.waitForPendingLoad()
+
+        XCTAssertEqual(controller.loadFailure, .permissionDenied, "Keep the inline access status")
+        XCTAssertNil(controller.exportError, "A cancelled command must not open an alert over the picker")
+        controller.setDocumentPickerTracking(false)
+    }
+
+    @MainActor
     func testStaleActionReadsNeverPresentAnyNativeAction() async throws {
         for action in [DocumentActionController.Action.quickLook, .reveal, .print, .export] {
             let first = try makePDF(name: "action-first.pdf")
