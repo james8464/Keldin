@@ -352,7 +352,7 @@ final class DocumentActionController: ObservableObject {
                     self.hasFormFields = false
                     self.loadFailure = failure
                 }
-                if action != nil || recovering != nil {
+                if recovering != nil || (action != nil && self.pickerRevision == pickerRequest) {
                     self.exportError = InterfaceText.resolve(failure.messageResource, language: self.language)
                 }
             }
