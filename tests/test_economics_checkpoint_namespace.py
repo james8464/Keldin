@@ -18,6 +18,33 @@ from Backend.Core.generator_registry import generator_subjects
 from Backend.Core.legacy_migration import output_directory
 
 
+@pytest.mark.parametrize(
+    "old_version",
+    [
+        "assessment-review-v13-typed-numeric-evidence",
+        "assessment-review-v14-single-rubric",
+    ],
+)
+def test_editorial_rubric_revision_never_reuses_previous_accepted_items(
+    tmp_path, monkeypatch, old_version
+):
+    args = request("economics_aqa")
+    current_path = checkpoint_path_for_job(args, tmp_path)
+    with monkeypatch.context() as older:
+        older.setattr(
+            "Backend.Core.generation.ASSESSMENT_REVIEW_VERSION",
+            old_version,
+        )
+        previous_path = checkpoint_path_for_job(args, tmp_path)
+    assert previous_path != current_path
+    previous_path.parent.mkdir(parents=True, exist_ok=True)
+    old_bytes = old_version.encode()
+    previous_path.write_bytes(old_bytes)
+    assert checkpoint_path_for_job(args, tmp_path) == current_path
+    assert not current_path.exists()
+    assert previous_path.read_bytes() == old_bytes
+
+
 def request(subject="economics"):
     return Namespace(
         subject=subject,

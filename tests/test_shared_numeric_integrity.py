@@ -312,6 +312,53 @@ def test_verified_percentage_review_has_one_answer_and_declared_precision(
     assert solution.model_dump() == before
 
 
+@pytest.mark.parametrize("paper_id", ["paper_1", "paper_2"])
+def test_aqa_percentage_scheme_spells_out_full_and_alternative_partial_credit(paper_id):
+    from aqaecongen.configs import RULES as ECON_RULES
+    from aqaecongen.generator import build_paper as build_economics
+    from aqaecongen.syllabus import load_syllabus as load_economics
+
+    syllabus = load_economics(
+        Path(__file__).resolve().parents[1]
+        / "Resources/economics/aqa/generator/data/syllabus.json"
+    )
+    paper = build_economics(ECON_RULES[paper_id], syllabus, 26080102)
+    questions = [
+        q
+        for section in paper.sections
+        for option in section.options
+        for q in option.questions
+        if q.kind == "calculation"
+    ]
+    assert len(questions) == 2
+    for question in questions:
+        scheme = question.structured_mark_scheme
+        full = next((row for row in scheme if "without working" in row.text), None)
+        assert full is not None, (
+            "Correctly formatted answers can earn full credit without working"
+        )
+        assert (
+            "2 marks" in full.text
+            and "one decimal place" in full.text
+            and "% sign" in full.text
+        )
+        partial = next(
+            (row for row in scheme if "1 mark" in row.text and "method" in row.text),
+            None,
+        )
+        assert partial is not None, (
+            "Clarify both format and correct-method partial-credit cases"
+        )
+        assert "wrong answer" in partial.text and "without the % sign" in partial.text
+        assert "Do not add" in partial.text
+        assert full.marks == partial.marks == 0
+        assert full.credit_type == partial.credit_type == "guidance"
+        assert sum(row.marks for row in scheme) == question.marks == 2
+        assert reconcile_solution(
+            IndependentSolver().solve(question, []), question
+        ).passed
+
+
 def test_percentage_contract_locks_requested_direction_to_candidate_prompt():
     from aqaecongen.configs import RULES as ECON_RULES
     from aqaecongen.generator import build_paper as build_economics

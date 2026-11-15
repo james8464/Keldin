@@ -535,7 +535,10 @@ def _written_question(
         scheme = [
             f"Correct method: (({values[-1]} − {values[0]}) ÷ {values[0]}) × 100.",
             f"Correct answer: {change}.",
-            f"Award up to {rule.marks} marks for a valid method and correct answer.",
+            f"Award {rule.marks} marks for the correct percentage to one decimal place with the % sign, even without working.",
+            "Award 1 mark for the correct numerical value without the % sign or without the required precision, "
+            "or for a valid method with a wrong answer given to one decimal place with the % sign. "
+            "Do not add this partial credit to full credit.",
         ]
     elif rule.kind == "data_interpretation":
         prompt = (
