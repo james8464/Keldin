@@ -147,6 +147,34 @@ def test_public_ollama_context_refusal_preserves_distinct_reason(
     assert evidence["raw_response"] == "not valid JSON"
 
 
+def test_invalid_authored_table_stays_in_private_diagnostics(publication, monkeypatch):
+    from tests.test_french_llm_pipeline import Client
+
+    subject, args, events = publication
+    private_marker = "PRIVATE_SYNTHETIC_TABLE_TITLE"
+
+    def invalidate(raw):
+        table = raw["materials"][0]
+        table["title"] = private_marker
+        table["rows"][0][1] = ""
+
+    client = Client(mutate=invalidate)
+    monkeypatch.setattr(subject, "HostedLLMClient", lambda **kwargs: client)
+    assert subject.handle_generate_llm_assessment(args) == 1
+    assert len(client.requests) == 2
+    assert events[-1]["type"] == "error"
+    assert private_marker not in events[-1]["message"]
+    assert events[-1]["code"] == "french_authoring_structure"
+    assert "Aucun sujet" in events[-1]["message"]
+    assert not any(event["type"] in {"done", "file"} for event in events)
+    assert not list(args.output.rglob("*.pdf"))
+    (report,) = (args.output / ".keldin-diagnostics").glob("failure-*.json")
+    details = json.loads(report.read_text(encoding="utf-8"))["details"]
+    assert details["kind"] == "french_authoring_structure"
+    assert len(details["attempts"]) == 2
+    assert all(private_marker in row["raw_response"] for row in details["attempts"])
+
+
 def test_ollama_memory_refusal_precedes_authoring(publication, monkeypatch):
     from Backend.Core.ollama_admission import ResourceAdmissionError
 

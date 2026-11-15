@@ -316,13 +316,29 @@ def handle_generate_llm_assessment(args) -> int:
                 "generation_limits": client.snapshot() if client is not None else None,
             },
         )
-        code = (
-            "french_model_context_unavailable"
+        kind = (
+            error.details.get("kind")
             if isinstance(error, GenerationEvidenceError)
-            and error.details.get("kind") == "context_capacity"
-            else "french_generation_failed"
+            else None
         )
-        emit("error", message=str(error), code=code)
+        if kind == "french_authoring_structure":
+            # Schema errors can include the full rejected material. Only
+            # the private diagnostic should contain that provider output.
+            emit(
+                "error",
+                code="french_authoring_structure",
+                message=(
+                    "Le modèle n'a pas produit un exercice utilisable. "
+                    "Essayez un autre modèle ou fournisseur. Aucun sujet n'a été enregistré."
+                ),
+            )
+        else:
+            code = (
+                "french_model_context_unavailable"
+                if kind == "context_capacity"
+                else "french_generation_failed"
+            )
+            emit("error", message=str(error), code=code)
         return 1
     finally:
         if previous_handler is not None:

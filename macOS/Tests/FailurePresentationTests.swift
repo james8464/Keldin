@@ -62,6 +62,19 @@ final class FailurePresentationTests: XCTestCase {
         XCTAssertEqual(GenerationPresentation.failureKind(for: "Private details", code: nil), .generationFailed)
     }
 
+    func testFrenchAuthoredShapeFailureUsesTheLocalizedQualityMessage() {
+        let code = "french_authoring_structure"
+        let message = "Le modèle n'a pas produit un exercice utilisable."
+        let existingQuality = "L'exercice 1 reste mal structuré après deux tentatives : invalid shape"
+        for language in ["en", "fr"] {
+            XCTAssertEqual(
+                GenerationPresentation.error(message, code: code, language: language),
+                GenerationPresentation.error(existingQuality, code: "french_generation_failed", language: language)
+            )
+        }
+        XCTAssertEqual(GenerationPresentation.failureKind(for: message, code: code), .qualityChecksFailed)
+    }
+
     @MainActor
     func testBackendFailureKindReachesOwnedHistoryWithoutSavingTheRawMessage() throws {
         let defaults = isolatedDefaults()
