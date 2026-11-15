@@ -89,7 +89,7 @@ def test_model_quality_guidance_is_separate_from_memory_suggestions():
     settings = (APP / "Features/Settings/SettingsPane.swift").read_text()
     assert 'Text("From model guide")' in workspace
     assert 'Text("Recommended")' not in workspace
-    assert 'LabeledContent("Model guide suggestion")' in settings
+    assert 'Picker("Model guide option"' in settings
     assert 'LabeledContent("Estimated to fit now"' in settings
     assert 'Label("Recommended model selected"' not in settings
 
@@ -97,19 +97,19 @@ def test_model_quality_guidance_is_separate_from_memory_suggestions():
 def test_suggested_download_waits_for_the_same_models_current_estimate():
     settings = (APP / "Features/Settings/SettingsPane.swift").read_text()
     assert (
-        "localGuidance?.fittingModels.contains(application.ollamaRecommendation.model) == true"
-        in settings
+        "localGuidance?.fittingModels.contains(guideOption.model) == true" in settings
     )
-    suggested = settings.split('Button("Download suggested model…")', 1)[1].split(
+    suggested = settings.split('Button("Download this model…")', 1)[1].split(
         'Button("Open Model Guide")', 1
     )[0]
     assert (
         "!application.canRequestModelDownload || !canDownloadSuggestedModel"
         in suggested
     )
+    assert "checkLocalGuide(downloadModel: guideOption.model)" in suggested
     assert 'Button("Check this Mac")' in settings
     assert (
-        '!checkedLocalGuidance {\n                    Text("Check this Mac before downloading the suggested model.")'
+        '!checkedLocalGuidance {\n                    Text("Check this Mac before downloading a guide model.")'
         in settings
     )
     assert 'Button("Download")' in settings  # The manual path remains available.

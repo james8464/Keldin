@@ -3247,11 +3247,8 @@
     {
       "path": "Resources/ollama-model-recommendations.json",
       "classification": "configuration-or-runtime-data",
-      "status": "reviewed",
-      "reason": "All 40 lines. Memory tiers are contiguous and explicitly unqualified for the full paper matrix. The warning distinguishes memory fit from accuracy. This was not a new model-availability or inference test.",
-      "source_sha256": "4ebce807196c10c2b73396b7f849d2bbb32dcd6738e8cc2b3746952425344b3e",
-      "review_evidence": "docs/quality/implementation-audit-reconciliation-2026-11-10.md",
-      "review_evidence_sha256": "799d0c38f8fce9352aa3b7697bae3e7e9bd9ccf480cafc45c12e94e6d1582c10"
+      "status": "pending",
+      "reason": "No file-level semantic implementation review recorded in this ledger."
     },
     {
       "path": "Resources/print-profiles.json",
@@ -6157,11 +6154,8 @@
     {
       "path": "macOS/Keldin/State/ModelDownloadPresentation.swift",
       "classification": "maintained-source",
-      "status": "reviewed",
-      "reason": "Root read complete current source through EOF; bounded dependencies and qualification limits are documented.",
-      "source_sha256": "bbf497df5ea0af154d4e10bb63e326d91061cf1ed79944bdaddd09317aa7fc9f",
-      "review_evidence": "docs/quality/model-download-and-packaging-input-review-2026-11-02.md",
-      "review_evidence_sha256": "9f13e6fbd83877c17dbad7659d266ce11619458437938f95242ecd585565908e"
+      "status": "pending",
+      "reason": "No file-level semantic implementation review recorded in this ledger."
     },
     {
       "path": "macOS/Keldin/State/RecentDocumentStore.swift",

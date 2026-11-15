@@ -1623,6 +1623,67 @@ final class RunIsolationTests: XCTestCase {
     }
 
     @MainActor
+    func testGuideDownloadDoesNotSelectOrSaveTheDownloadedModel() async throws {
+        let backend = ControlledRunBackend()
+        let defaults = isolatedDefaults()
+        defaults.set("existing-model:latest", forKey: AppStorageKey.ollamaModel)
+        let application = application(backend: backend, defaults: defaults)
+        backend.modelGuideResponse = LocalModelGuidance(
+            conditionsVerified: true,
+            recommendations: [.init(model: "qwen3.5:2b-q4_K_M", estimatedFitNow: true)]
+        )
+        _ = try await application.localModelGuidance()
+        let request = try XCTUnwrap(application.requestPullModel(model: "qwen3.5:2b-q4_K_M"))
+        application.confirmPullModel(request)
+        let pull = try XCTUnwrap(backend.requests.first)
+
+        pull.onFinish(.success(0))
+
+        XCTAssertEqual(application.selectedModel, "existing-model:latest")
+        XCTAssertEqual(defaults.string(forKey: AppStorageKey.ollamaModel), "existing-model:latest")
+    }
+
+    @MainActor
+    func testGuideRefusesPullAfterPreviouslyFittingModelNoLongerFits() async throws {
+        let backend = ControlledRunBackend()
+        let application = application(backend: backend)
+        let model = "qwen3.5:9b-q4_K_M"
+        backend.modelGuideResponse = LocalModelGuidance(
+            conditionsVerified: true,
+            recommendations: [.init(model: model, estimatedFitNow: true)]
+        )
+        let first = try await application.localModelGuidance()
+        XCTAssertEqual(first?.fittingModels, [model])
+
+        backend.modelGuideResponse = LocalModelGuidance(
+            conditionsVerified: true,
+            recommendations: [.init(model: model, estimatedFitNow: false)]
+        )
+        let second = try await application.localModelGuidance()
+        XCTAssertEqual(second?.fittingModels, [])
+        XCTAssertNil(application.requestPullModel(model: model))
+        XCTAssertTrue(backend.requests.isEmpty)
+    }
+
+    @MainActor
+    func testGuideCannotUseAnEstimateForAnotherOllamaServer() async throws {
+        let backend = ControlledRunBackend()
+        let application = application(backend: backend)
+        backend.modelGuideResponse = LocalModelGuidance(
+            conditionsVerified: true,
+            recommendations: [.init(model: "qwen3.5:2b-q4_K_M", estimatedFitNow: true)]
+        )
+        _ = try await application.localModelGuidance()
+        let request = try XCTUnwrap(application.requestPullModel(model: "qwen3.5:2b-q4_K_M"))
+        application.ollamaURL = "http://127.0.0.1:11435"
+
+        XCTAssertNil(application.requestPullModel(model: "qwen3.5:2b-q4_K_M"))
+        application.confirmPullModel(request)
+
+        XCTAssertTrue(backend.requests.isEmpty)
+    }
+
+    @MainActor
     func testFailedModelDownloadUsesTheSelectedFrenchMessage() throws {
         let backend = ControlledRunBackend()
         let defaults = isolatedDefaults()
@@ -2259,6 +2320,7 @@ final class ControlledRunBackend: BackendRunning, @unchecked Sendable {
     private(set) var lastProcess: Process?
     private(set) var cancelledProcessIDs: [ObjectIdentifier] = []
     var launchError: Error?
+    var modelGuideResponse: LocalModelGuidance?
 
     func run(
         arguments: [String], environment: [String: String],
@@ -2272,7 +2334,12 @@ final class ControlledRunBackend: BackendRunning, @unchecked Sendable {
         return process
     }
 
-    func collect(arguments: [String]) async throws -> [BackendEvent] { [] }
+    func collect(arguments: [String]) async throws -> [BackendEvent] {
+        if arguments == ["local-model-guidance"], let modelGuideResponse {
+            return [.localModelGuidance(modelGuideResponse)]
+        }
+        return []
+    }
 
     func cancel(_ process: Process) {
         cancelledProcessIDs.append(ObjectIdentifier(process))

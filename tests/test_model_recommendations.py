@@ -20,7 +20,12 @@ def payload() -> dict[str, object]:
 
 @pytest.mark.parametrize(
     ("available_gib", "disk_gib", "fitting"),
-    [(6, 20, ["qwen3.5:4b-q4_K_M"]), (4, 20, []), (6, 3, [])],
+    [
+        (6, 20, ["qwen3.5:4b-q4_K_M", "qwen3.5:2b-q4_K_M"]),
+        (4, 20, ["qwen3.5:2b-q4_K_M"]),
+        (6, 3, ["qwen3.5:2b-q4_K_M"]),
+        (6, 2, []),
+    ],
 )
 def test_live_guidance_checks_headroom_and_disk(
     monkeypatch, available_gib, disk_gib, fitting
@@ -45,6 +50,13 @@ def test_live_guidance_checks_headroom_and_disk(
     [(kind, report)] = events
     assert kind == "model_guidance"
     assert report["conditions_verified"] and report["prefer_cloud"]
+    assert [row["model"] for row in report["recommendations"]] == [
+        "gemma4:12b",
+        "qwen3.5:9b-q4_K_M",
+        "qwen2.5:7b",
+        "qwen3.5:4b-q4_K_M",
+        "qwen3.5:2b-q4_K_M",
+    ]
     assert [
         row["model"] for row in report["recommendations"] if row["estimated_fit_now"]
     ] == fitting
@@ -130,15 +142,17 @@ def test_recommendation_registry_is_contiguous_and_owns_cli_default() -> None:
 
     assert recommendations.default_model == default_ollama_model()
     assert recommendations.tiers[0].minimum_memory_gb == 0
-    assert recommendations.tiers[0].maximum_memory_gb == 16
-    assert recommendations.tiers[1].minimum_memory_gb == 16
+    assert [
+        (tier.minimum_memory_gb, tier.maximum_memory_gb)
+        for tier in recommendations.tiers
+    ] == [(0, 12), (12, 16), (16, 20), (20, 24), (24, None)]
     assert recommendations.tiers[-1].maximum_memory_gb is None
     assert "results" in recommendations.other_model_warning.casefold()
 
 
 def test_recommendation_registry_rejects_memory_gaps() -> None:
     value = copy.deepcopy(payload())
-    value["tiers"][1]["minimum_memory_gb"] = 17
+    value["tiers"][1]["minimum_memory_gb"] = 13
 
     with pytest.raises(ValueError, match="contiguous"):
         parse_model_recommendations(value)
@@ -195,11 +209,11 @@ def test_memory_boundaries_are_finite_numbers(field: str, boundary: object) -> N
 
 def test_finite_fractional_memory_boundaries_remain_valid() -> None:
     value = payload()
-    value["tiers"][0]["maximum_memory_gb"] = 15.5
-    value["tiers"][1]["minimum_memory_gb"] = 15.5
+    value["tiers"][0]["maximum_memory_gb"] = 11.5
+    value["tiers"][1]["minimum_memory_gb"] = 11.5
     parsed = parse_model_recommendations(value)
-    assert parsed.tiers[0].maximum_memory_gb == 15.5
-    assert parsed.tiers[1].minimum_memory_gb == 15.5
+    assert parsed.tiers[0].maximum_memory_gb == 11.5
+    assert parsed.tiers[1].minimum_memory_gb == 11.5
 
 
 @pytest.mark.parametrize("flag", [True, False])

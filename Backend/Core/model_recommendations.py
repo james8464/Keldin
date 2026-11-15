@@ -138,7 +138,6 @@ def handle_local_model_guidance(args: Any) -> int:
         (row["model"], math.ceil(row["download_size_gb"] * 10**9))
         for row in reversed(payload["tiers"])
     ]
-    candidates.append(("qwen3.5:4b-q4_K_M", 3_400_000_000))
     rows = []
     for model, download_estimate in candidates:
         cached_size = cached_sizes.get(model)

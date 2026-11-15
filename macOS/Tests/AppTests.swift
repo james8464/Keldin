@@ -834,9 +834,13 @@ final class KeldinTests: XCTestCase {
         let eightGB = guide.recommendation(physicalMemoryBytes: 8 * 1_073_741_824)
         let sixteenGB = guide.recommendation(physicalMemoryBytes: 16 * 1_073_741_824)
 
-        XCTAssertEqual(eightGB.model, "qwen2.5:7b")
-        XCTAssertEqual(sixteenGB.model, "gemma4:12b")
-        XCTAssertEqual(sixteenGB.contextWindow, "256K")
+        XCTAssertEqual(guide.tiers.map(\.model), [
+            "qwen3.5:2b-q4_K_M", "qwen3.5:4b-q4_K_M", "qwen2.5:7b",
+            "qwen3.5:9b-q4_K_M", "gemma4:12b"
+        ])
+        XCTAssertEqual(eightGB.model, "qwen3.5:2b-q4_K_M")
+        XCTAssertEqual(sixteenGB.model, "qwen2.5:7b")
+        XCTAssertEqual(sixteenGB.contextWindow, "32K")
         XCTAssertEqual(sixteenGB.appContextWindow, "16K")
         XCTAssertEqual(
             AppDefaults.ollamaModel,
@@ -854,7 +858,7 @@ final class KeldinTests: XCTestCase {
 
     func testModelGuidanceUsesSelectedLanguageAndStatesReviewLimits() throws {
         let guide = try OllamaModelGuide.load(bundle: .main)
-        let large = guide.recommendation(physicalMemoryBytes: 16 * 1_073_741_824)
+        let large = guide.recommendation(physicalMemoryBytes: 24 * 1_073_741_824)
         let small = guide.recommendation(physicalMemoryBytes: 8 * 1_073_741_824)
         XCTAssertFalse(large.validatedForFullMatrix)
         XCTAssertFalse(small.validatedForFullMatrix)
@@ -878,9 +882,6 @@ final class KeldinTests: XCTestCase {
         }
         let warning = InterfaceText.resolve(guide.otherModelWarningResource, language: "fr")
         XCTAssertTrue(warning.contains("pas encore passé un contrôle de qualité complet"))
-        let fallback = OllamaModelGuideDocument.fallback.recommendation(physicalMemoryBytes: 16 * 1_073_741_824)
-        XCTAssertEqual(fallback.detail, large.detail)
-        XCTAssertEqual(fallback.downloadSizeGB, large.downloadSizeGB)
     }
 
     func testFrenchNSIWorkflowHasFrenchLocalisation() {

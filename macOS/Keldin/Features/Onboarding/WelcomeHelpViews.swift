@@ -198,7 +198,8 @@ private struct HelpTopicPage: View {
             Text("The guide uses total memory. In Settings, choose Check this Mac to estimate fit under current conditions. Neither is a paper-quality check.")
                 .foregroundStyle(.secondary)
 
-            GroupBox("Model guide suggestion") {
+            if OllamaModelGuide.isAvailable {
+                GroupBox("Model guide suggestion") {
                 VStack(alignment: .leading, spacing: 10) {
                     LabeledContent("Model", value: application.ollamaRecommendation.model)
                     LabeledContent("Download size") {
@@ -217,6 +218,10 @@ private struct HelpTopicPage: View {
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(.top, 4)
+                }
+            } else {
+                Text("The local model guide is unavailable.")
+                    .foregroundStyle(.secondary)
             }
 
             HelpCallout(
@@ -239,8 +244,7 @@ private struct HelpTopicPage: View {
             HelpSection(
                 title: "Memory guidance",
                 rows: [
-                    "16 GB or more: gemma4:12b is the configured local suggestion.",
-                    "Below 16 GB: qwen2.5:7b is the smaller local suggestion. Memory use still depends on other apps and context.",
+                    "Choose from the model guide in Settings. Check this Mac before downloading.",
                     "Keep memory-heavy apps closed during generation. Model download size is not the model’s complete runtime memory requirement.",
                 ]
             )

@@ -60,6 +60,10 @@ struct OllamaModelRecommendation: Identifiable, Hashable, Decodable {
         LocalizedStringResource(stringLiteral: detail)
     }
 
+    var titleResource: LocalizedStringResource {
+        LocalizedStringResource(stringLiteral: title)
+    }
+
     var qualityNoteResource: LocalizedStringResource {
         LocalizedStringResource(stringLiteral: qualityNote)
     }
@@ -131,7 +135,9 @@ struct OllamaModelGuideDocument: Decodable {
 }
 
 enum OllamaModelGuide {
-    static let document = (try? load(bundle: .main)) ?? .fallback
+    private static let bundledDocument = try? load(bundle: .main)
+    static let document = bundledDocument ?? .fallback
+    static var isAvailable: Bool { bundledDocument != nil }
 
     static var currentRecommendation: OllamaModelRecommendation {
         document.recommendation(
