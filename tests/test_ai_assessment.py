@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+import io
+import json
+
 import pytest
 
 from Backend.Core.ai_assessment import (
@@ -20,6 +23,7 @@ from Backend.Core.ai_assessment import (
     _repair_prompt,
     _required_awarded_entries,
     _requires_model_review,
+    _review_batch,
     _review_prompt,
     _seeded_fallback_allowed,
     _Task,
@@ -40,6 +44,7 @@ from Backend.Core.exam_blueprints import (
 )
 from Backend.Core.independent_solver import CanonicalSolution
 from Backend.Core.model_review import DifficultyReviewResult, ReviewResult
+from Backend.Core.providers import HostedLLMClient
 from Backend.Core.reference_demand import ReferenceDemandProfile
 from Backend.Core.subjects.selected_response import (
     selected_response_contract,
@@ -1658,6 +1663,10 @@ def test_locked_contract_cannot_skip_editor_rejection_when_difficulty_is_disable
                     {
                         "id": task.id,
                         "approved": False,
+                        "factual_issues": [],
+                        "marking_issues": [],
+                        "source_issues": [],
+                        "difficulty_issues": [],
                         "ambiguity_issues": ["Two options are correct."],
                     }
                 ]
@@ -1841,6 +1850,70 @@ def _review_response(
             }
         ]
     }
+
+
+@pytest.mark.parametrize("provider", ["openai", "anthropic"])
+@pytest.mark.parametrize("case", ["valid", "duplicate", "missing_checks"])
+def test_hosted_assessment_review_requires_one_complete_row_per_question(
+    monkeypatch: pytest.MonkeyPatch, provider: str, case: str
+) -> None:
+    question = GeneratedQuestion(
+        rule_id="costs",
+        number="1",
+        marks=1,
+        kind="explain",
+        command_word="explain",
+        topic_id="costs",
+        prompt="Explain how higher costs affect profit.",
+        mark_scheme=["Higher costs reduce profit, other things equal."],
+        assessment_objectives={"AO1": 1},
+    )
+    task = _Task(
+        key=(0, 0, 0),
+        question=question,
+        option=GeneratedOption(id="case", title="Costs", questions=[question]),
+        topic=type("Topic", (), {"id": "costs", "title": "Costs", "points": []})(),
+    )
+    reviews = _review_response("0/0/0", approved=True)["reviews"]
+    assert isinstance(reviews, list)
+    if case == "duplicate":
+        denial = _review_response(
+            "0/0/0", approved=False, factual_issues=["Direction is wrong."]
+        )["reviews"]
+        assert isinstance(denial, list)
+        reviews = [*denial, *reviews]
+    elif case == "missing_checks":
+        reviews = [{"id": "0/0/0", "approved": True}]
+    content = json.dumps({"reviews": reviews})
+    envelope = (
+        {
+            "status": "completed",
+            "output": [
+                {
+                    "type": "message",
+                    "role": "assistant",
+                    "content": [{"type": "output_text", "text": content}],
+                }
+            ],
+        }
+        if provider == "openai"
+        else {"stop_reason": "end_turn", "content": [{"type": "text", "text": content}]}
+    )
+    monkeypatch.setattr(
+        "Backend.Core.providers.urllib_request",
+        lambda *_args, **_kwargs: io.BytesIO(json.dumps(envelope).encode()),
+    )
+    client = HostedLLMClient(provider=provider, model="fixture", api_key="test-only")
+
+    if case == "duplicate":
+        with pytest.raises(ValueError, match="one review per requested question"):
+            _review_batch([task], [question], client=client, subject="Economics")
+    elif case == "missing_checks":
+        with pytest.raises(ValueError, match="missing required checks"):
+            _review_batch([task], [question], client=client, subject="Economics")
+    else:
+        result = _review_batch([task], [question], client=client, subject="Economics")
+        assert result["0/0/0"].approved
 
 
 def _difficulty_response(

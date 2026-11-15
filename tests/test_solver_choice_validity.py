@@ -168,9 +168,17 @@ def test_closed_slot_solver_does_not_gain_choice_only_field():
     assert schema["properties"]["answer"]["type"] == "object"
 
 
-def test_choice_validity_gate_changes_checkpoint_identity(monkeypatch, tmp_path):
+@pytest.mark.parametrize(
+    "prior_review_version",
+    [
+        "assessment-review-v7-trusted-generation-requests",
+        "assessment-review-v11-accounting-equal-priority",
+    ],
+)
+def test_stricter_review_keeps_old_checkpoints_out_of_current_job(
+    monkeypatch, tmp_path, prior_review_version
+):
     from Backend.Core import generation
-    from Backend.Core.ai_assessment import ASSESSMENT_REVIEW_VERSION
 
     args = Namespace(
         subject="accounting_aqa",
@@ -179,18 +187,13 @@ def test_choice_validity_gate_changes_checkpoint_identity(monkeypatch, tmp_path)
         provider="apple",
         model="fixture",
     )
-    assert (
-        ASSESSMENT_REVIEW_VERSION == "assessment-review-v11-accounting-equal-priority"
-    )
-    current = generation.checkpoint_path_for_job(args, tmp_path)
-    monkeypatch.setattr(
-        generation,
-        "ASSESSMENT_REVIEW_VERSION",
-        "assessment-review-v7-trusted-generation-requests",
-    )
-    old = generation.checkpoint_path_for_job(args, tmp_path)
-    assert current != old
+    with monkeypatch.context() as previous:
+        previous.setattr(generation, "ASSESSMENT_REVIEW_VERSION", prior_review_version)
+        old = generation.checkpoint_path_for_job(args, tmp_path)
     old.parent.mkdir(parents=True)
-    old.write_text("retained historical checkpoint")
-    assert old.read_text() == "retained historical checkpoint"
+    old.write_bytes(b"retained historical checkpoint")
+    current = generation.checkpoint_path_for_job(args, tmp_path)
+    assert current != old
+    assert not current.exists()
+    assert old.read_bytes() == b"retained historical checkpoint"
     assert not current.exists()
