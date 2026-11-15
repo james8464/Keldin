@@ -5953,11 +5953,8 @@
     {
       "path": "macOS/Keldin/Features/Generation/GeneratorWorkspaceView.swift",
       "classification": "maintained-source",
-      "status": "reviewed",
-      "reason": "Complete-file EOF implementation review by release_gap_audit within the documented scope; exact source identity checked after integration. Dependencies, runtime acceptance and whole-project completion remain separate.",
-      "source_sha256": "c4a8e348c749868f87d44b597785bb669bc1505ab672bf3c7edd682a441df9c4",
-      "review_evidence": "docs/quality/native-interface-file-reviews-2026-11-02.md",
-      "review_evidence_sha256": "4665323a90eb980561527f316487a28a58b13867782b9f9d50847d66b6c390fd"
+      "status": "pending",
+      "reason": "No file-level semantic implementation review recorded in this ledger."
     },
     {
       "path": "macOS/Keldin/Features/Onboarding/KeldinCreationTips.swift",

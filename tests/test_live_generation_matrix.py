@@ -37,11 +37,10 @@ def test_matrix_requires_an_error_free_terminal_event_stream(
 
     def complete(command, **_kwargs):
         run_dir = Path(command[command.index("--output") + 1])
-        events = []
-        for role in (*job.expected_roles, "package_manifest"):
-            path = run_dir / f"{role}.json"
-            path.write_text(json.dumps({"reference_demand": {"passed": True}}))
-            events.append({"type": "file", "role": role, "path": str(path)})
+        files = published_files(run_dir, job)
+        events = [
+            {"type": "file", "role": role, "path": path} for role, path in files.items()
+        ]
         return BackendRun(
             0, False, "\n".join(map(json.dumps, events + terminal_events)), "", 1000
         )
@@ -109,6 +108,124 @@ def file_event_stream(files: dict[str, str]) -> str:
         {"type": "file", "role": role, "path": path} for role, path in files.items()
     ]
     return "\n".join(map(json.dumps, [*events, {"type": "done"}])) + "\n"
+
+
+def published_files(
+    run_dir,
+    job,
+    *,
+    seed=42,
+    model="gemma4:12b",
+    provider="ollama",
+    preview=False,
+    demand=True,
+    extra=None,
+):
+    import pymupdf
+
+    files = {}
+    outputs = {}
+    for role in job.expected_roles:
+        if role == "assessment_package":
+            path = run_dir / f"{role}.json"
+            payload = (
+                {}
+                if demand is None
+                else {
+                    "reference_demand": {
+                        "passed": demand,
+                        "failed_checks": []
+                        if demand
+                        else ["mark_weighted_demand_distribution"],
+                    }
+                }
+            )
+            path.write_text(json.dumps(payload), encoding="utf-8")
+            pdf_validation = None
+        else:
+            path = run_dir / f"{role}.pdf"
+            with pymupdf.open() as doc:
+                doc.new_page().insert_text((70, 70), f"Practice {role}")
+                doc.save(path)
+            pdf_validation = {"pages": 1}
+        files[role] = str(path)
+        outputs[role] = dict(
+            filename=path.name,
+            bytes=path.stat().st_size,
+            sha256=_sha256(path),
+            pdf_validation=pdf_validation,
+        )
+    manifest = run_dir / "package.json"
+    payload = {
+        "schema_version": 2,
+        "generator": {"id": job.family_id, "version": "1.2.3"},
+        "request": {
+            "subject": job.backend_subject,
+            "paper": job.paper,
+            "seed": seed,
+            "preview_mode": preview,
+            "model": model,
+            "provider": provider,
+        },
+        "outputs": outputs,
+    }
+    payload.update(extra or {})
+    manifest.write_text(json.dumps(payload), encoding="utf-8")
+    files["package_manifest"] = str(manifest)
+    return files
+
+
+@pytest.mark.parametrize("defect", ["none", "seed", "preview", "digest", "not_pdf"])
+def test_matrix_qualifies_only_the_bound_published_pdfs(tmp_path, monkeypatch, defect):
+    job = jobs()[0]
+
+    def backend(_command, *, run_dir, **_kwargs):
+        files = published_files(run_dir, job)
+        manifest = Path(files["package_manifest"])
+        packet = json.loads(manifest.read_text())
+        paper = Path(files["question_paper"])
+        if defect == "seed":
+            packet["request"]["seed"] = 43
+        elif defect == "preview":
+            packet["request"]["preview_mode"] = True
+        elif defect == "digest":
+            packet["outputs"]["question_paper"]["sha256"] = "0" * 64
+        elif defect == "not_pdf":
+            paper.write_text("Not a document.")
+            packet["outputs"]["question_paper"].update(
+                bytes=paper.stat().st_size, sha256=_sha256(paper)
+            )
+        manifest.write_text(json.dumps(packet), encoding="utf-8")
+        return BackendRun(0, False, file_event_stream(files), "", 1000)
+
+    monkeypatch.setattr("tools.live_generation_matrix.run_backend", backend)
+    report = run_matrix(
+        [job],
+        output_root=tmp_path,
+        command_prefix=["backend"],
+        model="gemma4:12b",
+        provider="ollama",
+        ollama_url="http://localhost:11434",
+        base_seed=42,
+        timeout_seconds=30,
+        dry_run=False,
+        resume=False,
+    )
+    result = report["results"][0]
+    assert result["passed"] == (defect == "none")
+    qualification = json.loads(Path(result["qualification_manifest"]).read_text())
+    assert qualification["gate_results"]["pdf"] == (
+        "passed" if defect == "none" else "failed"
+    )
+    # A retained result with the same file hashes still cannot promote a
+    # mismatched publication manifest simply by calling itself passed.
+    result.update(passed=True, generation_passed=True, errors=[])
+    retained = Path(result["qualification_manifest"]).with_name("matrix-result.json")
+    retained.write_text(json.dumps(result), encoding="utf-8")
+    assert (
+        _resumable_result(retained, request_identity=result["request_identity"])
+        is not None
+    ) is (defect == "none")
 
 
 @pytest.mark.parametrize(
@@ -336,56 +453,20 @@ def test_live_matrix_writes_per_paper_and_aggregate_qualification_manifests(
 
     def complete(command, **_kwargs):
         run_dir = Path(command[command.index("--output") + 1])
-        package = run_dir / "package.json"
-        role_paths: dict[str, Path] = {}
-        for role in job.expected_roles:
-            suffix = ".json" if role == "assessment_package" else ".pdf"
-            path = run_dir / f"{role.replace('_', '-')}{suffix}"
-            path.write_bytes(b"{}" if suffix == ".json" else b"%PDF-test")
-            if role == "assessment_package" and demand_passed is not None:
-                path.write_text(
-                    json.dumps(
-                        {
-                            "reference_demand": {
-                                "passed": demand_passed,
-                                "failed_checks": []
-                                if demand_passed
-                                else ["mark_weighted_demand_distribution"],
-                            }
-                        }
-                    ),
-                    encoding="utf-8",
-                )
-            role_paths[role] = path
-        package.write_text(
-            json.dumps(
-                {
-                    "schema_version": 2,
-                    "generator": {"version": "1.2.3"},
-                    "inputs": {
-                        "assessment_schema": "assessment:v3",
-                        "assessment_package_schema": 1,
-                        "syllabus_sha256": "b" * 64,
-                        "layout_profile_sha256": "c" * 64,
-                    },
+        files = published_files(
+            run_dir,
+            job,
+            demand=demand_passed,
+            extra={
+                "inputs": {
+                    "assessment_schema": "assessment:v3",
+                    "assessment_package_schema": 1,
+                    "syllabus_sha256": "b" * 64,
+                    "layout_profile_sha256": "c" * 64,
                 }
-            ),
-            encoding="utf-8",
+            },
         )
-        events = [
-            json.dumps({"type": "file", "role": role, "path": str(path)})
-            for role, path in role_paths.items()
-        ]
-        events.extend(
-            [
-                json.dumps(
-                    {"type": "file", "role": "package_manifest", "path": str(package)}
-                ),
-                json.dumps({"type": "done"}),
-            ]
-        )
-        stdout = "\n".join(events)
-        return BackendRun(0, False, stdout, "", 1000)
+        return BackendRun(0, False, file_event_stream(files), "", 1000)
 
     monkeypatch.setattr("tools.live_generation_matrix.run_backend", complete)
 
@@ -438,16 +519,7 @@ def test_resume_backfills_qualification_evidence_without_regenerating(
     job = jobs()[0]
     run_dir = tmp_path / job.backend_subject / f"paper-{job.paper}"
     run_dir.mkdir(parents=True)
-    files: dict[str, str] = {}
-    for role in (*job.expected_roles, "package_manifest"):
-        path = run_dir / f"{role}.json"
-        payload = (
-            {"reference_demand": {"passed": True}}
-            if role == "assessment_package"
-            else {}
-        )
-        path.write_text(json.dumps(payload), encoding="utf-8")
-        files[role] = str(path)
+    files = published_files(run_dir, job, seed=99)
     (run_dir / "events.jsonl").write_text(file_event_stream(files), encoding="utf-8")
     previous = {
         "id": job.id,
@@ -518,11 +590,7 @@ def test_resume_only_aggregates_current_automation_evidence(
 
     def backend(command, **_kwargs):
         run_dir = Path(command[command.index("--output") + 1])
-        files = {}
-        for role in (*job.expected_roles, "package_manifest"):
-            path = run_dir / f"{role}.json"
-            path.write_text(json.dumps({"reference_demand": {"passed": True}}))
-            files[role] = str(path)
+        files = published_files(run_dir, job)
         return BackendRun(0, False, file_event_stream(files), "", 1000)
 
     monkeypatch.setattr("tools.live_generation_matrix.run_backend", backend)
@@ -608,11 +676,7 @@ def test_final_aggregate_does_not_reissue_an_edited_earlier_review(
             payload = json.loads(earliest.read_bytes())
             payload["gate_results"]["visual"] = "passed"
             earliest.write_text(json.dumps(payload))
-        files = {}
-        for role in (*job.expected_roles, "package_manifest"):
-            path = run_dir / f"{role}.json"
-            path.write_text(json.dumps({"reference_demand": {"passed": True}}))
-            files[role] = str(path)
+        files = published_files(run_dir, job, seed=42 + job.seed_offset)
         return BackendRun(0, False, file_event_stream(files), "", 1000)
 
     monkeypatch.setattr("tools.live_generation_matrix.run_backend", backend)
@@ -831,14 +895,9 @@ def test_final_matrix_rechecks_earlier_evidence(tmp_path, monkeypatch, drift):
     def complete(command, *, run_dir, **kwargs):
         paper = command[command.index("--paper") + 1]
         job = next(item for item in selected if item.paper == paper)
-        lines = []
-        for role in (*job.expected_roles, "package_manifest"):
-            path = run_dir / f"{role}.json"
-            path.write_text(json.dumps({"reference_demand": {"passed": True}}))
-            lines.append(json.dumps({"type": "file", "role": role, "path": str(path)}))
-            if role == "question_paper" and job == selected[0]:
-                first_question.append(path)
-        lines.append('{"type":"done"}')
+        files = published_files(run_dir, job, seed=42 + job.seed_offset)
+        if job == selected[0]:
+            first_question.append(Path(files["question_paper"]))
         if job == selected[1]:
             if drift == "model":
                 current["model"] = "replacement-model"
@@ -846,7 +905,7 @@ def test_final_matrix_rechecks_earlier_evidence(tmp_path, monkeypatch, drift):
                 current["runtime"] = "changed-source"
             elif drift == "artifact":
                 first_question[0].write_text("tampered")
-        return BackendRun(0, False, "\n".join(lines), "", 1000)
+        return BackendRun(0, False, file_event_stream(files), "", 1000)
 
     monkeypatch.setattr("tools.live_generation_matrix.run_backend", complete)
     report = run_matrix(

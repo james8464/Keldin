@@ -35,6 +35,15 @@ from tools.live_process import run_backend
 
 ROOT = Path(__file__).resolve().parents[1]
 REGISTRY_PATH = ROOT / "Resources" / "generator-registry.json"
+PDF_ROLES = frozenset(
+    {
+        "question_paper",
+        "mark_scheme",
+        "source_booklet",
+        "preliminary_material",
+        "electronic_answer_document",
+    }
+)
 
 
 @dataclass(frozen=True)
@@ -267,6 +276,11 @@ def run_matrix(
             error_messages.append(protocol_error)
         if artifact_error:
             error_messages.append(artifact_error)
+        hashes = {
+            role: _sha256(path)
+            for role, path in sorted(file_events.items())
+            if path.is_file()
+        }
         generation_passed = (
             return_code == 0
             and not timed_out
@@ -275,6 +289,16 @@ def run_matrix(
             and protocol_error is None
             and artifact_error is None
         )
+        if generation_passed:
+            publication_error = _publication_error(
+                file_events,
+                hashes,
+                request_identity,
+                job.family_id,
+            )
+            if publication_error:
+                generation_passed = False
+                error_messages.append(publication_error)
         current_identity = _request_identity(
             job,
             seed=seed,
@@ -334,11 +358,7 @@ def run_matrix(
             "missing_files": missing_files,
             "errors": error_messages,
             "files": {role: str(path) for role, path in sorted(file_events.items())},
-            "artifact_sha256": {
-                role: _sha256(path)
-                for role, path in sorted(file_events.items())
-                if path.is_file()
-            },
+            "artifact_sha256": hashes,
             "events_sha256": _sha256(run_dir / "events.jsonl"),
         }
         write_json_atomically(result_path, result)
@@ -542,6 +562,84 @@ def _generation_files(
     return files, None
 
 
+def _publication_error(
+    files: dict[str, Path],
+    hashes: dict[str, str],
+    identity: dict[str, Any],
+    family_id: str | None,
+) -> str | None:
+    """Confirm the receipt describes this invocation and these actual bytes."""
+    import pymupdf
+
+    manifest = _read_package_manifest(files["package_manifest"])
+    request = manifest.get("request")
+    generator = manifest.get("generator")
+    outputs = manifest.get("outputs")
+    job_id = identity.get("job")
+    if not isinstance(job_id, str) or ":" not in job_id or not family_id:
+        return "matrix request identity is incomplete"
+    subject, paper = job_id.rsplit(":", 1)
+    if (
+        type(manifest.get("schema_version")) is not int
+        or manifest["schema_version"] != 2
+        or not isinstance(request, dict)
+        or not isinstance(generator, dict)
+        or generator.get("id") != family_id
+        or request.get("subject") != subject
+        or request.get("paper") != paper
+        or type(request.get("seed")) is not int
+        or request["seed"] != identity["seed"]
+        or request.get("preview_mode") is not identity["preview"]
+        or (
+            not identity["preview"]
+            and (request.get("model"), request.get("provider"))
+            != (identity["model"], identity["provider"])
+        )
+    ):
+        return "backend publication manifest does not identify this matrix request"
+    if not isinstance(outputs, dict) or outputs.keys() != files.keys() - {
+        "package_manifest"
+    }:
+        return "backend publication manifest has missing or unexpected output roles"
+    try:
+        if files["package_manifest"].is_symlink():
+            return "backend publication manifest is not a regular job file"
+        for role, metadata in outputs.items():
+            path = files[role]
+            if (
+                not isinstance(metadata, dict)
+                or path.is_symlink()
+                or metadata.get("filename") != path.name
+                or metadata.get("sha256") != hashes[role]
+                or type(metadata.get("bytes")) is not int
+                or metadata["bytes"] <= 0
+                or metadata["bytes"] != path.stat().st_size
+            ):
+                return f"backend publication manifest does not match {role}"
+            if role in PDF_ROLES or path.suffix.lower() == ".pdf":
+                validation = metadata.get("pdf_validation")
+                if (
+                    path.suffix.lower() != ".pdf"
+                    or not isinstance(validation, dict)
+                    or type(validation.get("pages")) is not int
+                    or validation["pages"] < 1
+                ):
+                    return (
+                        f"backend publication manifest has no PDF evidence for {role}"
+                    )
+                with pymupdf.open(path) as pdf:
+                    if (
+                        not pdf.is_pdf
+                        or pdf.is_repaired
+                        or pdf.needs_pass
+                        or pdf.page_count != validation["pages"]
+                    ):
+                        return f"published {role} is not the validated PDF"
+    except (OSError, RuntimeError, ValueError, KeyError):
+        return "published artifacts could not be verified against their manifest"
+    return None
+
+
 def _request_identity(
     job: MatrixJob,
     *,
@@ -731,6 +829,10 @@ def _resumable_result(
             for role, value in event_files.items()
         ):
             return None
+        if _publication_error(
+            event_files, hashes, request_identity, result.get("family_id")
+        ):
+            return None
     except (OSError, ValueError):
         return None
     demand = _read_package_manifest(files.get("assessment_package")).get(
@@ -774,9 +876,12 @@ def _qualification_manifest(
     verified_artifacts: bool = False,
 ) -> QualificationManifest:
     package = _read_package_manifest(result.get("files", {}).get("package_manifest"))
-    inputs = package.get("inputs", {})
-    generator = package.get("generator", {})
-    backend = package.get("backend", {})
+    inputs = package.get("inputs")
+    generator = package.get("generator")
+    backend = package.get("backend")
+    inputs = inputs if isinstance(inputs, dict) else {}
+    generator = generator if isinstance(generator, dict) else {}
+    backend = backend if isinstance(backend, dict) else {}
     unfinished = result.get("status") in {"running", "interrupted"}
     generation_passed = result.get("generation_passed", result["passed"]) is True
     demand_passed = result.get("reference_demand_passed") is True

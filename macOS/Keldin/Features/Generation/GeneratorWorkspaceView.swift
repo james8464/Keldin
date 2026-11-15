@@ -145,6 +145,9 @@ private struct PaperConfiguration: View {
                         .foregroundStyle(.secondary)
                         .multilineTextAlignment(.trailing)
                 }
+                // The native label can retain its first accessibility value.
+                // Refresh this informational row without rebuilding either picker.
+                .id(application.selectedPaperDetail)
             }
 
             Section("Generation") {
