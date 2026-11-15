@@ -20,7 +20,11 @@ from Backend.Core.subjects.accounting_selected_response import (
     accounting_selected_response_contract,
 )
 from Backend.Core.subjects.selected_response import solve_selected_response
-from tests.test_shared_numeric_integrity import accounting_tasks
+from tests.test_shared_numeric_integrity import (
+    accounting_tasks,
+    restore_prior_abc_working,
+    restore_prior_scarce_hour_working,
+)
 
 PRE_BINDING_BASELINE_SHA256 = (
     "f42616ec0240caf5c7d72c92d4f545e21acca9ab0f8fe771dd257e5695f1aadb"
@@ -69,6 +73,10 @@ def _pre_binding_content_digest():
             for key, value in question.model_dump(mode="json").items()
             if key != "authoring_context"
         }
+        if question.rule_id == "costing_1":
+            restore_prior_abc_working(projection, question.authoring_context)
+        elif question.rule_id == "costing_3":
+            restore_prior_scarce_hour_working(projection, question.authoring_context)
         # The later equal-priority fix intentionally changes one scheme sentence.
         # Reverse only that exact delta when checking the earlier binding's RNG
         # and content baseline; dedicated tie tests require the corrected text.
@@ -117,7 +125,7 @@ def test_all_question_content_and_rng_match_pre_binding_baseline():
     assert _pre_binding_content_digest() == PRE_BINDING_BASELINE_SHA256
 
 
-@pytest.mark.parametrize("number", ["12.1", "13"])
+@pytest.mark.parametrize("number", ["12.1", "13", "15.1", "15.3"])
 def test_baseline_projection_still_detects_unrelated_content_changes(
     monkeypatch, number
 ):

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import random
 import secrets
+from decimal import Decimal
 
 from aqaaccountgen.case_data import (
     AccountingSystemCase,
@@ -35,6 +36,7 @@ from Backend.Core.exam_blueprints import (
     validate_rule,
 )
 from Backend.Core.mark_scheme_enrichment import enrich_paper
+from Backend.Core.numeric_integrity import rounded
 from Backend.Core.shared_source_scope import (
     owns_shared_source,
     uses_shared_option_source,
@@ -256,9 +258,10 @@ def _gbp(value: int) -> str:
     return f"{sign}£{abs(value):,}"
 
 
-def _gbp_decimal(value: float) -> str:
-    sign = "−" if value < 0 else ""
-    return f"{sign}£{abs(value):,.2f}"
+def _gbp_decimal(value: Decimal) -> str:
+    displayed = rounded(value, 2)
+    sign = "−" if displayed < 0 else ""
+    return f"{sign}£{abs(displayed):,.2f}"
 
 
 RULE_TOPIC_IDS = {
@@ -1092,6 +1095,13 @@ def _management_calculation(
             "total_overhead": total_overhead,
             "overhead_per_unit": overhead_per_unit,
         }
+        # Preserve historical numeric metadata, but use the published inputs
+        # for display arithmetic so binary floats cannot move a half-cent tie.
+        display_setup_rate = Decimal(setup_cost_pool) / total_setups
+        display_order_rate = Decimal(purchase_order_cost_pool) / total_purchase_orders
+        display_setup = display_setup_rate * product_setups
+        display_orders = display_order_rate * product_purchase_orders
+        display_total = display_setup + display_orders
         prompt = (
             f"Calculate the activity-based overhead cost per unit for a product made by {business}. "
             f"Set-up costs are {_gbp(setup_cost_pool)} for {total_setups:,} set-ups and "
@@ -1103,18 +1113,18 @@ def _management_calculation(
         scheme = [
             "Method: set-up driver rate = set-up cost pool ÷ total set-ups;",
             f"Set-up driver rate: {_gbp(setup_cost_pool)} ÷ {total_setups:,} = "
-            f"{_gbp_decimal(setup_rate)};",
+            f"{_gbp_decimal(display_setup_rate)};",
             "Method: purchase-order driver rate = purchase-order cost pool ÷ total orders;",
             f"Purchase-order driver rate: {_gbp(purchase_order_cost_pool)} ÷ "
-            f"{total_purchase_orders:,} = {_gbp_decimal(purchase_order_rate)};",
+            f"{total_purchase_orders:,} = {_gbp_decimal(display_order_rate)};",
             f"Set-up overhead assigned: ({_gbp(setup_cost_pool)} ÷ {total_setups:,}) × "
-            f"{product_setups:,} = {_gbp_decimal(setup_overhead)};",
+            f"{product_setups:,} = {_gbp_decimal(display_setup)};",
             f"Purchase-order overhead assigned: ({_gbp(purchase_order_cost_pool)} ÷ {total_purchase_orders:,}) × "
-            f"{product_purchase_orders:,} = {_gbp_decimal(purchase_order_overhead)};",
-            f"Total activity-based overhead: {_gbp_decimal(setup_overhead)} + "
-            f"{_gbp_decimal(purchase_order_overhead)} = {_gbp_decimal(total_overhead)};",
-            f"Overhead cost per unit: {_gbp_decimal(total_overhead)} ÷ "
-            f"{product_units:,} = {_gbp_decimal(overhead_per_unit)}.",
+            f"{product_purchase_orders:,} = {_gbp_decimal(display_orders)};",
+            "Total activity-based overhead: unrounded set-up overhead + unrounded "
+            f"purchase-order overhead = {_gbp_decimal(display_total)};",
+            "Overhead cost per unit: unrounded total activity-based overhead ÷ "
+            f"{product_units:,} = {_gbp_decimal(display_total / product_units)}.",
         ]
     elif rule_id == "costing_3":
         contribution_a = seeds[4] + 8
@@ -1151,10 +1161,10 @@ def _management_calculation(
         scheme = [
             "Method for Product A: contribution per unit ÷ scarce hours per unit;",
             f"Product A: {_gbp(contribution_a)} ÷ {hours_a} = "
-            f"{_gbp_decimal(return_a)} per scarce hour.",
+            f"{_gbp_decimal(Decimal(contribution_a) / hours_a)} per scarce hour.",
             "Method for Product B: contribution per unit ÷ scarce hours per unit;",
             f"Product B: {_gbp(contribution_b)} ÷ {hours_b} = "
-            f"{_gbp_decimal(return_b)} per scarce hour.",
+            f"{_gbp_decimal(Decimal(contribution_b) / hours_b)} per scarce hour.",
             (
                 "Ranking: Equal priority because both products earn the same contribution "
                 "per scarce hour; this criterion alone does not favour either product."

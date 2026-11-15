@@ -81,3 +81,19 @@ warnings were reported. Ruff, formatting and diff checks passed. Missing/extra
 facts, zero/negative/mistyped quantity domains, wrong units, canonical-wording
 mutations, unique-option controls, forged private keys and retained checkpoint
 bytes are covered. These are bounded contract tests, not live-model acceptance.
+
+## Accounting costing display follow-up
+
+The earlier variance review and its limits still apply. In the Paper 2 source
+choices test, independent review of the complete follow-up delta confirmed that
+the historical digest still pins the same seeded questions. The test reverses
+only two exact Q15.1 operand labels and the intentional Q15.3 half-cent display
+corrections in the historical projection. Prompt changes on those same questions
+still change the digest. Current checks independently reconcile both costing
+rules over 64 seeds and the separate exact-half-cent regression. The broader
+release sweep checked both rules over 513 seeds without a mismatch.
+
+The candidate keeps the original inputs, credit and unrounded ranking. Source
+PDFs at seed 237889026 show the corrected £4.13 and unrounded working on mark
+scheme page 8 only. This does not refresh qualification for other batteries of
+generated papers or provider outputs.

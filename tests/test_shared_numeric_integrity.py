@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+from decimal import ROUND_HALF_UP, Decimal
 from pathlib import Path
 
 import pytest
@@ -499,6 +500,110 @@ def test_abc_checks_every_asserted_intermediate_without_rounding_into_final():
 def test_monetary_output_rounding_is_explicit_for_candidate(rule):
     task = next(t for t in accounting_tasks() if t.question.rule_id == rule)
     assert "two decimal places" in task.question.prompt
+
+
+def test_abc_working_does_not_treat_rounded_display_values_as_operands():
+    task = next(
+        t for t in accounting_tasks(seed=237889026) if t.question.rule_id == "costing_1"
+    )
+    scheme = task.question.model_dump(mode="json")["mark_scheme"]
+    subtotal = next(
+        row for row in scheme if row.startswith("Total activity-based overhead:")
+    )
+    unit_cost = next(row for row in scheme if row.startswith("Overhead cost per unit:"))
+
+    # The independently checked sum is £24,497.97; the displayed intermediate
+    # amounts alone sum to £24,497.96 and must not be presented as its operands.
+    assert "unrounded" in subtotal and "£24,497.97" in subtotal
+    assert "£16,683.33 + £7,814.63" not in subtotal
+    assert "unrounded" in unit_cost and "£26.92" in unit_cost
+    assert "£24,497.97 ÷" not in unit_cost
+    assert reconcile_solution(
+        IndependentSolver().solve(task.question, []), task.question
+    ).passed
+
+
+def test_scarce_hour_exact_half_cent_uses_declared_rounding():
+    task = next(
+        t for t in accounting_tasks(seed=237889026) if t.question.rule_id == "costing_3"
+    )
+    solution = IndependentSolver().solve(task.question, [])
+    assert solution.answer_slots["product_a_contribution_per_scarce_hour"] == (
+        "£4.13/scarce hour"
+    )
+    assert "Product A: £99 ÷ 24 = £4.13 per scarce hour." in task.question.mark_scheme
+    assert reconcile_solution(solution, task.question).passed
+
+
+def test_accounting_costing_working_reconciles_across_seeded_papers():
+    solver = IndependentSolver()
+    for seed in range(64):
+        for task in accounting_tasks(seed=seed):
+            question = task.question
+            if question.rule_id in {"costing_1", "costing_3"}:
+                verdict = reconcile_solution(solver.solve(question, []), question)
+                assert verdict.passed, (seed, question.rule_id, verdict.issues)
+
+
+def restore_prior_abc_working(projection, context):
+    """Undo only the deliberate operand prose changes in historical hashes."""
+    answers = context["verified_answers"]
+    units = context["source_data"]["product_units"]
+    subtotal = f"£{answers['total_overhead']:,.2f}"
+    unit_cost = f"£{answers['overhead_per_unit']:,.2f}"
+    setup = f"£{answers['setup_overhead']:,.2f}"
+    orders = f"£{answers['purchase_order_overhead']:,.2f}"
+    replacements = {
+        "Total activity-based overhead: unrounded set-up overhead + unrounded "
+        f"purchase-order overhead = {subtotal};": (
+            f"Total activity-based overhead: {setup} + {orders} = {subtotal};"
+        ),
+        f"Overhead cost per unit: unrounded total activity-based overhead ÷ {units:,} = {unit_cost}.": (
+            f"Overhead cost per unit: {subtotal} ÷ {units:,} = {unit_cost}."
+        ),
+    }
+    _restore_prior_working_rows(projection, context, replacements)
+
+
+def restore_prior_scarce_hour_working(projection, context):
+    """Undo only the intentional half-cent money-display correction."""
+    source = context["source_data"]
+    answers = context["verified_answers"]
+    replacements = {}
+    for product in ("a", "b"):
+        contribution = source[f"product_{product}_contribution"]
+        hours = source[f"product_{product}_scarce_hours"]
+        old = f"{answers[f'product_{product}_contribution_per_scarce_hour']:,.2f}"
+        exact = Decimal(contribution) / hours
+        corrected = f"{exact.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP):,.2f}"
+        if corrected != old:
+            start = f"Product {product.upper()}: £{contribution:,} ÷ {hours} = £"
+            end = " per scarce hour."
+            replacements[start + corrected + end] = start + old + end
+    _restore_prior_working_rows(projection, context, replacements)
+
+
+def _restore_prior_working_rows(projection, context, replacements):
+    row_groups = [
+        (projection["mark_scheme"], None),
+        (projection["structured_mark_scheme"], "text"),
+    ]
+    if "authoring_context" in projection:
+        row_groups.extend(
+            [
+                (context["accounting_source_content"], "text"),
+                (context["observable_mark_points"], None),
+            ]
+        )
+    for rows, field in row_groups:
+        for revised, earlier in replacements.items():
+            texts = rows if field is None else [row[field] for row in rows]
+            assert texts.count(revised) == 1
+            index = texts.index(revised)
+            if field is None:
+                rows[index] = earlier
+            else:
+                rows[index][field] = earlier
 
 
 def test_published_unit_cannot_contradict_output_role():

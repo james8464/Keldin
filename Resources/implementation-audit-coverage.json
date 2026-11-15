@@ -1916,7 +1916,7 @@
       "reason": "Recorded complete baseline plus complete independently reviewed repair delta and relevant call paths; not a fresh whole-file or whole-repository read. Targeted tests and source-only render limits remain explicit.",
       "source_sha256": "5772fc11bbd28cd13683704b098d3005a62dd892fab02501d948a825920771be",
       "review_evidence": "docs/quality/accounting-variance-public-contract-review.md",
-      "review_evidence_sha256": "3f17b2c9ee65c62973222d9a19746c19b4c7d9d5caf6614e2ceaa5c28a8b06dd"
+      "review_evidence_sha256": "21e54e294ba1b655d4d1505c198934e0e7f71ae6b10f2f66a269ddf29edb1c3c"
     },
     {
       "path": "Backend/Core/subjects/biology.py",
@@ -2075,7 +2075,7 @@
       "reason": "Recorded complete baseline plus complete independently reviewed repair delta and relevant call paths; not a fresh whole-file or whole-repository read. Targeted tests and source-only render limits remain explicit.",
       "source_sha256": "2585708c9e3ffd04d375ca7dc32fd0b5fb94d69dd551cc7013b4ad8c6dc6d8c9",
       "review_evidence": "docs/quality/accounting-variance-public-contract-review.md",
-      "review_evidence_sha256": "3f17b2c9ee65c62973222d9a19746c19b4c7d9d5caf6614e2ceaa5c28a8b06dd"
+      "review_evidence_sha256": "21e54e294ba1b655d4d1505c198934e0e7f71ae6b10f2f66a269ddf29edb1c3c"
     },
     {
       "path": "Resources/accounting/aqa/generator/aqaaccountgen/configs.py",
@@ -6633,9 +6633,9 @@
       "classification": "test",
       "status": "reviewed",
       "reason": "Recorded complete baseline plus complete independently reviewed repair delta and relevant call paths; not a fresh whole-file or whole-repository read. Targeted tests and source-only render limits remain explicit.",
-      "source_sha256": "4212c72f1dbb81f07dee9fe4da8e45f8e7995c2e536961edca119ebb9fc17a99",
+      "source_sha256": "ac7826c0e00e889c11a806b671bc087199bee83fd44e0154c2a8a1a42bb0204c",
       "review_evidence": "docs/quality/accounting-variance-public-contract-review.md",
-      "review_evidence_sha256": "3f17b2c9ee65c62973222d9a19746c19b4c7d9d5caf6614e2ceaa5c28a8b06dd"
+      "review_evidence_sha256": "21e54e294ba1b655d4d1505c198934e0e7f71ae6b10f2f66a269ddf29edb1c3c"
     },
     {
       "path": "tests/test_accounting_private_credit.py",
@@ -6644,7 +6644,7 @@
       "reason": "Recorded complete baseline plus complete independently reviewed repair delta and relevant call paths; not a fresh whole-file or whole-repository read. Targeted tests and source-only render limits remain explicit.",
       "source_sha256": "884164375a5bf267d758711fec9884fe63b46402591bedd4f7ee58f091015d9a",
       "review_evidence": "docs/quality/accounting-variance-public-contract-review.md",
-      "review_evidence_sha256": "3f17b2c9ee65c62973222d9a19746c19b4c7d9d5caf6614e2ceaa5c28a8b06dd"
+      "review_evidence_sha256": "21e54e294ba1b655d4d1505c198934e0e7f71ae6b10f2f66a269ddf29edb1c3c"
     },
     {
       "path": "tests/test_accounting_scheme_pagination.py",
@@ -6680,7 +6680,7 @@
       "reason": "Complete new offline variance test file independently read; public-fact classification, immutable wording, unique choices and unchanged checkpoint-byte controls. No general natural-language solver claim.",
       "source_sha256": "66f8c12f8f0c7dec1ee4b4e6e578725e854514c112893f81c33e7bc05c56000c",
       "review_evidence": "docs/quality/accounting-variance-public-contract-review.md",
-      "review_evidence_sha256": "3f17b2c9ee65c62973222d9a19746c19b4c7d9d5caf6614e2ceaa5c28a8b06dd"
+      "review_evidence_sha256": "21e54e294ba1b655d4d1505c198934e0e7f71ae6b10f2f66a269ddf29edb1c3c"
     },
     {
       "path": "tests/test_ai_assessment.py",
