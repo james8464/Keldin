@@ -9,6 +9,7 @@ import pytest
 
 from Backend.Core import ai_assessment, independent_solver
 from Backend.Core.assessment_contracts import EvidenceRecord
+from Backend.Core.exam_blueprints import MarkSchemePoint
 from Backend.Core.generation_requests import OutputContract, make_request
 from Backend.Core.independent_solver import IndependentSolver, _without_answer_key
 from Backend.Core.model_review import ReviewResult
@@ -178,6 +179,97 @@ def capture_snapshots():
 def test_exact_prompt_bytes_and_trusted_metadata_match_current_policy_snapshot():
     expected = json.loads(GOLDEN.read_text(encoding="utf-8"))
     assert capture_snapshots() == expected
+
+
+def test_editorial_request_has_one_authoritative_rubric_when_points_are_typed():
+    paper, _, topics = paper_fixture()
+    task = ai_assessment._tasks(paper, {topic.id: topic for topic in topics})[0]
+    rows = [
+        MarkSchemePoint(
+            text="Apply the rate to the supplied value.",
+            marks=1,
+            assessment_objective="AO2",
+        ),
+        MarkSchemePoint(
+            text="Marker guidance: accept equivalent working.",
+            marks=0,
+            credit_type="guidance",
+        ),
+    ]
+    candidate = task.question.model_copy(
+        update={
+            "mark_scheme": [
+                "Apply the rate to the supplied value.",
+                "Marker guidance: accept equivalent working.",
+            ],
+            "structured_mark_scheme": rows,
+        }
+    )
+    before = candidate.model_dump(mode="json")
+    prompt = ai_assessment._review_prompt([task], [candidate], subject="Economics")
+    [review] = json.loads(prompt.split("\nREVIEW_DATA=", 1)[1])
+    question = review["question"]
+    assert "mark_scheme" not in question
+    assert [
+        (row["text"], row["marks"], row["credit_type"])
+        for row in question["structured_mark_scheme"]
+    ] == [
+        ("Apply the rate to the supplied value.", 1, "point"),
+        ("Marker guidance: accept equivalent working.", 0, "guidance"),
+    ]
+    assert question["prompt"] == before["prompt"]
+    assert candidate.model_dump(mode="json") == before
+
+
+def test_editorial_request_retains_an_untyped_legacy_scheme():
+    paper, _, topics = paper_fixture()
+    task = ai_assessment._tasks(paper, {topic.id: topic for topic in topics})[0]
+    candidate = task.question.model_copy(
+        update={
+            "mark_scheme": ["Credit a supported conclusion."],
+            "structured_mark_scheme": [],
+        }
+    )
+    prompt = ai_assessment._review_prompt([task], [candidate], subject="Economics")
+    [review] = json.loads(prompt.split("\nREVIEW_DATA=", 1)[1])
+    question = review["question"]
+    assert question["mark_scheme"] == ["Credit a supported conclusion."]
+    assert "structured_mark_scheme" not in question
+
+
+def test_editorial_request_retains_distinct_printed_marking_text_without_extra_credit():
+    paper, _, topics = paper_fixture()
+    task = ai_assessment._tasks(paper, {topic.id: topic for topic in topics})[0]
+    candidate = task.question.model_copy(
+        update={
+            "mark_scheme": [
+                "Apply the rate   to the supplied value.",
+                "Apply the rate to the supplied value. [AO2 credit]",
+                "Method: divide the change by the starting value.",
+                "Method: divide the change by the starting value.",
+            ],
+            "structured_mark_scheme": [
+                MarkSchemePoint(
+                    text="Apply the rate to the supplied value. [AO2 credit]",
+                    marks=1,
+                    assessment_objective="AO2",
+                )
+            ],
+        }
+    )
+    prompt = ai_assessment._review_prompt([task], [candidate], subject="Business")
+    [review] = json.loads(prompt.split("\nREVIEW_DATA=", 1)[1])
+    question = review["question"]
+    assert "mark_scheme" not in question
+    assert [
+        (row["text"], row["marks"], row["credit_type"])
+        for row in question["structured_mark_scheme"]
+    ] == [
+        ("Apply the rate to the supplied value. [AO2 credit]", 1, "point"),
+        ("Method: divide the change by the starting value.", 0, "guidance"),
+    ]
+    assert len(candidate.mark_scheme) == 4
+    assert len(candidate.structured_mark_scheme) == 1
 
 
 @pytest.mark.parametrize("stop", [0, 1, 2, 3, None])

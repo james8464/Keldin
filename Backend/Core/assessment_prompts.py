@@ -10,7 +10,11 @@ from typing import Any
 from Backend.Core.assessment_contracts import EvidenceRecord
 from Backend.Core.assessment_objectives import objective_policy_for
 from Backend.Core.assessment_quality import numeric_tokens
-from Backend.Core.exam_blueprints import GeneratedOption, GeneratedQuestion
+from Backend.Core.exam_blueprints import (
+    GeneratedOption,
+    GeneratedQuestion,
+    MarkSchemePoint,
+)
 from Backend.Core.independent_solver import CanonicalSolution
 from Backend.Core.model_review import ReviewResult
 from Backend.Core.reference_demand import (
@@ -509,10 +513,26 @@ def review_prompt(
     )
 
 
-# Add an unambiguous human-facing key without changing stored item data.
+# Project a single mark scheme and an unambiguous key for the editorial review.
 def review_question_payload(candidate: GeneratedQuestion) -> dict[str, object]:
-
     payload = candidate.model_dump(mode="json")
+    # Typed rows carry the actual credit, including zero-mark guidance. The
+    # legacy copy cannot express that distinction and is not a second rubric.
+    if candidate.structured_mark_scheme:
+        payload.pop("mark_scheme")
+        # Some renderers also print legacy text not represented by a typed
+        # row. Keep it visible for review without treating it as extra credit.
+        seen = {" ".join(row.text.split()) for row in candidate.structured_mark_scheme}
+        seen |= {re.sub(r" \[AO[1-4] credit\]$", "", text) for text in seen}
+        for text in candidate.mark_scheme:
+            normalized = " ".join(text.split())
+            if not normalized or normalized in seen:
+                continue
+            seen.add(normalized)
+            note = MarkSchemePoint(text=text, marks=0, credit_type="guidance")
+            payload["structured_mark_scheme"].append(note.model_dump(mode="json"))
+    else:
+        payload.pop("structured_mark_scheme")
     if (
         candidate.kind == "multiple_choice"
         and isinstance(candidate.correct_choice, int)

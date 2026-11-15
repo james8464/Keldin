@@ -63,3 +63,26 @@ build or full-suite run. Existing focused tests render their own temporary PDFs;
 no additional manual PDF or raster review is claimed. Five existing SWIG
 deprecation warnings were observed. Ruff check/format and diff whitespace checks
 are required before freezing. Root owns final integration, Graphify and ledger.
+
+## November 15 follow-up: two-mark calculations and editorial input
+
+The two-mark calculation schemes on Papers 1 and 2 now distinguish full
+credit for the correctly formatted answer, without requiring working, from
+one mark for a correct value with a format error or a valid method with a
+wrong, properly formatted answer. Partial credit is not added to full credit.
+This follows the treatment in AQA's [June 2022 Paper 1 mark scheme, Q05](https://filestore.aqa.org.uk/sample-papers-and-mark-schemes/2022/june/AQA-71361-MS-JUN22.PDF)
+and [November 2020 Paper 1 mark scheme, Q01](https://filestore.aqa.org.uk/sample-papers-and-mark-schemes/2020/november/AQA-71361-W-MS-NOV20.PDF).
+The signed value, precision, source and total marks are unchanged.
+
+Editorial review receives one set of awarded rows. If typed rows exist, any
+distinct legacy display text survives as zero-mark guidance. Legacy-only
+schemes still use the original text. The saved item is not rewritten, and
+there is no change to review failures, source checks or independent solving.
+A new review identity keeps earlier accepted checkpoints from being reused.
+
+Same-seed offline comparisons with Papers 1 and 2 changed only mark-scheme
+pages 5 and 10 on each paper. All page counts, the question-paper rasters and
+the 5 mm text inset checks passed. The four revised calculation blocks were
+inspected visually. A guarded source trial of the revised marking rule still
+received a live model refusal. It published no files. The layout checks do
+not establish live qualification or official equivalence.
