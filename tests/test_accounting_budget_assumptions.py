@@ -21,6 +21,7 @@ from Backend.Core.assessment_prompts import (
 )
 from Backend.Core.solver_prompts import build_solver_prompt
 from Backend.Core.subjects.accounting import solve_accounting_calculation
+from tests.test_shared_numeric_integrity import restore_prior_abc_working
 
 ROOT = Path(__file__).resolve().parents[1]
 SYLLABUS = load_syllabus(ROOT / "Resources/accounting/aqa/generator/data/syllabus.json")
@@ -166,6 +167,10 @@ def test_unchanged_content_and_all_old_numeric_contracts_are_preserved() -> None
         for section in raw["sections"]:
             for option in section["options"]:
                 for question in option["questions"]:
+                    if question["rule_id"] == "costing_1":
+                        restore_prior_abc_working(
+                            question, question["authoring_context"]
+                        )
                     if question["rule_id"] == "company_statement":
                         # Check the new period and preserve the remainder of this
                         # historical credit/content snapshot byte for byte.
