@@ -6,6 +6,7 @@ import re
 from copy import deepcopy
 from decimal import Decimal
 from pathlib import Path
+from types import SimpleNamespace
 
 import pymupdf as fitz
 import pytest
@@ -21,6 +22,7 @@ from aqaecongen.written_tasks import PROFILES
 from pypdf import PdfReader
 from reportlab.graphics.shapes import Drawing
 
+from Backend.Core.ai_assessment import GenerationPolicy, _candidate_question, _Task
 from Backend.Core.assessment_package import _extract_items
 from Backend.Core.assessment_quality import assert_distinct_items
 from Backend.Core.exam_blueprints import (
@@ -315,7 +317,14 @@ def test_paper_three_visual_questions_have_data_bound_diagrams() -> None:
         assert contract["operation"] == "economic_shift"
         assert contract["inputs"]["curve"] in {"D", "S", "AD", "SRAS", "LRAS"}
         assert contract["inputs"]["direction"] in {"left", "right"}
-        assert set(context) == {"visual_kind", "selected_response_contract"}
+        assert context["preserve_prompt"] is True
+        assert context["preserve_mark_scheme"] is True
+        assert set(context) == {
+            "visual_kind",
+            "selected_response_contract",
+            "preserve_prompt",
+            "preserve_mark_scheme",
+        }
         assert (
             f"{contract['inputs']['curve']} curve".casefold()
             not in question.prompt.casefold()
@@ -516,6 +525,128 @@ def test_index_mcqs_have_public_numeric_contract_and_semantically_unique_choices
                 ] = "index"
                 with pytest.raises(ValueError, match="format policy"):
                     solve_selected_response(wrong_unit)
+
+
+@pytest.mark.parametrize("number", ["5", "15", "30"])
+def test_index_mcq_authoring_cannot_invert_the_source_change(number: str) -> None:
+    paper = build_paper(RULES["paper_3"], SYLLABUS, seed=26080104)
+    (option,) = [
+        option
+        for option in paper.sections[0].options
+        if option.questions[0].number == number
+    ]
+    (question,) = option.questions
+    inputs = question.authoring_context["selected_response_contract"]["inputs"]
+    if number == "30":
+        inverted = (
+            f"The activity index initially stood at {inputs['final']} and later "
+            f"fell to {Decimal(inputs['initial']):.1f}. Determine its percentage change."
+        )
+    else:
+        direction = "reduction" if number == "5" else "rise"
+        inverted = (
+            f"A survey recorded {inputs['base']} on its index. Following a "
+            f"{direction} of {inputs['rate_percent']}%, calculate the resulting index reading."
+        )
+    authored = _candidate_question(
+        _Task(key=(0, 0, 0), question=question, option=option, topic=object()),
+        {"prompt": inverted},
+        client=SimpleNamespace(provider="test", model="synthetic"),
+        policy=GenerationPolicy(),
+    )
+    assert authored.prompt == question.prompt
+    assert authored.choices == question.choices
+    assert authored.correct_choice == question.correct_choice
+
+
+@pytest.mark.parametrize(
+    ("number", "contradiction"),
+    [
+        (
+            "3",
+            "A retailer first charges £12 for 88 sales, then charges £10 for 100 sales. How does total expenditure change?",
+        ),
+        (
+            "7",
+            "In a survey, the poorest group moves from 25% of income to 20%, and the richest moves from 38% to 45%. Determine the impact on inequality.",
+        ),
+        (
+            "11",
+            "Policy borrowing rates decline from 6% to 4%. Credit finances 60% of expenditure by households and firms. Identify the likely effect.",
+        ),
+        (
+            "17",
+            "Suppose a currency appreciates. With export demand elasticity 0.9 and import demand elasticity 0.6, determine how the trade balance changes.",
+        ),
+    ],
+)
+def test_applied_mcq_keeps_the_question_tied_to_its_source(
+    number: str, contradiction: str
+) -> None:
+    paper = build_paper(RULES["paper_3"], SYLLABUS, seed=26080104)
+    (option,) = [
+        option
+        for option in paper.sections[0].options
+        if option.questions[0].number == number
+    ]
+    (question,) = option.questions
+    result = _candidate_question(
+        _Task(key=(0, 0, 0), question=question, option=option, topic=object()),
+        {"prompt": contradiction},
+        client=SimpleNamespace(provider="test", model="synthetic"),
+        policy=GenerationPolicy(),
+    )
+    assert result.prompt == question.prompt
+    assert result.choices == question.choices
+    assert result.correct_choice == question.correct_choice
+
+
+@pytest.mark.parametrize("number", sorted(PAPER3_VISUAL_QUESTION_NUMBERS))
+def test_visual_mcq_keeps_the_source_figure(number: int) -> None:
+    paper = build_paper(RULES["paper_3"], SYLLABUS, seed=26080104)
+    (option,) = [
+        option
+        for option in paper.sections[0].options
+        if option.questions[0].number == str(number)
+    ]
+    (question,) = option.questions
+    wrong_figure = 4 if number == 2 else 2
+    revised = _candidate_question(
+        _Task(key=(0, 0, 0), question=question, option=option, topic=object()),
+        {
+            "prompt": (
+                f"Figure {wrong_figure} illustrates a market change. Use the chart "
+                "to select the effect on both variables in equilibrium."
+            )
+        },
+        client=SimpleNamespace(provider="test", model="synthetic"),
+        policy=GenerationPolicy(),
+    )
+    assert revised.prompt == question.prompt
+    assert revised.source_references == [f"Figure {number}"]
+    assert revised.choices == question.choices
+    assert revised.correct_choice == question.correct_choice
+
+
+@pytest.mark.parametrize(
+    "rewrite",
+    [
+        "Figure 2 illustrates weaker consumer confidence reducing spending in the market for battery recycling. Based on the diagram, identify how equilibrium price and quantity change.",
+        "Figure 2 shows the market for battery recycling after a change. From the diagram, identify whether the original equilibrium price was higher or lower than the new price.",
+    ],
+)
+def test_visual_mcq_keeps_source_premise_and_task(rewrite: str) -> None:
+    paper = build_paper(RULES["paper_3"], SYLLABUS, seed=26080104)
+    option = paper.sections[0].options[1]
+    (question,) = option.questions
+    assert question.number == "2"
+    revised = _candidate_question(
+        _Task(key=(0, 1, 0), question=question, option=option, topic=object()),
+        {"prompt": rewrite},
+        client=SimpleNamespace(provider="test", model="synthetic"),
+        policy=GenerationPolicy(),
+    )
+    assert revised.prompt == question.prompt
 
 
 def test_applied_mcqs_project_one_typed_source_into_prompt_key_and_solver() -> None:

@@ -461,13 +461,16 @@ def _mcq(
             f"£{cost}m. What is its gross profit?"
         )
         authoring_context = {
+            # The revenue and cost roles must agree with the calculated key.
+            "preserve_prompt": True,
+            "preserve_mark_scheme": True,
             "selected_response_contract": {
                 "version": "selected-response-v1",
                 "operation": "gross_profit",
                 "inputs": {"revenue": str(revenue), "cost_of_sales": str(cost)},
                 "unit": "GBPm",
                 "decimal_places": 0,
-            }
+            },
         }
     else:
         stem, correct, distractors = ALTERNATE_FACTS.get(number, FACTS[topic.id])

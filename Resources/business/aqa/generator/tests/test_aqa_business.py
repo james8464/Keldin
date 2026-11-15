@@ -5,6 +5,7 @@ import re
 from copy import deepcopy
 from itertools import pairwise
 from pathlib import Path
+from types import SimpleNamespace
 
 import pymupdf as fitz
 import pytest
@@ -21,6 +22,7 @@ from aqabizgen.render_pdf import (
 from aqabizgen.syllabus import load_syllabus
 from pypdf import PdfReader
 
+from Backend.Core.ai_assessment import GenerationPolicy, _candidate_question, _Task
 from Backend.Core.assessment_package import _extract_items
 from Backend.Core.exam_blueprints import (
     resolve_question_rules,
@@ -41,6 +43,27 @@ def _marks(paper_id: str) -> list[int]:
         for _ in range(section.option_count)
         for question in section.questions
     ]
+
+
+def test_gross_profit_authoring_cannot_swap_cost_and_revenue() -> None:
+    paper = build_paper(RULES["paper_1"], SYLLABUS, seed=26080105)
+    (option, question) = next(
+        (option, question)
+        for option in paper.sections[0].options
+        for question in option.questions
+        if question.number == "05"
+    )
+    result = _candidate_question(
+        _Task(key=(0, 0, 0), question=question, option=option, topic=object()),
+        {
+            "prompt": "A firm spends £23m on the goods it sells and earns £14m in revenue. Work out the gross profit."
+        },
+        client=SimpleNamespace(provider="test", model="synthetic"),
+        policy=GenerationPolicy(),
+    )
+    assert result.prompt == question.prompt
+    assert result.choices == question.choices
+    assert result.correct_choice == question.correct_choice
 
 
 def test_current_rules_and_printed_mark_sequences() -> None:

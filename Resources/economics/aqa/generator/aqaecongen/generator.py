@@ -903,13 +903,17 @@ def _build_mcq_option(
         raw_choices = [f"{value:.1f}{suffix}" for value in values]
         correct_text = f"{correct:.1f}{suffix}"
         authoring_context = {
+            # Rewording can reverse the direction or swap the two readings
+            # without changing the numbers checked by the general contract.
+            "preserve_prompt": True,
+            "preserve_mark_scheme": True,
             "selected_response_contract": {
                 "version": "selected-response-v1",
                 "operation": operation,
                 "inputs": inputs,
                 "unit": unit,
                 "decimal_places": 1,
-            }
+            },
         }
     elif number in APPLIED_TOPIC_BY_NUMBER:
         prompt, correct_text, raw_choices, authoring_context = _applied_mcq(number)
@@ -1004,6 +1008,10 @@ def _visual_mcq(
         list(choices),
         {
             "visual_kind": "economic_shift_diagram",
+            # The figure identifier, premise and task belong to the same
+            # source as the rendered curve and the calculated answer.
+            "preserve_prompt": True,
+            "preserve_mark_scheme": True,
             "selected_response_contract": {
                 "version": "selected-response-v1",
                 "operation": "economic_shift",
@@ -1131,6 +1139,12 @@ def project_applied_mcq(source: AppliedMCQSource) -> AppliedMCQProjection:
         # The model can reword the task, but these names also identify the
         # immutable choices. Renaming only the stem makes them ambiguous.
         item["authoring_context"]["required_prompt_terms"] = ["product X", "product Y"]
+    else:
+        # These operations solve the source, not a paraphrase that may
+        # swap its roles or reverse the requested direction.
+        item["authoring_context"].update(
+            preserve_prompt=True, preserve_mark_scheme=True
+        )
     solution = solve_selected_response(item)
     if solution is None or solution["answer"] not in choices:
         raise ValueError("applied source projection could not derive one checked key")

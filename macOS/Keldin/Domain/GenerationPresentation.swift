@@ -148,6 +148,7 @@ enum GenerationPresentation {
     }
 
     private static func isGenerationQualityFailure(_ message: String, code: String?) -> Bool {
+        if code == "french_authoring_structure" { return true }
         // Only the actual failure line classifies the error, never a path or
         // diagnostic body that happens to mention an assessment check.
         let line = String(message.prefix(while: { $0 != "\n" && $0 != "\r" }))

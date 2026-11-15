@@ -2683,11 +2683,8 @@
     {
       "path": "Resources/economics/aqa/generator/aqaecongen/generator.py",
       "classification": "maintained-source",
-      "status": "reviewed",
-      "reason": "Complete prior EOF read plus complete independently reviewed rendering repair and relevant identity/source callers; not a new whole-file read after the delta.",
-      "source_sha256": "5fa2cf3afb1cff42e38c0fa32b173e1e50a79d4eff13ef6199a1f85d646a848d",
-      "review_evidence": "docs/quality/renderer-eof-audit-and-release-follow-ups.md",
-      "review_evidence_sha256": "bb98a3b38c4795e8b83ad544940570d72884305e0cb6edbe836c7081490fe8f6"
+      "status": "pending",
+      "reason": "No file-level semantic implementation review recorded in this ledger."
     },
     {
       "path": "Resources/economics/aqa/generator/aqaecongen/level_policy.py",
