@@ -8591,10 +8591,10 @@
       "path": "tests/test_ollama_resource_admission.py",
       "classification": "test",
       "status": "reviewed",
-      "reason": "Prior complete baseline and reviewed headroom delta, plus complete independently reviewed 63-line cloud-route and bridge-test delta. Earlier exact evidence remains at docs/quality/local-model-current-headroom-review.md SHA256 56278db735289cf84ee185b23467621507581b8fc53a14b3e443ac598fe788ec. This is not a new 476-line EOF review or live model qualification.",
-      "source_sha256": "e5bf85e5691f8dea9c732e3f01eea3d9fcd842b969afd58a3ad071201766e809",
+      "reason": "Prior complete baseline and independently reviewed headroom and cloud-route deltas, plus independent review of the synthetic hosted-credential fixture change. This is not a new whole-file read or live model qualification.",
+      "source_sha256": "8078ed9e21f8db907ed1908ace47e8d6cf0b41a1657f0729d88dd0ff123d5884",
       "review_evidence": "docs/quality/hosted-consent-and-local-routing-review.md",
-      "review_evidence_sha256": "f5a93a68b21a6b584aeb55d34c221b9e5430d3e47e94f9125802f0437a95f2ef"
+      "review_evidence_sha256": "10b876562658f58114bfcd1bae1af47bdcb25d941185718519edc22a1233db79"
     },
     {
       "path": "tests/test_ollama_status.py",

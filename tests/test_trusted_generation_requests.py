@@ -282,7 +282,7 @@ def test_hosted_api_payloads_preserve_transport_except_owned_budget(
 
     monkeypatch.setattr("Backend.Core.providers.urllib_request", send)
     client = HostedLLMClient(
-        provider=provider, model="fixture", api_key="fixture-only-not-a-real-key"
+        provider=provider, model="fixture", api_key=" fixture-only-not-a-real-key\t"
     )
     client.generate_json("Exact prompt")
     request = make("Exact prompt", Contract("review"))
@@ -294,6 +294,25 @@ def test_hosted_api_payloads_preserve_transport_except_owned_budget(
     else:
         assert captured[0][1].pop(key) == 4096
     assert captured[0] == captured[1]
+    headers = captured[0][2]
+    if provider == "openai":
+        assert headers["Authorization"] == "Bearer fixture-only-not-a-real-key"
+    else:
+        assert headers["x-api-key"] == "fixture-only-not-a-real-key"
+
+
+@pytest.mark.parametrize("provider", ["openai", "anthropic"])
+@pytest.mark.parametrize("key", ["", " \t"])
+def test_missing_hosted_credentials_never_contact_the_transport(
+    monkeypatch, provider, key
+):
+    def send(*args, **kwargs):
+        pytest.fail("No hosted transport without credentials")
+
+    monkeypatch.setattr("Backend.Core.providers.urllib_request", send)
+    client = HostedLLMClient(provider=provider, model="fixture", api_key=key)
+    with pytest.raises(ValueError, match="API key"):
+        client.generate_json("Owned fixture for a request that must not be sent")
 
 
 def test_legacy_negative_seed_and_prompt_entrypoint_are_retained():

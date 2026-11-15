@@ -165,7 +165,8 @@ def test_completed_provider_response_is_accepted(provider, reply, monkeypatch):
         "Backend.Core.providers.urllib_request",
         lambda *args, **kwargs: io.BytesIO(json.dumps(reply).encode()),
     )
-    client = HostedLLMClient(provider=provider, model="test", api_key="")
+    key = "fixture-only-not-a-real-key" if provider in {"openai", "anthropic"} else ""
+    client = HostedLLMClient(provider=provider, model="test", api_key=key)
     assert client.generate_json("Return JSON.") == {"answer": "complete"}
 
 

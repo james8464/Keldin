@@ -237,7 +237,8 @@ def test_non_ollama_providers_never_enter_admission(monkeypatch, provider, metho
         pytest.fail("Non-Ollama generation entered resource admission")
 
     monkeypatch.setattr(providers, "require_local_ollama_capacity", forbidden)
-    client = providers.HostedLLMClient(provider=provider, model="fixture", api_key="")
+    key = "fixture-only-not-a-real-key" if provider in {"openai", "anthropic"} else ""
+    client = providers.HostedLLMClient(provider=provider, model="fixture", api_key=key)
     monkeypatch.setattr(client, method, lambda *args: {"answer": 1})
     assert client.generate_json("Question.") == {"answer": 1}
 
