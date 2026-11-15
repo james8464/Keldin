@@ -1415,13 +1415,13 @@ final class ApplicationCoordinator: ObservableObject {
             return
         }
         if !request.selectAfterDownload {
-            guard canUseLocalModelGuide,
-                  request.endpoint == ollamaURL.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard request.endpoint == ollamaURL.trimmingCharacters(in: .whitespacesAndNewlines)
             else {
                 setError(InterfaceText.resolve("The Ollama server changed. Check this Mac again before downloading.", language: presentationLanguage), presentation: presentation)
                 return
             }
-            guard request.guideEstimateRevision == localGuideRevision,
+            guard canUseLocalModelGuide,
+                  request.guideEstimateRevision == localGuideRevision,
                   let expiresAt = request.guideEstimateExpiresAt, expiresAt >= Date()
             else {
                 setError(InterfaceText.resolve("The fit estimate expired. Check this Mac again before downloading.", language: presentationLanguage), presentation: presentation)

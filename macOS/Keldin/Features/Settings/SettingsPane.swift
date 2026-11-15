@@ -179,6 +179,7 @@ private struct AISettingsTab: View {
     @EnvironmentObject private var downloadPresentation: ModelDownloadPresentation
 
     var body: some View {
+        let check = guideCheck
         Form {
             Section("Provider") {
                 Picker("Provider", selection: Binding(
@@ -216,8 +217,8 @@ private struct AISettingsTab: View {
         }
         .formStyle(.grouped)
         .disabled(application.isRunning)
-        .task(id: guideCheck?.id) {
-            if let check = guideCheck { await finishLocalGuide(check) }
+        .task(id: check?.id) {
+            if let check { await finishLocalGuide(check) }
         }
         .onDisappear { clearLocalGuide() }
         .onChange(of: application.aiProvider) { _, _ in clearLocalGuide() }
@@ -257,6 +258,9 @@ private struct AISettingsTab: View {
         guideCheck = nil
         localGuidance = nil
         checkedLocalGuidance = false
+        if let request = downloadPresentation.request, !request.selectAfterDownload {
+            downloadPresentation.dismiss(id: request.id)
+        }
     }
 
     private func finishLocalGuide(_ check: GuideCheck) async {
@@ -271,7 +275,8 @@ private struct AISettingsTab: View {
         else { return }
         localGuidance = result
         checkedLocalGuidance = true
-        if let model = check.downloadModel, guideOption.model == model {
+        if let model = check.downloadModel, guideOption.model == model,
+           result?.fittingModels.contains(model) == true {
             downloadPresentation.present(application.requestPullModel(model: model))
         }
     }
