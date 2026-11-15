@@ -314,6 +314,36 @@ def test_aqa_cs_on_screen_cover_does_not_reserve_handwritten_identity_area(tmp_p
         assert time.x0 > session.x1 + 5
 
 
+@pytest.mark.parametrize(
+    ("topic_id", "topic"),
+    [
+        ("4.2", "Fundamentals of data structures"),
+        ("4.10", "Fundamentals of databases"),
+        ("4.12", "Fundamentals of functional programming"),
+    ],
+)
+def test_aqa_cs_topic_bank_has_the_same_distinct_topic_on_both_covers(
+    tmp_path, topic_id, topic
+):
+    from cspapergen.generator import build_topic_question_bank
+    from cspapergen.render_pdf import render_mark_scheme, render_question_paper
+    from cspapergen.syllabus import load_syllabus
+
+    blueprint = build_topic_question_bank(load_syllabus(), topic_id=topic_id, seed=42)
+    expected = f"Topic Question Bank: {topic}"
+    for role, render in (
+        ("questions", render_question_paper),
+        ("scheme", render_mark_scheme),
+    ):
+        path = tmp_path / f"{role}.pdf"
+        render(blueprint, path)
+        with fitz.open(path) as paper:
+            cover = paper[0]
+            assert expected in " ".join(cover.get_text().split())
+            (title,) = cover.search_for(expected)
+            assert title.x1 < cover.rect.width - 40
+
+
 def test_ocr_question_cover_uses_ocr_identity_and_materials_grid(tmp_path):
     profile = CoverProfile(
         "ocr",

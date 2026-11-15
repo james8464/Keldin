@@ -2395,11 +2395,8 @@
     {
       "path": "Resources/computer-science/aqa/generator/cspapergen/render_pdf.py",
       "classification": "maintained-source",
-      "status": "reviewed",
-      "reason": "Prior hash-matched composite review plus the complete print-gutter delta and both delivery branches. Not a fresh whole-file read.",
-      "source_sha256": "be1ef5a698e5f28536084d9c2c4170ec4eeae1cf37a6d82b566d74d93454fea1",
-      "review_evidence": "docs/quality/print-safe-answer-gutters-review.md",
-      "review_evidence_sha256": "395b36494b5e8eac725f06af0c699687afacfd84bf59747db79f7bd5b3ff4c77"
+      "status": "pending",
+      "reason": "No file-level semantic implementation review recorded in this ledger."
     },
     {
       "path": "Resources/computer-science/aqa/generator/cspapergen/syllabus.py",
@@ -7207,11 +7204,8 @@
     {
       "path": "tests/test_exam_cover.py",
       "classification": "test",
-      "status": "reviewed",
-      "reason": "Recorded complete baseline plus complete independently reviewed repair delta and relevant call paths; not a fresh whole-file or whole-repository read. Targeted tests and source-only render limits remain explicit.",
-      "source_sha256": "8cdde181c53a645419fcb6dadf7db77acf2336c7c86d6437c5822363d82b24c5",
-      "review_evidence": "docs/quality/business-source-and-marking-review.md",
-      "review_evidence_sha256": "06e603c846a5c676e1b045434cf45573610b3a986ee084130e7d3839dea41af8"
+      "status": "pending",
+      "reason": "No file-level semantic implementation review recorded in this ledger."
     },
     {
       "path": "tests/test_exam_pages.py",

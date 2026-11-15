@@ -603,6 +603,21 @@ class _QuestionRenderState:
         self.is_blank = False
 
 
+def _cover_title(blueprint: PaperBlueprint) -> str:
+    if blueprint.assessment_kind != "question-bank":
+        return f"Paper {blueprint.paper_number}"
+    # Topic-bank blueprints already carry the syllabus title. Use it on both
+    # covers as well as in PDF metadata, without looking up a second syllabus.
+    prefix = "A-level COMPUTER SCIENCE "
+    suffix = " Question Bank"
+    title = blueprint.title
+    if title.startswith(prefix) and title.endswith(suffix):
+        topic = title.removeprefix(prefix).removesuffix(suffix).strip()
+        if topic:
+            return f"Topic Question Bank: {topic}"
+    return "Topic Question Bank"
+
+
 def _cover_page(pdf: canvas.Canvas, blueprint: PaperBlueprint) -> None:
     _rf("ExamCover-Medium", "ExamCover-SemiBold")
     on_screen = blueprint.delivery_mode == "on-screen"
@@ -621,12 +636,7 @@ def _cover_page(pdf: canvas.Canvas, blueprint: PaperBlueprint) -> None:
     pdf.setFont("ExamCover-SemiBold", 27.96)
     pdf.drawString(40, 650.32 if on_screen else 501, "COMPUTER SCIENCE")
     pdf.setFont("ExamCover-Medium", 16)
-    document_title = (
-        "Topic Question Bank"
-        if blueprint.assessment_kind == "question-bank"
-        else f"Paper {blueprint.paper_number}"
-    )
-    pdf.drawString(40, 622.22 if on_screen else 476, document_title)
+    pdf.drawString(40, 622.22 if on_screen else 476, _cover_title(blueprint))
     pdf.setLineWidth(2)
     pdf.line(40, 598 if on_screen else 455, 545, 598 if on_screen else 455)
     pdf.setFont(FONT, 11)
@@ -1525,11 +1535,7 @@ def _mark_scheme_cover(pdf: canvas.Canvas, blueprint: PaperBlueprint) -> None:
             board="aqa",
             subject="Computer Science",
             code=blueprint.paper_code,
-            paper_title=(
-                "Topic Question Bank"
-                if blueprint.assessment_kind == "question-bank"
-                else f"Paper {blueprint.paper_number}"
-            ),
+            paper_title=_cover_title(blueprint),
             duration=(
                 f"{blueprint.duration_minutes // 60} hours "
                 f"{blueprint.duration_minutes % 60} minutes"
