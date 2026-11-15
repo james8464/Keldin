@@ -150,6 +150,7 @@ final class DocumentActionController: ObservableObject {
     private var pickerRevision = UUID()
     private var selectionLease: PDFReadLease?
     enum Action: Equatable { case quickLook, reveal, print, export }
+    private let applicationIsActive: @MainActor () -> Bool
     private let presentAction: (@MainActor (Action, GeneratedFile, LoadedPDF) -> Void)?
 
     var canAccessDocument: Bool {
@@ -160,8 +161,13 @@ final class DocumentActionController: ObservableObject {
         canAccessDocument && selectedFile.map { quickLook.canPresent(fileID: $0.id) } == true
     }
 
-    init(access: PDFDocumentAccess, presentAction: (@MainActor (Action, GeneratedFile, LoadedPDF) -> Void)? = nil) {
+    init(
+        access: PDFDocumentAccess,
+        applicationIsActive: @escaping @MainActor () -> Bool = { NSApp.isActive },
+        presentAction: (@MainActor (Action, GeneratedFile, LoadedPDF) -> Void)? = nil
+    ) {
         self.access = access
+        self.applicationIsActive = applicationIsActive
         self.presentAction = presentAction
         quickLook.availabilityDidChange = { [weak self] in
             Task { @MainActor [weak self] in self?.objectWillChange.send() }
@@ -223,6 +229,11 @@ final class DocumentActionController: ObservableObject {
     }
 
     func quickLookSelected() {
+        guard !isDocumentPickerTracking, !isLoading, selectedFile != nil else { return }
+        guard applicationIsActive() else {
+            reportQuickLookResult(.inactive)
+            return
+        }
         startLoad(action: .quickLook)
     }
 
@@ -243,13 +254,17 @@ final class DocumentActionController: ObservableObject {
         switch action {
         case .quickLook:
             guard let lease = selectionLease?.retained() else { return }
-            if !quickLook.present(file.url, fileID: file.id, lease: lease) {
-                exportError = InterfaceText.resolve("Quick Look couldn't open this preview. Please try again.", language: language)
-            }
+            reportQuickLookResult(quickLook.present(file.url, fileID: file.id, lease: lease))
         case .reveal: NSWorkspace.shared.activateFileViewerSelecting([file.url])
         case .print:
             pdf.document.printOperation(for: NSPrintInfo.shared, scalingMode: .pageScaleToFit, autoRotate: true)?.run()
         case .export: export(file: file, bytes: pdf.bytes, revision: revision)
+        }
+    }
+
+    private func reportQuickLookResult(_ result: QuickLookPresentationResult) {
+        if let message = result.failureMessage {
+            exportError = InterfaceText.resolve(message, language: language)
         }
     }
 
@@ -455,8 +470,8 @@ final class QuickLookPresentationState {
     var activeClaimant: UUID? { active?.claimant }
     var pendingClaimant: UUID? { pending?.claimant }
 
-    func stage(url: URL, claimant: UUID?, lease: PDFReadLease) -> Bool {
-        guard let claimant else { lease.release(); return false }
+    func stage(url: URL, claimant: UUID?, lease: PDFReadLease, applicationActive: Bool = true) -> Bool {
+        guard applicationActive, let claimant else { lease.release(); return false }
         pending?.lease.release()
         pending = Request(url: url, claimant: claimant, lease: lease)
         return true
@@ -492,6 +507,20 @@ final class QuickLookPresentationState {
         active?.lease.release()
         pending = nil
         active = nil
+    }
+}
+
+fileprivate enum QuickLookPresentationResult {
+    case presented
+    case inactive
+    case unavailable
+
+    var failureMessage: LocalizedStringResource? {
+        switch self {
+        case .presented: nil
+        case .inactive: "Bring Keldin to the front, then choose Quick Look again."
+        case .unavailable: "Quick Look couldn't open this preview. Please try again."
+        }
     }
 }
 
@@ -568,26 +597,29 @@ fileprivate final class QuickLookCoordinator: NSObject, ObservableObject,
         }
     }
 
-    func present(_ url: URL, fileID: UUID, lease: PDFReadLease) -> Bool {
+    func present(_ url: URL, fileID: UUID, lease: PDFReadLease) -> QuickLookPresentationResult {
         guard let view = renderedView, view.fileID == fileID, let window = view.window else {
             recordRefusal("missing_attached_view_or_identity", view: renderedView, panel: panel)
             lease.release()
-            return false
+            return .unavailable
         }
-        guard state.stage(url: url, claimant: view.claimant, lease: lease) else {
-            recordRefusal("stage_refused", view: view, panel: panel)
-            return false
+        // PDF validation can finish after another app has gained focus. The
+        // shared panel needs an active responder chain; don't try to steal it.
+        let isActive = NSApp.isActive
+        guard state.stage(url: url, claimant: view.claimant, lease: lease, applicationActive: isActive) else {
+            recordRefusal(isActive ? "stage_refused" : "application_inactive", view: view, panel: panel)
+            return isActive ? .unavailable : .inactive
         }
         guard window.makeFirstResponder(view) else {
             recordRefusal("make_first_responder_failed", view: view, panel: panel)
             state.cancelPending(view.claimant)
-            return false
+            return .unavailable
         }
         window.makeKeyAndOrderFront(nil)
         guard let panel = QLPreviewPanel.shared() else {
             recordRefusal("panel_unavailable", view: view, panel: nil)
             state.cancelPending(view.claimant)
-            return false
+            return .unavailable
         }
         let wasVisible = panel.isVisible
         // Showing the panel lets AppKit acquire its responder-chain controller.
@@ -597,18 +629,18 @@ fileprivate final class QuickLookCoordinator: NSObject, ObservableObject,
             recordRefusal("current_controller_mismatch", view: view, panel: panel)
             state.cancelPending(view.claimant)
             if !wasVisible, panel.currentController == nil { panel.orderOut(nil) }
-            return false
+            return .unavailable
         }
         // An unchanged controller does not receive another begin callback.
         guard state.activate(view.claimant) else {
             recordRefusal("activation_failed", view: view, panel: panel)
-            return false
+            return .unavailable
         }
         install(panel, from: view)
         panel.reloadData()
         let context = diagnosticContext(view: view, panel: panel)
         logger.debug("intent.presented \(context, privacy: .public)")
-        return true
+        return .presented
     }
 
     func beginControl(_ panel: QLPreviewPanel, from view: QuickLookPDFView) {

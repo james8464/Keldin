@@ -5909,10 +5909,10 @@
       "path": "macOS/Keldin/Features/Documents/DocumentPreviewView.swift",
       "classification": "maintained-source",
       "status": "reviewed",
-      "reason": "Prior source-bound full-file and picker reviews plus the complete failure-alert cancellation delta; inline recovery status and scoped access unchanged.",
-      "source_sha256": "1673f4a3a38ce01122e59e67f3228d4a7b8ebc54051cea36070dbdf414898f23",
+      "reason": "Prior source-bound full-file, picker and failure-alert reviews plus the complete inactive Quick Look delta and scoped lease checks; foreground panel readiness remains a separate acceptance limit.",
+      "source_sha256": "4f5f9386b81965de160b913a45c4f3f8789cff307499c3f45219cee0810d761e",
       "review_evidence": "docs/quality/document-action-cancellation-review-2026-11-15.md",
-      "review_evidence_sha256": "ed3614622805a021d302529b553f5f8258c04070753d136e001ea6ac67fe7953"
+      "review_evidence_sha256": "725635f3da6cceedcd74cb21287abc53d8cb771820f424e1a3ec230cf90fa1cc"
     },
     {
       "path": "macOS/Keldin/Features/Documents/JobHistoryView.swift",

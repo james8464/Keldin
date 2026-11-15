@@ -36,6 +36,7 @@
     "The paper could not be saved or its history could not be verified. Check storage and folder access before trying again.": {"localizations":{"fr":{"stringUnit":{"state":"translated","value":"Le sujet n’a pas pu être enregistré ou son historique n’a pas pu être vérifié. Vérifiez l’espace de stockage et l’accès au dossier avant de réessayer."}}}},
     "Failure details were not recorded for this run.": {"localizations":{"fr":{"stringUnit":{"state":"translated","value":"Les détails de l’échec n’ont pas été enregistrés pour cette tentative."}}}},
     "Quick Look couldn't open this preview. Please try again.": {"localizations":{"fr":{"stringUnit":{"state":"translated","value":"Impossible d’ouvrir cet aperçu avec Coup d’œil. Réessayez."}}}},
+    "Bring Keldin to the front, then choose Quick Look again.": {"localizations":{"fr":{"stringUnit":{"state":"translated","value":"Placez Keldin au premier plan, puis choisissez de nouveau Coup d’œil."}}}},
     "Loading PDF…": {"localizations":{"fr":{"stringUnit":{"state":"translated","value":"Chargement du PDF…"}}}},
     "Direct Download": {"localizations":{"fr":{"stringUnit":{"state":"translated","value":"Téléchargement direct"}}}},
     "Not required": {"localizations":{"fr":{"stringUnit":{"state":"translated","value":"Non requis"}}}},
