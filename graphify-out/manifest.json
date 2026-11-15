@@ -5,7 +5,7 @@
     "semantic_hash": ""
   },
   "Backend/Core/ai_assessment.py": {
-    "mtime": 1794714733.0642223,
+    "mtime": 1794717231.516813,
     "ast_hash": "0a0e81644eb012e7bbc52a26c984f9f9",
     "semantic_hash": ""
   },
@@ -1235,7 +1235,7 @@
     "semantic_hash": "9089fa356046b0e497da7729dfba8605"
   },
   "Resources/repository-inventory.json": {
-    "mtime": 1794717147.1332912,
+    "mtime": 1794717231.5976722,
     "ast_hash": "3368255030591e925e8176e676d9cecd",
     "semantic_hash": ""
   },
@@ -1535,7 +1535,7 @@
     "semantic_hash": ""
   },
   "tests/test_live_generation_matrix.py": {
-    "mtime": 1794714652.857228,
+    "mtime": 1794717231.459,
     "ast_hash": "c1502b8d21c8e4c77009a015d5d7a8d4",
     "semantic_hash": ""
   },
@@ -1700,7 +1700,7 @@
     "semantic_hash": ""
   },
   "tests/test_shared_numeric_integrity.py": {
-    "mtime": 1794714921.9944441,
+    "mtime": 1794717231.540686,
     "ast_hash": "1e10c6523996b45879fe8dbd0c0dfb4c",
     "semantic_hash": ""
   },
@@ -1770,7 +1770,7 @@
     "semantic_hash": ""
   },
   "tools/live_generation_matrix.py": {
-    "mtime": 1794714652.8579745,
+    "mtime": 1794717231.4594324,
     "ast_hash": "84e5463d996f0b413950a35c8b412a96",
     "semantic_hash": ""
   },
@@ -3280,8 +3280,8 @@
     "semantic_hash": ""
   },
   "tests/test_french_interface_copy.py": {
-    "mtime": 1793925415.3075695,
-    "ast_hash": "486e75d939ed2d204109ccf6a3dbaefb",
+    "mtime": 1794717667.9111402,
+    "ast_hash": "675646b83bf63bfbf53da5b587fc2872",
     "semantic_hash": ""
   },
   "Backend/Core/legacy_migration.py": {
@@ -3295,7 +3295,7 @@
     "semantic_hash": ""
   },
   "macOS/Keldin/Application/AppCommands.swift": {
-    "mtime": 1794716881.9740102,
+    "mtime": 1794717231.6208873,
     "ast_hash": "6aaf9a6efdc96763e660b6e96b472dfc",
     "semantic_hash": ""
   },
@@ -3395,7 +3395,7 @@
     "semantic_hash": ""
   },
   "macOS/Keldin/Features/Documents/DocumentPreviewView.swift": {
-    "mtime": 1794716881.973655,
+    "mtime": 1794717231.6211736,
     "ast_hash": "70f9a2ffd8946cf801b902c3cd6a2e40",
     "semantic_hash": ""
   },
@@ -3885,8 +3885,8 @@
     "semantic_hash": ""
   },
   "Resources/implementation-audit-coverage.json": {
-    "mtime": 1794717156.1125793,
-    "ast_hash": "3f949086193b50688dca4205eb4ffb09",
+    "mtime": 1794717668.3828273,
+    "ast_hash": "cbc1c28841409bbf260fb12c221c8c2c",
     "semantic_hash": ""
   },
   "macOS/Keldin/Services/PDFDocumentAccess.swift": {
@@ -3905,7 +3905,7 @@
     "semantic_hash": ""
   },
   "macOS/Tests/PDFDocumentAccessTests.swift": {
-    "mtime": 1794716913.4295142,
+    "mtime": 1794717231.6215286,
     "ast_hash": "fd0f3b6e4462b87c1cfa74954c3bc8e8",
     "semantic_hash": ""
   },
@@ -4000,7 +4000,7 @@
     "semantic_hash": ""
   },
   "Backend/Core/assessment_prompts.py": {
-    "mtime": 1794714733.0759299,
+    "mtime": 1794717231.5171597,
     "ast_hash": "c9fcd6131e74ba93f07418df84cf2d76",
     "semantic_hash": ""
   },
@@ -4250,12 +4250,12 @@
     "semantic_hash": ""
   },
   "macOS/Keldin/Features/Documents/DocumentPickerView.swift": {
-    "mtime": 1794716881.9733305,
+    "mtime": 1794717231.6210318,
     "ast_hash": "2e043bbdd095ef24d8b737f312e791ce",
     "semantic_hash": ""
   },
   "macOS/Tests/DocumentPickerTests.swift": {
-    "mtime": 1794716823.8019075,
+    "mtime": 1794717231.6213388,
     "ast_hash": "01cc30c36788df42029385bb25d39f80",
     "semantic_hash": ""
   },
@@ -4475,7 +4475,7 @@
     "semantic_hash": ""
   },
   "tests/test_solver_choice_validity.py": {
-    "mtime": 1794714710.2975643,
+    "mtime": 1794717231.5410707,
     "ast_hash": "131d3724ba9803d0d99c6a345dcf3763",
     "semantic_hash": ""
   },
@@ -5020,7 +5020,7 @@
     "semantic_hash": ""
   },
   "tests/test_apple_intelligence_packaging.py": {
-    "mtime": 1794713992.894009,
+    "mtime": 1794717231.4587169,
     "ast_hash": "4c0c217afc8d064a0e58600bd0e32480",
     "semantic_hash": ""
   },
@@ -6320,7 +6320,7 @@
     "semantic_hash": ""
   },
   "docs/quality/document-picker-print-review-2026-11-15.md": {
-    "mtime": 1794717146.9914818,
+    "mtime": 1794717231.5977805,
     "ast_hash": "3d436c81b510bc8e82f833ab5826d9fe",
     "semantic_hash": ""
   }
