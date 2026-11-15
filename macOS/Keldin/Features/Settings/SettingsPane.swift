@@ -163,9 +163,14 @@ private struct SettingsWindowConfiguration: NSViewRepresentable {
 }
 
 private struct AISettingsTab: View {
+    private struct GuideCheck: Identifiable {
+        let id = UUID()
+        let downloadModel: String?
+    }
+
     @State private var localGuidance: LocalModelGuidance?
     @State private var guideSelection: String?
-    @State private var checkingLocalGuidance = false
+    @State private var guideCheck: GuideCheck?
     @State private var checkedLocalGuidance = false
     @ObservedObject var presentation: SettingsActionPresentation
     @Environment(\.openWindow) private var openWindow
@@ -211,6 +216,15 @@ private struct AISettingsTab: View {
         }
         .formStyle(.grouped)
         .disabled(application.isRunning)
+        .task(id: guideCheck?.id) {
+            if let check = guideCheck { await finishLocalGuide(check) }
+        }
+        .onDisappear { clearLocalGuide() }
+        .onChange(of: application.aiProvider) { _, _ in clearLocalGuide() }
+        .onChange(of: application.ollamaURL) { _, _ in clearLocalGuide() }
+        .onChange(of: application.isRunning) { _, running in
+            if running { clearLocalGuide() }
+        }
         .onChange(of: application.selectedModel) { _, _ in application.saveAISettings(presentation: application.settingsPresentation) }
         .onChange(of: application.openAIModel) { _, _ in application.saveAISettings(presentation: application.settingsPresentation) }
         .onChange(of: application.anthropicModel) { _, _ in application.saveAISettings(presentation: application.settingsPresentation) }
@@ -231,20 +245,34 @@ private struct AISettingsTab: View {
             && localGuidance?.fittingModels.contains(guideOption.model) == true
     }
 
+    private var checkingLocalGuidance: Bool { guideCheck != nil }
+
     private func checkLocalGuide(downloadModel: String? = nil) {
         guard !checkingLocalGuidance, application.canUseLocalModelGuide else { return }
-        let endpoint = application.ollamaURL
         localGuidance = nil
-        checkingLocalGuidance = true
-        Task {
-            defer { checkingLocalGuidance = false }
-            let result = try? await application.localModelGuidance()
-            guard application.ollamaURL == endpoint else { return }
-            localGuidance = result
-            checkedLocalGuidance = true
-            if let model = downloadModel, guideOption.model == model {
-                downloadPresentation.present(application.requestPullModel(model: model))
-            }
+        guideCheck = GuideCheck(downloadModel: downloadModel)
+    }
+
+    private func clearLocalGuide() {
+        guideCheck = nil
+        localGuidance = nil
+        checkedLocalGuidance = false
+    }
+
+    private func finishLocalGuide(_ check: GuideCheck) async {
+        guard !Task.isCancelled, guideCheck?.id == check.id else { return }
+        let endpoint = application.ollamaURL
+        defer {
+            if guideCheck?.id == check.id { guideCheck = nil }
+        }
+        let result = try? await application.localModelGuidance()
+        guard !Task.isCancelled, guideCheck?.id == check.id,
+              application.canUseLocalModelGuide, application.ollamaURL == endpoint
+        else { return }
+        localGuidance = result
+        checkedLocalGuidance = true
+        if let model = check.downloadModel, guideOption.model == model {
+            downloadPresentation.present(application.requestPullModel(model: model))
         }
     }
 
@@ -264,15 +292,6 @@ private struct AISettingsTab: View {
                     checkLocalGuide()
                 }
                 .disabled(checkingLocalGuidance || !application.canUseLocalModelGuide)
-                .onChange(of: application.ollamaURL) { _, _ in
-                    localGuidance = nil
-                    checkedLocalGuidance = false
-                }
-                .onChange(of: application.isRunning) { _, running in
-                    guard running else { return }
-                    localGuidance = nil
-                    checkedLocalGuidance = false
-                }
                 if checkingLocalGuidance {
                     ProgressView("Checking memory and disk space…")
                 } else if checkedLocalGuidance {

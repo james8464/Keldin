@@ -3420,8 +3420,8 @@
     "semantic_hash": ""
   },
   "macOS/Keldin/Features/Settings/SettingsPane.swift": {
-    "mtime": 1794754885.7020774,
-    "ast_hash": "10d6fffd1bf8b9707cdc34171579ba91",
+    "mtime": 1794760163.8007915,
+    "ast_hash": "5d4209769a4bff0394d48a042fdf2adb",
     "semantic_hash": ""
   },
   "macOS/Keldin/Navigation/ContentView.swift": {
@@ -3445,8 +3445,8 @@
     "semantic_hash": ""
   },
   "macOS/Keldin/State/ApplicationCoordinator.swift": {
-    "mtime": 1794754926.642345,
-    "ast_hash": "41f0b6cb9be74f8857b81ea5bf085ba5",
+    "mtime": 1794760163.8004181,
+    "ast_hash": "8212c25fd6ced8c1d0427987153cf60d",
     "semantic_hash": ""
   },
   "macOS/Keldin/State/BenchmarkCoordinator.swift": {
@@ -3735,8 +3735,8 @@
     "semantic_hash": ""
   },
   "macOS/Tests/RunIsolationTests.swift": {
-    "mtime": 1794754885.7318068,
-    "ast_hash": "bc32fe7a96b4d774089cabe9990c5eb4",
+    "mtime": 1794760116.1300607,
+    "ast_hash": "d5c8fe9bd77af34b29ea305a2ac82e91",
     "semantic_hash": ""
   },
   "docs/quality/native-run-isolation-review-2026-10-28.md": {
@@ -3885,7 +3885,7 @@
     "semantic_hash": ""
   },
   "Resources/implementation-audit-coverage.json": {
-    "mtime": 1794754947.987509,
+    "mtime": 1794760185.2633312,
     "ast_hash": "c2065f865595d47f58e1ac7af1da2dd1",
     "semantic_hash": ""
   },

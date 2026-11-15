@@ -1684,6 +1684,39 @@ final class RunIsolationTests: XCTestCase {
     }
 
     @MainActor
+    func testGuideCannotStartWhileAnotherProviderIsSelected() async throws {
+        let backend = ControlledRunBackend()
+        let application = application(backend: backend)
+        backend.modelGuideResponse = LocalModelGuidance(
+            conditionsVerified: true,
+            recommendations: [.init(model: "qwen3.5:2b-q4_K_M", estimatedFitNow: true)]
+        )
+        application.aiProvider = .apple
+
+        let guidance = try await application.localModelGuidance()
+        XCTAssertNil(guidance)
+        XCTAssertNil(application.requestPullModel(model: "qwen3.5:2b-q4_K_M"))
+    }
+
+    @MainActor
+    func testProviderRoundTripInvalidatesPendingGuideDownload() async throws {
+        let backend = ControlledRunBackend()
+        let application = application(backend: backend)
+        backend.modelGuideResponse = LocalModelGuidance(
+            conditionsVerified: true,
+            recommendations: [.init(model: "qwen3.5:2b-q4_K_M", estimatedFitNow: true)]
+        )
+        _ = try await application.localModelGuidance()
+        let request = try XCTUnwrap(application.requestPullModel(model: "qwen3.5:2b-q4_K_M"))
+
+        application.aiProvider = .apple
+        application.aiProvider = .ollama
+        application.confirmPullModel(request)
+
+        XCTAssertTrue(backend.requests.isEmpty)
+    }
+
+    @MainActor
     func testFailedModelDownloadUsesTheSelectedFrenchMessage() throws {
         let backend = ControlledRunBackend()
         let defaults = isolatedDefaults()
