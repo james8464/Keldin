@@ -16,6 +16,7 @@ from Backend.Core.france.network import open_ollama_request
 from Backend.Core.ollama_admission import require_local_ollama_capacity
 
 _OLLAMA = "http://127.0.0.1:11434"
+_VISION_CONTEXT_TOKENS = 4096
 _MAX_REPLY_BYTES = 16_384
 _LAYOUT_SCHEMA = {
     "type": "object",
@@ -112,7 +113,7 @@ def analyze_custom_source_page(
         or "vision" not in metadata["capabilities"]
     ):
         raise ValueError("Choose an installed local Ollama vision model")
-    require_local_ollama_capacity(_OLLAMA, model)
+    require_local_ollama_capacity(_OLLAMA, model, _VISION_CONTEXT_TOKENS)
     image = render_custom_source_page(source, page)
     try:
         reply = _read_local(
@@ -130,7 +131,11 @@ def analyze_custom_source_page(
                 "think": False,
                 "format": _LAYOUT_SCHEMA,
                 "keep_alive": 0,
-                "options": {"temperature": 0, "num_ctx": 4096, "num_predict": 512},
+                "options": {
+                    "temperature": 0,
+                    "num_ctx": _VISION_CONTEXT_TOKENS,
+                    "num_predict": 512,
+                },
             },
             timeout=90,
             limit=_MAX_REPLY_BYTES,

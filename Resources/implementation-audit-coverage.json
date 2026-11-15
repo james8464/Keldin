@@ -8566,11 +8566,8 @@
     {
       "path": "tests/test_ollama_headroom.py",
       "classification": "test",
-      "status": "reviewed",
-      "reason": "Root complete current 318-line EOF read plus independent initial 265-line EOF and every subsequent fixture/cancellation/metadata-bound delta. Offline guarded 386-pass focused evidence covers real admission policy using injected inputs, not live sensors/network/inference; no runtime peak-fit or model-quality qualification.",
-      "source_sha256": "e550fc5a6dae7bc4bc1a28ef66a885fb5d038b2ae914ee07b6dc122ec1c7c534",
-      "review_evidence": "docs/quality/local-model-current-headroom-review.md",
-      "review_evidence_sha256": "56278db735289cf84ee185b23467621507581b8fc53a14b3e443ac598fe788ec"
+      "status": "pending",
+      "reason": "No file-level semantic implementation review recorded in this ledger."
     },
     {
       "path": "tests/test_ollama_parallel_jobs.py",

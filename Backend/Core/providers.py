@@ -30,6 +30,7 @@ from Backend.Core.mlx_batching import (
 from Backend.Core.mlx_setup import ensure_mlx_memory_capacity, resolve_local_mlx_model
 from Backend.Core.model_review import CANONICAL_COGNITIVE_OPERATIONS
 from Backend.Core.ollama_admission import (
+    PAPER_OLLAMA_CONTEXT_TOKENS,
     require_local_ollama_capacity,
     require_local_ollama_route,
 )
@@ -304,8 +305,12 @@ class HostedLLMClient:
         budget = (
             _ollama_output_budget(schema) if output_budget is None else output_budget
         )
-        if french_nsi and (type(budget) is not int or not 1 <= budget <= 16384):
-            raise ValueError("French NSI output budget must be from 1 to 16384.")
+        if french_nsi and (
+            type(budget) is not int or not 1 <= budget <= PAPER_OLLAMA_CONTEXT_TOKENS
+        ):
+            raise ValueError(
+                f"French NSI output budget must be from 1 to {PAPER_OLLAMA_CONTEXT_TOKENS}."
+            )
         require_local_ollama_capacity(self.base_url, self.model)
         thinking_policy = self._ollama_thinking_policy(request_function)
         payload = json.dumps(
@@ -321,7 +326,7 @@ class HostedLLMClient:
                     if temperature is None
                     else temperature,
                     "top_p": 0.9,
-                    "num_ctx": 16384,
+                    "num_ctx": PAPER_OLLAMA_CONTEXT_TOKENS,
                     "num_predict": budget,
                     "repeat_last_n": 256,
                     "repeat_penalty": 1.0 if french_nsi else 1.15,
@@ -370,7 +375,7 @@ class HostedLLMClient:
                         "kind": "context_capacity",
                         "provider": "ollama",
                         "http_status": cause.code,
-                        "context_window": 16384,
+                        "context_window": PAPER_OLLAMA_CONTEXT_TOKENS,
                         "output_budget": budget,
                         "prompt_sha256": hashlib.sha256(prompt.encode()).hexdigest(),
                     },
@@ -406,7 +411,7 @@ class HostedLLMClient:
             diagnostic.update(
                 input_tokens=input_count,
                 output_budget=budget,
-                context_window=16384,
+                context_window=PAPER_OLLAMA_CONTEXT_TOKENS,
                 truncate=False,
                 shift=False,
             )
@@ -415,8 +420,8 @@ class HostedLLMClient:
                 or input_count < 1
                 or type(output_count) is not int
                 or output_count < 0
-                or input_count + budget > 16384
-                or input_count + output_count > 16384
+                or input_count + budget > PAPER_OLLAMA_CONTEXT_TOKENS
+                or input_count + output_count > PAPER_OLLAMA_CONTEXT_TOKENS
                 or output_count > budget
             ):
                 diagnostic["kind"] = "context_capacity"
@@ -425,7 +430,8 @@ class HostedLLMClient:
                     details=diagnostic,
                 )
             emit_progress(
-                f"Contexte du modèle : {input_count} jetons d'entrée, {output_count} de sortie, limite 16384.",
+                f"Contexte du modèle : {input_count} jetons d'entrée, "
+                f"{output_count} de sortie, limite {PAPER_OLLAMA_CONTEXT_TOKENS}.",
                 stage="provider_context",
             )
         if raw_dict.get("done") is not True or raw_dict.get("done_reason") not in {
