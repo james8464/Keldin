@@ -42,3 +42,14 @@ Store-mode builds are bound to `66f18b2f`; the Direct helper returned
 the expected refusal for synthetic Accounting P2 and French V36
 requests, without publishing a paper. This does not qualify any live
 paper, production distribution or App Store privacy answers.
+
+## Hosted credential preflight follow-up
+
+The existing test that non-Ollama providers never use local Ollama admission
+now supplies a synthetic nonblank key to its OpenAI and Anthropic success
+fixtures. MLX still has no key. The test stubs provider response methods and
+fails if Ollama resource admission is called; it does not contact a service.
+Separate regression tests fail if empty or whitespace-only hosted keys reach
+the transport, and verify that French failure evidence redacts a normalized
+key. The resource-admission test file passed all 64 tests after the fixture
+change. These checks do not qualify content, a provider or an account.

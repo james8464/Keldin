@@ -36,6 +36,11 @@ from Backend.Core.ollama_admission import (
 from Backend.Core.ollama_thinking import structured_thinking_policy
 
 
+def normalized_provider_key(value: object) -> str:
+    """Trim pasted credentials without logging or interpreting their contents."""
+    return value.strip() if isinstance(value, str) else ""
+
+
 class HostedLLMClient:
     def __init__(
         self,
@@ -47,7 +52,7 @@ class HostedLLMClient:
     ) -> None:
         self.provider = provider
         self.model = model
-        self.api_key = api_key
+        self.api_key = normalized_provider_key(api_key)
         self.usage_records: list[dict[str, object]] = []
         self.base_url = _normalise_base_url(base_url)
         self.parallel_review_workers = (
@@ -103,6 +108,8 @@ class HostedLLMClient:
     ) -> dict[str, object]:
         if not 1 <= retries <= 3:
             raise ValueError("Structured-output attempts must be between 1 and 3.")
+        if self.provider in {"openai", "anthropic"} and not self.api_key:
+            raise ValueError(f"Enter an API key for {provider_title(self.provider)}.")
         if self.provider in {"deepseek", "apple_intelligence"} or (
             request is not None and request.operation == "french_nsi_authoring"
         ):

@@ -29,7 +29,7 @@ from Backend.Core.ollama_admission import (
     ResourceAdmissionError,
     require_local_ollama_route,
 )
-from Backend.Core.providers import HostedLLMClient
+from Backend.Core.providers import HostedLLMClient, normalized_provider_key
 from Backend.Core.render_transaction import render_pdf_atomically
 from Backend.Core.temporary_cleanup import remove_owned_staging
 
@@ -83,6 +83,7 @@ def handle_generate_llm_assessment(args) -> int:
     previous_handler = None
     client = None
     output = Path(args.output).expanduser().absolute()
+    api_key = normalized_provider_key(getattr(args, "api_key", ""))
 
     def cancel(_signal, _frame):
         raise InterruptedError("Création annulée; aucun PDF incomplet n'a été publié.")
@@ -111,11 +112,7 @@ def handle_generate_llm_assessment(args) -> int:
             raise ValueError(
                 "Préparez les références françaises avant de créer un sujet."
             )
-        if args.provider in {"openai", "anthropic", "deepseek"} and not getattr(
-            args, "api_key", ""
-        ):
-            raise ValueError("Ajoutez la clé du fournisseur dans les réglages.")
-        if args.provider == "deepseek" and not args.api_key.strip():
+        if args.provider in {"openai", "anthropic", "deepseek"} and not api_key:
             raise ValueError("Ajoutez la clé du fournisseur dans les réglages.")
         # Reference and model snapshots can read several gigabytes. Report
         # cancellation during that preflight as well as during generation.
@@ -123,7 +120,7 @@ def handle_generate_llm_assessment(args) -> int:
         provider_client = HostedLLMClient(
             provider=args.provider,
             model=args.model,
-            api_key=getattr(args, "api_key", ""),
+            api_key=api_key,
             base_url=args.ollama_url,
         )
         if args.provider == "apple":
@@ -165,9 +162,7 @@ def handle_generate_llm_assessment(args) -> int:
                 progress=min(0.8, 0.04 + steps * 0.08),
             )
 
-        recorder = RecoveryEvidenceRecorder(
-            output, secrets=(getattr(args, "api_key", ""),)
-        )
+        recorder = RecoveryEvidenceRecorder(output, secrets=(api_key,))
         package = llm_pipeline.generate(
             index_path=args.reference_index,
             client=client,
@@ -312,7 +307,7 @@ def handle_generate_llm_assessment(args) -> int:
         save_failure_diagnostic(
             output,
             error,
-            secrets=(getattr(args, "api_key", ""),),
+            secrets=(api_key,),
             context={
                 "assessment": args.assessment,
                 "provider": args.provider,
@@ -342,7 +337,10 @@ def handle_generate_llm_assessment(args) -> int:
                 if kind == "context_capacity"
                 else "french_generation_failed"
             )
-            emit("error", message=str(error), code=code)
+            message = str(error)
+            if api_key:
+                message = message.replace(api_key, "[redacted]")
+            emit("error", message=message, code=code)
         return 1
     finally:
         if previous_handler is not None:

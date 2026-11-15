@@ -135,6 +135,51 @@ def test_local_memory_refusal_has_a_distinct_terminal_code(publication, monkeypa
     assert not any(event["type"] in {"done", "file"} for event in events)
 
 
+@pytest.mark.parametrize("provider", ["openai", "anthropic", "deepseek"])
+def test_blank_hosted_credentials_stop_before_preflight(
+    publication, monkeypatch, provider
+):
+    subject, args, events = publication
+    args.provider = provider
+    args.api_key = " \t"
+
+    def create_client(**kwargs):
+        pytest.fail("French hosted client must not be created for a blank key")
+
+    monkeypatch.setattr(subject, "HostedLLMClient", create_client)
+    assert subject.handle_generate_llm_assessment(args) == 1
+    assert events[-1]["type"] == "error"
+    assert "Ajoutez la clé" in events[-1]["message"]
+    assert not args.output.exists()
+
+
+def test_pasted_hosted_key_is_removed_from_failure_evidence(publication, monkeypatch):
+    from Backend.Core.generation_diagnostics import GenerationEvidenceError
+
+    subject, args, events = publication
+    args.provider = "openai"
+    key = "fixture-only-not-a-real-key"
+    args.api_key = f" {key}\t"
+    create_client = subject.HostedLLMClient
+
+    def checked_client(**kwargs):
+        assert kwargs["api_key"] == key
+        return create_client(**kwargs)
+
+    def reject(*args, **kwargs):
+        assert kwargs["record_round"].secrets == (key,)
+        raise GenerationEvidenceError(
+            f"Fixture refusal for {key}", details={"rejected": key}
+        )
+
+    monkeypatch.setattr(subject, "HostedLLMClient", checked_client)
+    monkeypatch.setattr(subject.llm_pipeline, "generate", reject)
+    assert subject.handle_generate_llm_assessment(args) == 1
+    [diagnostic] = (args.output / ".keldin-diagnostics").glob("failure-*.json")
+    assert json.loads(diagnostic.read_text())["details"]["rejected"] == "[redacted]"
+    assert events[-1]["message"] == "Fixture refusal for [redacted]"
+
+
 @pytest.mark.parametrize(
     ("input_tokens", "reason", "expected_code"),
     [
