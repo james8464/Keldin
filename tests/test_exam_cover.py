@@ -344,6 +344,58 @@ def test_aqa_cs_topic_bank_has_the_same_distinct_topic_on_both_covers(
             assert title.x1 < cover.rect.width - 40
 
 
+@pytest.mark.parametrize(
+    ("topic_id", "seed", "rules_count", "needs_new_page"),
+    [
+        ("4.2", 26080110, 108, True),
+        ("4.10", 26080111, 109, False),
+        ("4.12", 26080112, 107, False),
+    ],
+)
+def test_aqa_cs_bank_end_marker_respects_available_space_after_the_last_answer(
+    tmp_path, topic_id, seed, rules_count, needs_new_page
+):
+    from cspapergen.generator import build_topic_question_bank
+    from cspapergen.render_pdf import render_question_paper
+    from cspapergen.syllabus import load_syllabus
+
+    blueprint = build_topic_question_bank(load_syllabus(), topic_id=topic_id, seed=seed)
+    path = tmp_path / "bank.pdf"
+    render_question_paper(blueprint, path)
+    with fitz.open(path) as paper:
+        rules = []
+        markers = []
+        spare_pages = []
+        for page in paper:
+            for drawing in page.get_drawings():
+                rect = drawing["rect"]
+                if (
+                    abs(rect.x0 - 118) < 0.1
+                    and abs(rect.x1 - 534) < 0.1
+                    and rect.height < 0.1
+                ):
+                    rules.append((page.number, rect))
+            markers.extend(
+                (page.number, rect) for rect in page.search_for("END OF QUESTIONS")
+            )
+            if page.search_for("Additional page, if required"):
+                spare_pages.append(page.number)
+        assert len(rules) == rules_count
+        ((page_no, marker),) = markers
+        last_answer_page, last_rule = rules[-1]
+        assert page_no == last_answer_page + needs_new_page
+        total_boxes = [
+            d["rect"]
+            for d in paper[last_answer_page].get_drawings()
+            if abs(d["rect"].x0 - 547) < 0.1 and abs(d["rect"].height - 42) < 0.1
+        ]
+        assert total_boxes
+        if not needs_new_page:
+            assert marker.y0 > max(last_rule.y1, max(box.y1 for box in total_boxes))
+        assert marker.y1 < 765
+        assert spare_pages == [page_no + 1, page_no + 2, page_no + 3]
+
+
 def test_ocr_question_cover_uses_ocr_identity_and_materials_grid(tmp_path):
     profile = CoverProfile(
         "ocr",
