@@ -17,7 +17,11 @@ final class ApplicationCoordinator: ObservableObject {
     let settingsPresentation = SettingsActionPresentation()
 
     @Published var selectedModel = AppDefaults.ollamaModel
-    @Published var aiProvider: AIProvider = .ollama
+    @Published var aiProvider: AIProvider = .ollama {
+        didSet {
+            if oldValue != aiProvider { invalidateLocalGuideEstimate() }
+        }
+    }
     @Published var ollamaURL = AppDefaults.ollamaURL {
         didSet {
             guard oldValue != ollamaURL else { return }
@@ -483,7 +487,7 @@ final class ApplicationCoordinator: ObservableObject {
         guard canUseLocalModelGuide else { return nil }
         let revision = localGuideRevision
         let events = try await backend.collect(arguments: ["local-model-guidance"])
-        guard revision == localGuideRevision else { return nil }
+        guard revision == localGuideRevision, !Task.isCancelled else { return nil }
         for event in events {
             if case let .localModelGuidance(result) = event {
                 localGuideEstimate = (result, Date().addingTimeInterval(60))
@@ -1411,13 +1415,13 @@ final class ApplicationCoordinator: ObservableObject {
             return
         }
         if !request.selectAfterDownload {
-            guard canUseLocalModelGuide,
-                  request.endpoint == ollamaURL.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard request.endpoint == ollamaURL.trimmingCharacters(in: .whitespacesAndNewlines)
             else {
                 setError(InterfaceText.resolve("The Ollama server changed. Check this Mac again before downloading.", language: presentationLanguage), presentation: presentation)
                 return
             }
-            guard request.guideEstimateRevision == localGuideRevision,
+            guard canUseLocalModelGuide,
+                  request.guideEstimateRevision == localGuideRevision,
                   let expiresAt = request.guideEstimateExpiresAt, expiresAt >= Date()
             else {
                 setError(InterfaceText.resolve("The fit estimate expired. Check this Mac again before downloading.", language: presentationLanguage), presentation: presentation)
@@ -1574,7 +1578,7 @@ final class ApplicationCoordinator: ObservableObject {
     var canUseLocalModelGuide: Bool {
         // The backend estimates the stock port and the local cache volume only.
         let endpoint = ollamaURL.trimmingCharacters(in: .whitespacesAndNewlines)
-        return OllamaModelGuide.isAvailable
+        return aiProvider == .ollama && OllamaModelGuide.isAvailable
             && [AppDefaults.ollamaURL, "http://127.0.0.1:11434"].contains(endpoint)
     }
 

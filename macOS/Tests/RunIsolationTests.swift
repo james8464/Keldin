@@ -1684,6 +1684,76 @@ final class RunIsolationTests: XCTestCase {
     }
 
     @MainActor
+    func testGuideCannotStartWhileAnotherProviderIsSelected() async throws {
+        let backend = ControlledRunBackend()
+        let application = application(backend: backend)
+        backend.modelGuideResponse = LocalModelGuidance(
+            conditionsVerified: true,
+            recommendations: [.init(model: "qwen3.5:2b-q4_K_M", estimatedFitNow: true)]
+        )
+        application.aiProvider = .apple
+
+        let guidance = try await application.localModelGuidance()
+        XCTAssertNil(guidance)
+        XCTAssertNil(application.requestPullModel(model: "qwen3.5:2b-q4_K_M"))
+    }
+
+    @MainActor
+    func testProviderRoundTripInvalidatesPendingGuideDownload() async throws {
+        let backend = ControlledRunBackend()
+        let application = application(backend: backend)
+        backend.modelGuideResponse = LocalModelGuidance(
+            conditionsVerified: true,
+            recommendations: [.init(model: "qwen3.5:2b-q4_K_M", estimatedFitNow: true)]
+        )
+        _ = try await application.localModelGuidance()
+        let request = try XCTUnwrap(application.requestPullModel(model: "qwen3.5:2b-q4_K_M"))
+
+        application.aiProvider = .apple
+        application.aiProvider = .ollama
+        application.confirmPullModel(request)
+
+        XCTAssertTrue(backend.requests.isEmpty)
+    }
+
+    @MainActor
+    func testCancelledGuideCheckCannotUseLateFittingResponse() async throws {
+        let backend = DeferredRefreshBackend()
+        let application = application(backend: backend)
+        let model = "qwen3.5:2b-q4_K_M"
+        let check = Task { try await application.localModelGuidance() }
+        await fulfillment(of: [backend.guideStarted], timeout: 2)
+        check.cancel()
+        backend.resumeNext(.success([.localModelGuidance(.init(
+            conditionsVerified: true, recommendations: [.init(model: model, estimatedFitNow: true)]
+        ))]))
+
+        let result = try await check.value
+        XCTAssertNil(result)
+        XCTAssertNil(application.requestPullModel(model: model))
+        XCTAssertTrue(backend.runs.requests.isEmpty)
+    }
+
+    @MainActor
+    func testProviderRoundTripRejectsFittingReplyFromSuspendedCheck() async throws {
+        let backend = DeferredRefreshBackend()
+        let application = application(backend: backend)
+        let model = "qwen3.5:2b-q4_K_M"
+        let check = Task { try await application.localModelGuidance() }
+        await fulfillment(of: [backend.guideStarted], timeout: 2)
+        application.aiProvider = .apple
+        application.aiProvider = .ollama
+        backend.resumeNext(.success([.localModelGuidance(.init(
+            conditionsVerified: true, recommendations: [.init(model: model, estimatedFitNow: true)]
+        ))]))
+
+        let result = try await check.value
+        XCTAssertNil(result)
+        XCTAssertNil(application.requestPullModel(model: model))
+        XCTAssertTrue(backend.runs.requests.isEmpty)
+    }
+
+    @MainActor
     func testFailedModelDownloadUsesTheSelectedFrenchMessage() throws {
         let backend = ControlledRunBackend()
         let defaults = isolatedDefaults()
@@ -2358,6 +2428,7 @@ private final class DeferredRefreshBackend: BackendRunning, @unchecked Sendable 
     let runs = ControlledRunBackend()
     let statusStarted = XCTestExpectation(description: "Ollama status collection started")
     let modelsStarted = XCTestExpectation(description: "Ollama models collection started")
+    let guideStarted = XCTestExpectation(description: "Ollama guide collection started")
     private let lock = NSLock()
     private let defersModels: Bool
     private var arguments: [[String]] = []
@@ -2380,10 +2451,11 @@ private final class DeferredRefreshBackend: BackendRunning, @unchecked Sendable 
     func collect(arguments: [String]) async throws -> [BackendEvent] {
         lock.withLock { self.arguments.append(arguments) }
         let isStatus = arguments.first == "ollama-status"
-        guard isStatus || defersModels else { return [] }
+        let isGuide = arguments == ["local-model-guidance"]
+        guard isGuide || isStatus || defersModels else { return [] }
         return try await withCheckedThrowingContinuation { continuation in
             lock.withLock { continuations.append(continuation) }
-            (isStatus ? statusStarted : modelsStarted).fulfill()
+            (isGuide ? guideStarted : isStatus ? statusStarted : modelsStarted).fulfill()
         }
     }
 
