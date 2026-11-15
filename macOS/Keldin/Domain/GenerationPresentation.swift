@@ -160,6 +160,7 @@ enum GenerationPresentation {
         let identifier = #"(?:question |question-|verified contract )?[0-9][0-9A-Za-z()./_-]{0,63}"#
         let failures = #"(?:failed independent solution reconciliation:|failed reference-demand review:|failed second-pass assessment review:|failed assessment review:|independent answer disagrees with the keyed option(?:$|:))"#
         return line.range(of: "^\(identifier) \(failures)", options: .regularExpression) != nil
+            || line.range(of: "^(?:\(identifier)|mcq_[1-9][0-9]{0,4}) independent solver found no single valid choice$", options: .regularExpression) != nil
             || line.range(of: #"^AI could not produce a valid, second-pass reviewed item for question [0-9][0-9A-Za-z()./_-]{0,63}:"#, options: .regularExpression) != nil
     }
 

@@ -47,6 +47,7 @@ final class CoordinatorTests: XCTestCase {
             "question-2b failed second-pass assessment review: marking issue",
             "verified contract 15.1 failed assessment review: not approved",
             "question-1a independent answer disagrees with the keyed option",
+            "mcq_1 independent solver found no single valid choice",
             "AI could not produce a valid, second-pass reviewed item for question 01: rejected",
         ] {
             let raw = firstLine + "\nA private diagnostic report was saved to /private/test/model-diagnostic.json"
