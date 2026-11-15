@@ -77,7 +77,7 @@ _question_uses_option_source = _assessment_prompts.question_uses_option_source
 _SEMANTIC_STOPWORDS = _assessment_prompts._SEMANTIC_STOPWORDS
 
 LOGGER = logging.getLogger(__name__)
-ASSESSMENT_REVIEW_VERSION = "assessment-review-v11-accounting-equal-priority"
+ASSESSMENT_REVIEW_VERSION = "assessment-review-v12-exact-review-rows"
 
 
 class AssessmentLLMClient(JSONGenerationClient, Protocol):
@@ -1541,8 +1541,10 @@ def _review_batch(
         ),
     )
     reviews = raw.get("reviews")
-    if not isinstance(reviews, list):
-        raise ValueError("second-pass review response has no reviews")
+    if not isinstance(reviews, list) or len(reviews) != len(tasks):
+        raise ValueError(
+            "second-pass response must contain exactly one review per requested question"
+        )
     by_id = {
         str(review.get("id")): review for review in reviews if isinstance(review, dict)
     }
@@ -1551,6 +1553,8 @@ def _review_batch(
     results: dict[str, ReviewResult] = {}
     for task in tasks:
         review = by_id[task.id]
+        if ReviewResult.model_fields.keys() - review.keys():
+            raise ValueError("second-pass review response is missing required checks")
         result = ReviewResult.model_validate(
             {key: value for key, value in review.items() if key != "id"}
         )
