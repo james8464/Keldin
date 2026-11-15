@@ -91,9 +91,14 @@ def test_document_commands_do_not_target_the_document_behind_a_guide():
         "private", 1
     )[0]
     assert "canNavigate" in provenance
-    assert "documentActions?.provenance != nil" in provenance
+    assert "documentActions?.canCopyProvenance == true" in provenance
     assert ".disabled(!canCopyProvenance)" in source
     assert "guard canCopyProvenance else { return }" in source
+    document = (APP / "Features/Documents/DocumentPreviewView.swift").read_text()
+    copy_gate = document.split("var canCopyProvenance: Bool", 1)[1].split("}", 1)[0]
+    assert "!isDocumentPickerTracking" in copy_gate
+    assert "provenance != nil" in copy_gate
+    assert "guard canCopyProvenance, let provenance else { return }" in document
     navigation = source.split("private var canNavigate: Bool", 1)[1].split(
         "private", 1
     )[0]

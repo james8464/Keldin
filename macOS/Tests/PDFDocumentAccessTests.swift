@@ -194,6 +194,80 @@ final class PDFDocumentAccessTests: XCTestCase {
     }
 
     @MainActor
+    func testDocumentActionsWaitForThePickerAndUseTheCommittedSelection() async throws {
+        let subject = GeneratedFile(role: "question_paper", url: try makePDF(name: "subject.pdf", pages: 3))
+        let scheme = GeneratedFile(role: "mark_scheme", url: try makePDF(name: "scheme.pdf", pages: 2))
+        let reads = Mutex(0)
+        var printedPages: [Int] = []
+        let controller = DocumentActionController(access: PDFDocumentAccess(defaults: defaults(), readData: { url in
+            reads.withLock { $0 += 1 }
+            return try Data(contentsOf: url)
+        }), presentAction: { action, _, pdf in
+            XCTAssertEqual(action, .print)
+            printedPages.append(pdf.document.pageCount)
+        })
+        controller.update(file: subject, provenance: nil)
+        await controller.waitForPendingLoad()
+        var selectedID: GeneratedFile.ID? = subject.id
+        let binding = controller.selectionBinding(
+            selection: Binding(get: { selectedID }, set: { selectedID = $0 }),
+            files: [subject, scheme], records: []
+        )
+
+        for (index, next) in [scheme, subject].enumerated() {
+            let readCount = reads.withLock { $0 }
+            XCTAssertTrue(controller.canAccessDocument)
+            controller.setDocumentPickerTracking(true)
+            XCTAssertFalse(controller.canAccessDocument)
+            for action in [DocumentActionController.Action.quickLook, .reveal, .print, .export] {
+                invoke(action, on: controller)
+            }
+            await controller.waitForPendingLoad()
+            XCTAssertEqual(reads.withLock { $0 }, readCount)
+            XCTAssertEqual(printedPages.count, index)
+
+            // AppKit ends tracking and sends the menu item's action on the same turn.
+            controller.setDocumentPickerTracking(false)
+            binding.wrappedValue = next.id
+            await controller.waitForPendingLoad()
+            XCTAssertTrue(controller.canAccessDocument)
+            controller.printSelected()
+            await controller.waitForPendingLoad()
+        }
+        XCTAssertEqual(printedPages, [2, 3])
+
+        controller.setDocumentPickerTracking(true)
+        controller.setDocumentPickerTracking(false) // Escape, no new selection.
+        controller.printSelected()
+        await controller.waitForPendingLoad()
+        XCTAssertEqual(printedPages, [2, 3, 3])
+    }
+
+    @MainActor
+    func testOpeningDocumentPickerInvalidatesAnInFlightPrintEvenIfItIsDismissed() async throws {
+        let url = try makePDF()
+        let bytes = try Data(contentsOf: url)
+        let began = expectation(description: "Print revalidation entered")
+        let reader = GatedPDFReader(started: began, blockedCalls: [2]) { _, _ in bytes }
+        var printed = 0
+        let controller = DocumentActionController(access: PDFDocumentAccess(defaults: defaults(),
+            readData: { try reader.read($0) }), presentAction: { _, _, _ in printed += 1 })
+        controller.update(file: GeneratedFile(role: "question_paper", url: url), provenance: nil)
+        await controller.waitForPendingLoad()
+        controller.printSelected()
+        await fulfillment(of: [began], timeout: 3)
+        controller.setDocumentPickerTracking(true)
+        controller.setDocumentPickerTracking(false)
+        reader.gate.signal()
+        await controller.waitForPendingLoad()
+        XCTAssertEqual(printed, 0)
+        XCTAssertTrue(controller.canAccessDocument)
+        controller.printSelected()
+        await controller.waitForPendingLoad()
+        XCTAssertEqual(printed, 1)
+    }
+
+    @MainActor
     func testStaleActionReadsNeverPresentAnyNativeAction() async throws {
         for action in [DocumentActionController.Action.quickLook, .reveal, .print, .export] {
             let first = try makePDF(name: "action-first.pdf")

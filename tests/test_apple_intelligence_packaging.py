@@ -49,7 +49,9 @@ def _fixture(tmp_path: Path, *, store: bool = False, sign_failure: bool = False)
         )
         path.chmod(0o755)
     source.write_text(
-        SCRIPT.read_text().replace("/usr/bin/codesign", str(bin_dir / "codesign"))
+        SCRIPT.read_text().replace(
+            "/usr/bin/codesign", shlex.quote(str(bin_dir / "codesign"))
+        )
     )
     return (
         source,
@@ -102,7 +104,7 @@ def test_helper_packaging_uses_one_cache_and_rechecks_build_inputs(tmp_path):
 
 
 def test_store_helper_inherits_sandbox_and_is_hardened(tmp_path):
-    source, calls, env = _fixture(tmp_path, store=True)
+    source, calls, env = _fixture(tmp_path / "workspace with spaces", store=True)
     assert _run(source, env).returncode == 0
     commands = [json.loads(line) for line in calls.read_text().splitlines()]
     sign = next(row for row in commands if "--force" in row)

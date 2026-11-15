@@ -767,6 +767,50 @@ def test_starting_a_retry_invalidates_old_success_before_launch(tmp_path, monkey
     )
 
 
+@pytest.mark.parametrize("interruption", [KeyboardInterrupt, SystemExit])
+def test_interrupted_route_keeps_evidence_without_counting_a_verdict(
+    tmp_path, monkeypatch, interruption
+):
+    selected = jobs()[:2]
+    event = '{"type":"progress","stage":"authoring"}\n'
+
+    def run(command, *, run_dir, **_kwargs):
+        if command[command.index("--paper") + 1] == selected[0].paper:
+            return BackendRun(1, False, "", "fixture failure", 1000)
+        (run_dir / "events.jsonl").write_text(event)
+        raise interruption(143)
+
+    monkeypatch.setattr("tools.live_generation_matrix.run_backend", run)
+    with pytest.raises(interruption):
+        run_matrix(
+            selected,
+            output_root=tmp_path,
+            command_prefix=["backend"],
+            model="fixture",
+            provider="ollama",
+            ollama_url="http://127.0.0.1:1",
+            base_seed=42,
+            timeout_seconds=30,
+            dry_run=True,
+            resume=False,
+        )
+
+    job = selected[1]
+    folder = tmp_path / job.backend_subject / f"paper-{job.paper}"
+    result = json.loads((folder / "matrix-result.json").read_text())
+    assert result["status"] == "interrupted"
+    assert result["passed"] is False
+    assert result["files"] == {}
+    assert (folder / "events.jsonl").read_text() == event
+    assert result["events_sha256"] == _sha256(folder / "events.jsonl")
+    manifest = json.loads(Path(result["qualification_manifest"]).read_text())
+    assert manifest["gate_results"]["generation"] == "not_run"
+    assert manifest["evidence"][0]["sha256"] == result["events_sha256"]
+    report = json.loads((tmp_path / "matrix-report.json").read_text())
+    assert report["complete"] is False
+    assert report["summary"] == {"papers": 1, "passed": 0, "failed": 1}
+
+
 @pytest.mark.parametrize("drift", ["model", "runtime", "artifact", "unknown_model"])
 def test_final_matrix_rechecks_earlier_evidence(tmp_path, monkeypatch, drift):
     selected = jobs()[:2]

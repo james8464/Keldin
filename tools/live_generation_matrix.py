@@ -217,12 +217,30 @@ def run_matrix(
             output_root=output_root,
         )
         before = time.monotonic()
-        completed = run_backend(
-            command,
-            cwd=ROOT,
-            run_dir=run_dir,
-            timeout_seconds=timeout_seconds,
-        )
+        try:
+            completed = run_backend(
+                command,
+                cwd=ROOT,
+                run_dir=run_dir,
+                timeout_seconds=timeout_seconds,
+            )
+        except (KeyboardInterrupt, SystemExit):
+            active_result.update(
+                status="interrupted",
+                events_sha256=_sha256(run_dir / "events.jsonl"),
+            )
+            active_result["qualification_manifest"] = str(
+                _write_qualification_manifest(
+                    job=job,
+                    result=active_result,
+                    result_path=result_path,
+                    run_dir=run_dir,
+                    output_root=output_root,
+                )
+            )
+            # Keep the last completed aggregate; this route has no verdict.
+            write_json_atomically(result_path, active_result, ensure_ascii=True)
+            raise
         return_code = completed.return_code
         timed_out = completed.timed_out
         stdout, stderr = completed.stdout, completed.stderr
@@ -759,7 +777,7 @@ def _qualification_manifest(
     inputs = package.get("inputs", {})
     generator = package.get("generator", {})
     backend = package.get("backend", {})
-    running = result.get("status") == "running"
+    unfinished = result.get("status") in {"running", "interrupted"}
     generation_passed = result.get("generation_passed", result["passed"]) is True
     demand_passed = result.get("reference_demand_passed") is True
     artifacts = []
@@ -815,18 +833,18 @@ def _qualification_manifest(
         artifacts=artifacts,
         gate_results={
             "generation": GateState.NOT_RUN
-            if running
+            if unfinished
             else GateState.PASSED
             if generation_passed
             else GateState.FAILED,
             "pdf": GateState.NOT_RUN
-            if running
+            if unfinished
             else GateState.PASSED
             if generation_passed
             else GateState.FAILED,
             "reference_demand": (
                 GateState.NOT_RUN
-                if running
+                if unfinished
                 else GateState.PASSED
                 if demand_passed
                 else GateState.FAILED

@@ -409,6 +409,37 @@ def semantic_task_contract(task: AssessmentPromptTask) -> dict[str, object]:
     }
 
 
+def _editorial_solution_evidence(
+    solution: CanonicalSolution | None,
+) -> dict[str, Any] | None:
+    if solution is None:
+        return None
+    evidence = solution.model_dump(
+        mode="json",
+        include={
+            "answer",
+            "steps",
+            "numeric_results",
+            "solution_source",
+            "verified_scope",
+        },
+    )
+    if solution.numeric_checks:
+        # The solver has already reconciled the raw values. Give the editor
+        # each exam-facing answer once, with the exact output format.
+        evidence["answer"] = dict(solution.answer_slots)
+        evidence["numeric_formats"] = {
+            check.role: {
+                "unit": check.unit,
+                "decimal_places": check.decimal_places,
+                "sign": check.sign,
+            }
+            for check in solution.numeric_checks
+        }
+        del evidence["numeric_results"]
+    return evidence
+
+
 def review_prompt(
     tasks: list[AssessmentPromptTask],
     candidates: list[GeneratedQuestion],
@@ -435,19 +466,8 @@ def review_prompt(
             },
             "source": task_source(task),
             "question": review_question_payload(candidate),
-            "independent_solution": (
-                solution.model_dump(
-                    mode="json",
-                    include={
-                        "answer",
-                        "steps",
-                        "numeric_results",
-                        "solution_source",
-                        "verified_scope",
-                    },
-                )
-                if (solution := (canonical_solutions or {}).get(task.id)) is not None
-                else None
+            "independent_solution": _editorial_solution_evidence(
+                (canonical_solutions or {}).get(task.id)
             ),
         }
         for task, candidate in zip(tasks, candidates, strict=True)
