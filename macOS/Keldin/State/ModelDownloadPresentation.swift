@@ -5,10 +5,20 @@ struct ModelDownloadRequest: Equatable, Identifiable, Sendable {
     let id = UUID()
     let model: String
     let endpoint: String
+    let selectAfterDownload: Bool
+    let guideEstimateExpiresAt: Date?
+    let guideEstimateRevision: UUID?
 
-    init(model: String, endpoint: String = AppDefaults.ollamaURL) {
+    init(
+        model: String, endpoint: String = AppDefaults.ollamaURL,
+        selectAfterDownload: Bool = true, guideEstimateExpiresAt: Date? = nil,
+        guideEstimateRevision: UUID? = nil
+    ) {
         self.model = model
         self.endpoint = endpoint
+        self.selectAfterDownload = selectAfterDownload
+        self.guideEstimateExpiresAt = guideEstimateExpiresAt
+        self.guideEstimateRevision = guideEstimateRevision
     }
 }
 

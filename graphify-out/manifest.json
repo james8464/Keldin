@@ -280,8 +280,8 @@
     "semantic_hash": ""
   },
   "Backend/Core/model_recommendations.py": {
-    "mtime": 1794680776.7348647,
-    "ast_hash": "aa610ffc9b68b9046e00cf0375341af7",
+    "mtime": 1794752070.6839263,
+    "ast_hash": "75ee72e48a94f29ba70c6024cb68649c",
     "semantic_hash": ""
   },
   "Backend/Core/model_review.py": {
@@ -1205,8 +1205,8 @@
     "semantic_hash": "981d7274fd87040b2e75d97b575e8f0e"
   },
   "Resources/ollama-model-recommendations.json": {
-    "mtime": 1793356586.8415549,
-    "ast_hash": "2cba10636bd0d9b85b3b9c0b8c165928",
+    "mtime": 1794752145.2352893,
+    "ast_hash": "83f5b9da5f79cb70b96ee1bbfd06cd2c",
     "semantic_hash": ""
   },
   "Resources/print-profiles.json": {
@@ -1260,8 +1260,8 @@
     "semantic_hash": ""
   },
   "macOS/Tests/AppTests.swift": {
-    "mtime": 1794673341.9321065,
-    "ast_hash": "063642cf6162f1a5ad19de500da192a9",
+    "mtime": 1794752256.1300619,
+    "ast_hash": "3305a51c73dccb290db120a8c613120c",
     "semantic_hash": ""
   },
   "macOS/Tests/CoordinatorTests.swift": {
@@ -1570,8 +1570,8 @@
     "semantic_hash": ""
   },
   "tests/test_model_recommendations.py": {
-    "mtime": 1794680776.7779572,
-    "ast_hash": "cd86d48cfd437ac6226348ef35226956",
+    "mtime": 1794752145.2501502,
+    "ast_hash": "02f03b3b0bb1884abbdedacf4a83f143",
     "semantic_hash": ""
   },
   "tests/test_model_review.py": {
@@ -1920,8 +1920,8 @@
     "semantic_hash": ""
   },
   "README.md": {
-    "mtime": 1794739889.8866234,
-    "ast_hash": "8833d9549721ecd350ec9e865a32a949",
+    "mtime": 1794752590.0713794,
+    "ast_hash": "5508470f9d63af27bc40101811ee10b3",
     "semantic_hash": ""
   },
   "docs/ARCHITECTURE.md": {
@@ -3385,8 +3385,8 @@
     "semantic_hash": ""
   },
   "macOS/Keldin/Domain/OllamaModelGuide.swift": {
-    "mtime": 1794673341.9264958,
-    "ast_hash": "c8024e61a2aeb8e840f7f9b28ec819ee",
+    "mtime": 1794754582.5399587,
+    "ast_hash": "cf36ce54542c84c05211f1e3487f0b6c",
     "semantic_hash": ""
   },
   "macOS/Keldin/Features/Benchmark/BenchmarkView.swift": {
@@ -3415,13 +3415,13 @@
     "semantic_hash": ""
   },
   "macOS/Keldin/Features/Onboarding/WelcomeHelpViews.swift": {
-    "mtime": 1794740023.5504365,
-    "ast_hash": "339e7997c4fbb8b2b345681c491d1c93",
+    "mtime": 1794754625.0748777,
+    "ast_hash": "614dcd181bd9b8fef5479cda13f00f06",
     "semantic_hash": ""
   },
   "macOS/Keldin/Features/Settings/SettingsPane.swift": {
-    "mtime": 1794740450.1072457,
-    "ast_hash": "2825fc5f738b2f262545f8351e42e96b",
+    "mtime": 1794754885.7020774,
+    "ast_hash": "10d6fffd1bf8b9707cdc34171579ba91",
     "semantic_hash": ""
   },
   "macOS/Keldin/Navigation/ContentView.swift": {
@@ -3445,8 +3445,8 @@
     "semantic_hash": ""
   },
   "macOS/Keldin/State/ApplicationCoordinator.swift": {
-    "mtime": 1794709941.213968,
-    "ast_hash": "b41bc5669f254a80f79837d4a1342308",
+    "mtime": 1794754926.642345,
+    "ast_hash": "41f0b6cb9be74f8857b81ea5bf085ba5",
     "semantic_hash": ""
   },
   "macOS/Keldin/State/BenchmarkCoordinator.swift": {
@@ -3735,8 +3735,8 @@
     "semantic_hash": ""
   },
   "macOS/Tests/RunIsolationTests.swift": {
-    "mtime": 1794709941.2145474,
-    "ast_hash": "7f72f09e372b64611d38b3295d3b0bc2",
+    "mtime": 1794754885.7318068,
+    "ast_hash": "bc32fe7a96b4d774089cabe9990c5eb4",
     "semantic_hash": ""
   },
   "docs/quality/native-run-isolation-review-2026-10-28.md": {
@@ -3885,8 +3885,8 @@
     "semantic_hash": ""
   },
   "Resources/implementation-audit-coverage.json": {
-    "mtime": 1794739859.6887796,
-    "ast_hash": "b1fbf5d0b1c9a54960971e3c4a5d631a",
+    "mtime": 1794754947.987509,
+    "ast_hash": "c2065f865595d47f58e1ac7af1da2dd1",
     "semantic_hash": ""
   },
   "macOS/Keldin/Services/PDFDocumentAccess.swift": {
@@ -4195,8 +4195,8 @@
     "semantic_hash": ""
   },
   "macOS/Keldin/State/ModelDownloadPresentation.swift": {
-    "mtime": 1794006465.765727,
-    "ast_hash": "24caafbf56ca6b37e20a9e273316d65f",
+    "mtime": 1794754926.635233,
+    "ast_hash": "37955cdd267b827d129465a829eb3adb",
     "semantic_hash": ""
   },
   "macOS/Keldin/State/SettingsActionPresentation.swift": {
@@ -4695,8 +4695,8 @@
     "semantic_hash": ""
   },
   "tests/test_native_model_quality_guidance.py": {
-    "mtime": 1794740437.175395,
-    "ast_hash": "c230e3cff02ed499f91c40fa087115cd",
+    "mtime": 1794754885.7235982,
+    "ast_hash": "0a12035660c6a02ff0280650e4362598",
     "semantic_hash": ""
   },
   "tools/french_model_capability.py": {

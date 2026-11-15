@@ -22,6 +22,7 @@ final class ApplicationCoordinator: ObservableObject {
         didSet {
             guard oldValue != ollamaURL else { return }
             ollamaRefreshRevision = UUID()
+            invalidateLocalGuideEstimate()
             availableModels = []
             hasLoadedOllamaModels = false
             ollamaState = OllamaState()
@@ -30,6 +31,8 @@ final class ApplicationCoordinator: ObservableObject {
     @Published var outputFolder = AppDefaults.defaultOutputFolder()
     @Published var dryRun = false
     @Published private var activeRun: BackendRun?
+    private var localGuideEstimate: (guidance: LocalModelGuidance, expiresAt: Date)?
+    private var localGuideRevision = UUID()
     @Published private(set) var isObservingCustomPage = false
     private var cancelledFrenchRuns: [UUID: (jobID: UUID, root: URL)] = [:]
     @Published var status = "Ready"
@@ -319,7 +322,7 @@ final class ApplicationCoordinator: ObservableObject {
     }
 
     var selectedModelIsRecommended: Bool {
-        selectedModel == ollamaRecommendation.model
+        OllamaModelGuide.isAvailable && OllamaModelGuide.document.tiers.contains { $0.model == selectedModel }
     }
 
     var recommendedModelIsInstalled: Bool {
@@ -476,11 +479,23 @@ final class ApplicationCoordinator: ObservableObject {
     }
 
     func localModelGuidance() async throws -> LocalModelGuidance? {
+        invalidateLocalGuideEstimate()
+        guard canUseLocalModelGuide else { return nil }
+        let revision = localGuideRevision
         let events = try await backend.collect(arguments: ["local-model-guidance"])
+        guard revision == localGuideRevision else { return nil }
         for event in events {
-            if case let .localModelGuidance(result) = event { return result }
+            if case let .localModelGuidance(result) = event {
+                localGuideEstimate = (result, Date().addingTimeInterval(60))
+                return result
+            }
         }
         return nil
+    }
+
+    private func invalidateLocalGuideEstimate() {
+        localGuideEstimate = nil
+        localGuideRevision = UUID()
     }
 
     func refreshOllama(presentation: SettingsActionPresentation? = nil) {
@@ -1366,12 +1381,26 @@ final class ApplicationCoordinator: ObservableObject {
         return requestPullModel()
     }
 
-    func requestPullModel() -> ModelDownloadRequest? {
-        guard canRequestModelDownload,
-              !modelToPull.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return nil }
+    func requestPullModel(model: String? = nil) -> ModelDownloadRequest? {
+        let requestedModel = (model ?? modelToPull).trimmingCharacters(in: .whitespacesAndNewlines)
+        guard canRequestModelDownload, !requestedModel.isEmpty else { return nil }
+        var guideEstimateExpiresAt: Date?
+        if model != nil {
+            guard canUseLocalModelGuide,
+                  let estimate = localGuideEstimate,
+                  estimate.expiresAt >= Date(),
+                  estimate.guidance.fittingModels.contains(requestedModel),
+                  OllamaModelGuide.document.tiers.contains(where: { $0.model == requestedModel })
+            else { return nil }
+            guideEstimateExpiresAt = estimate.expiresAt
+            invalidateLocalGuideEstimate()
+        }
         return ModelDownloadRequest(
-            model: modelToPull.trimmingCharacters(in: .whitespacesAndNewlines),
-            endpoint: ollamaURL.trimmingCharacters(in: .whitespacesAndNewlines)
+            model: requestedModel,
+            endpoint: ollamaURL.trimmingCharacters(in: .whitespacesAndNewlines),
+            selectAfterDownload: model == nil,
+            guideEstimateExpiresAt: guideEstimateExpiresAt,
+            guideEstimateRevision: model == nil ? nil : localGuideRevision
         )
     }
 
@@ -1380,6 +1409,20 @@ final class ApplicationCoordinator: ObservableObject {
         guard distributionMode.canManageOllama else {
             setError("The App Store build can detect Ollama, but cannot install or pull models.", presentation: presentation)
             return
+        }
+        if !request.selectAfterDownload {
+            guard canUseLocalModelGuide,
+                  request.endpoint == ollamaURL.trimmingCharacters(in: .whitespacesAndNewlines)
+            else {
+                setError(InterfaceText.resolve("The Ollama server changed. Check this Mac again before downloading.", language: presentationLanguage), presentation: presentation)
+                return
+            }
+            guard request.guideEstimateRevision == localGuideRevision,
+                  let expiresAt = request.guideEstimateExpiresAt, expiresAt >= Date()
+            else {
+                setError(InterfaceText.resolve("The fit estimate expired. Check this Mac again before downloading.", language: presentationLanguage), presentation: presentation)
+                return
+            }
         }
 
         let model = request.model.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -1391,7 +1434,10 @@ final class ApplicationCoordinator: ObservableObject {
         etaTimer?.cancel()
         etaTimer = nil
 
-        let session = beginRunSession(intent: .modelPull, model: model, errorPresentation: presentation)
+        let session = beginRunSession(
+            intent: .modelPull, model: model, errorPresentation: presentation,
+            selectAfterDownload: request.selectAfterDownload
+        )
         do {
             let process = try backend.run(arguments: ["pull-model", "--model", model, "--ollama-url", request.endpoint], environment: [:]) { [weak self] event in
                 self?.apply(event, from: session)
@@ -1525,6 +1571,13 @@ final class ApplicationCoordinator: ObservableObject {
         distributionMode.canManageOllama && !isRunning && !benchmarkCoordinator.isRunning && !isImportingPreviousData
     }
 
+    var canUseLocalModelGuide: Bool {
+        // The backend estimates the stock port and the local cache volume only.
+        let endpoint = ollamaURL.trimmingCharacters(in: .whitespacesAndNewlines)
+        return OllamaModelGuide.isAvailable
+            && [AppDefaults.ollamaURL, "http://127.0.0.1:11434"].contains(endpoint)
+    }
+
     func requestRecommendedOllamaModel() -> ModelDownloadRequest? {
         guard canRequestModelDownload else { return nil }
         modelToPull = ollamaRecommendation.model
@@ -1589,6 +1642,7 @@ final class ApplicationCoordinator: ObservableObject {
     func startBenchmark() {
         guard !isObservingCustomPage, !isRunning, !benchmarkCoordinator.isRunning, !isImportingPreviousData else { return }
         ollamaRefreshRevision = UUID()
+        invalidateLocalGuideEstimate()
         benchmarkCoordinator.start(generationIsRunning: isRunning)
         status = "Benchmarking"
         sidebarSelection = .benchmark
@@ -1703,14 +1757,16 @@ final class ApplicationCoordinator: ObservableObject {
 
     private func beginRunSession(
         intent: BackendRunIntent, documents: RunDocuments? = nil, model: String,
-        retryTarget: GenerationRetryTarget? = nil, errorPresentation: SettingsActionPresentation? = nil
+        retryTarget: GenerationRetryTarget? = nil, errorPresentation: SettingsActionPresentation? = nil,
+        selectAfterDownload: Bool = true
     ) -> UUID {
         // A discovery request started before this operation must remain obsolete
         // even if the operation finishes before that request returns.
         ollamaRefreshRevision = UUID()
+        invalidateLocalGuideEstimate()
         let run = BackendRun(
             intent: intent, documents: documents ?? completedDocuments, model: model, retryTarget: retryTarget,
-            errorPresentation: errorPresentation
+            errorPresentation: errorPresentation, selectAfterDownload: selectAfterDownload
         )
         activeRun = run
         return run.id
@@ -1996,8 +2052,10 @@ final class ApplicationCoordinator: ObservableObject {
         // cancellation could not be written to history.
         switch result {
         case .success(0) where run.backendErrorMessage == nil:
-            selectedModel = model
-            defaults.set(model, forKey: AppStorageKey.ollamaModel)
+            if run.selectAfterDownload {
+                selectedModel = model
+                defaults.set(model, forKey: AppStorageKey.ollamaModel)
+            }
             status = InterfaceText.resolve("Done", language: presentationLanguage)
             generationProgress = 1
             notifySuccess(for: .modelPull)
@@ -2349,6 +2407,7 @@ private struct BackendRun {
     let model: String
     let retryTarget: GenerationRetryTarget?
     let errorPresentation: SettingsActionPresentation?
+    let selectAfterDownload: Bool
     var ownedJobID: UUID?
     var process: Process?
     var phase = BackendRunPhase.running

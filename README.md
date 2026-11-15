@@ -83,9 +83,10 @@ The estimate is not a guarantee, so generation checks memory again before it
 contacts the local model. Closing memory-heavy apps can help with available
 memory, but it cannot raise the Mac's physical memory limit.
 
-The bundled guide lists `gemma4:12b` and the smaller `qwen2.5:7b` as starting
-points, not as guaranteed fits. The listed 7B model exceeds Keldin's
-conservative memory limit on an 8 GB Mac. If no suitable local model fits,
+The bundled guide offers five local choices, from the compact
+`qwen3.5:2b-q4_K_M` through `qwen3.5:4b-q4_K_M`, `qwen2.5:7b`,
+`qwen3.5:9b-q4_K_M`, and `gemma4:12b`. These are starting points, not
+guaranteed fits or approved models for paper generation. If no suitable local model fits,
 choose a hosted provider after reviewing its costs and privacy terms, or make
 an offline layout preview. No listed model has passed the complete live paper
 matrix. Check generated questions and marking guidance before using them.

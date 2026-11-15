@@ -1,33 +1,72 @@
 {
   "schema_version": 1,
-  "researched_at": "2026-10-28",
+  "researched_at": "2026-11-15",
   "default_model": "gemma4:12b",
   "other_model_warning": "These suggestions concern available memory. The models have not passed a complete paper-quality review. Results may vary with another model or quantisation.",
   "tiers": [
     {
-      "id": "memory-compatible",
+      "id": "compact",
       "minimum_memory_gb": 0,
+      "maximum_memory_gb": 12,
+      "model": "qwen3.5:2b-q4_K_M",
+      "title": "Compact local option",
+      "download_size_gb": 2.0,
+      "context_window": "256K",
+      "app_context_window": "16K",
+      "validated_for_full_matrix": false,
+      "detail": "The smallest download in the guide. Check current fit before downloading.",
+      "quality_note": "Review the questions and marking guidance before use. Fitting in memory does not establish accuracy."
+    },
+    {
+      "id": "small",
+      "minimum_memory_gb": 12,
       "maximum_memory_gb": 16,
+      "model": "qwen3.5:4b-q4_K_M",
+      "title": "Small local option",
+      "download_size_gb": 3.4,
+      "context_window": "256K",
+      "app_context_window": "16K",
+      "validated_for_full_matrix": false,
+      "detail": "A small local option. Check available memory before downloading.",
+      "quality_note": "Review the questions and marking guidance before use. Fitting in memory does not establish accuracy."
+    },
+    {
+      "id": "memory-compatible",
+      "minimum_memory_gb": 16,
+      "maximum_memory_gb": 20,
       "model": "qwen2.5:7b",
-      "title": "Smaller local option",
+      "title": "Mid-sized local option",
       "download_size_gb": 4.7,
       "context_window": "32K",
       "app_context_window": "16K",
       "validated_for_full_matrix": false,
-      "detail": "A smaller download for Macs with less than 16 GB of unified memory. Memory use also depends on the context and other running apps.",
+      "detail": "A mid-sized local option. Memory use depends on the context and other running apps.",
       "quality_note": "Review the questions and marking guidance before use. Fitting in memory does not establish accuracy."
     },
     {
+      "id": "large",
+      "minimum_memory_gb": 20,
+      "maximum_memory_gb": 24,
+      "model": "qwen3.5:9b-q4_K_M",
+      "title": "Larger local option",
+      "download_size_gb": 6.7,
+      "context_window": "256K",
+      "app_context_window": "16K",
+      "validated_for_full_matrix": false,
+      "detail": "A larger local option. Leave memory available for the context and other apps.",
+      "quality_note": "Download size does not include all memory needed during generation."
+    },
+    {
       "id": "quality",
-      "minimum_memory_gb": 16,
+      "minimum_memory_gb": 24,
       "maximum_memory_gb": null,
       "model": "gemma4:12b",
-      "title": "Local option for 16 GB or more",
+      "title": "Largest local option",
       "download_size_gb": 8.0,
       "context_window": "256K",
       "app_context_window": "16K",
       "validated_for_full_matrix": false,
-      "detail": "For Macs with at least 16 GB of unified memory. Close other memory-heavy apps before generating. Paper quality is still under review.",
+      "detail": "The largest download in the guide. Check current fit even on a Mac with 24 GB of unified memory.",
       "quality_note": "Download size does not include all memory needed during generation."
     }
   ],
@@ -35,6 +74,7 @@
     "https://ollama.com/library/gemma4/tags",
     "https://ai.google.dev/gemma/docs/core",
     "https://ollama.com/library/qwen2.5/tags",
+    "https://ollama.com/library/qwen3.5/tags",
     "https://docs.ollama.com/capabilities/structured-outputs"
   ]
 }

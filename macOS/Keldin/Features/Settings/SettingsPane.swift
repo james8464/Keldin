@@ -164,6 +164,7 @@ private struct SettingsWindowConfiguration: NSViewRepresentable {
 
 private struct AISettingsTab: View {
     @State private var localGuidance: LocalModelGuidance?
+    @State private var guideSelection: String?
     @State private var checkingLocalGuidance = false
     @State private var checkedLocalGuidance = false
     @ObservedObject var presentation: SettingsActionPresentation
@@ -220,9 +221,31 @@ private struct AISettingsTab: View {
         .onChange(of: application.deepSeekAPIKey) { _, _ in application.saveAISettings(presentation: application.settingsPresentation) }
     }
 
+    private var guideOption: OllamaModelRecommendation {
+        OllamaModelGuide.document.tiers.first { $0.model == guideSelection }
+            ?? application.ollamaRecommendation
+    }
+
     private var canDownloadSuggestedModel: Bool {
-        !checkingLocalGuidance
-            && localGuidance?.fittingModels.contains(application.ollamaRecommendation.model) == true
+        application.canUseLocalModelGuide && !checkingLocalGuidance
+            && localGuidance?.fittingModels.contains(guideOption.model) == true
+    }
+
+    private func checkLocalGuide(downloadModel: String? = nil) {
+        guard !checkingLocalGuidance, application.canUseLocalModelGuide else { return }
+        let endpoint = application.ollamaURL
+        localGuidance = nil
+        checkingLocalGuidance = true
+        Task {
+            defer { checkingLocalGuidance = false }
+            let result = try? await application.localModelGuidance()
+            guard application.ollamaURL == endpoint else { return }
+            localGuidance = result
+            checkedLocalGuidance = true
+            if let model = downloadModel, guideOption.model == model {
+                downloadPresentation.present(application.requestPullModel(model: model))
+            }
+        }
     }
 
     @ViewBuilder
@@ -230,22 +253,36 @@ private struct AISettingsTab: View {
         switch application.aiProvider {
         case .ollama:
             Section("Local model") {
-                Button("Check this Mac") {
-                    checkingLocalGuidance = true
-                    Task {
-                        defer { checkingLocalGuidance = false }
-                        localGuidance = try? await application.localModelGuidance()
-                        checkedLocalGuidance = true
-                    }
+                if !application.canUseLocalModelGuide && OllamaModelGuide.isAvailable {
+                    Text("The model guide checks the default local Ollama server only.")
+                        .foregroundStyle(.secondary)
+                } else if !OllamaModelGuide.isAvailable {
+                    Text("The local model guide is unavailable.")
+                        .foregroundStyle(.secondary)
                 }
-                .disabled(checkingLocalGuidance)
+                Button("Check this Mac") {
+                    checkLocalGuide()
+                }
+                .disabled(checkingLocalGuidance || !application.canUseLocalModelGuide)
+                .onChange(of: application.ollamaURL) { _, _ in
+                    localGuidance = nil
+                    checkedLocalGuidance = false
+                }
+                .onChange(of: application.isRunning) { _, running in
+                    guard running else { return }
+                    localGuidance = nil
+                    checkedLocalGuidance = false
+                }
                 if checkingLocalGuidance {
                     ProgressView("Checking memory and disk space…")
                 } else if checkedLocalGuidance {
                     if let localGuidance, localGuidance.conditionsVerified {
-                        if let model = localGuidance.fittingModels.first {
-                            LabeledContent("Estimated to fit now", value: model)
+                        if localGuidance.fittingModels.contains(guideOption.model) {
+                            LabeledContent("Estimated to fit now", value: guideOption.model)
                             Text("This is a memory and disk estimate, not a paper-quality check.")
+                        } else if let model = localGuidance.fittingModels.first {
+                            Text("The selected guide model does not fit the current estimate.")
+                            LabeledContent("Estimated to fit now", value: model)
                         } else {
                             Text("None of the checked local models is estimated to fit right now.")
                         }
@@ -255,28 +292,34 @@ private struct AISettingsTab: View {
                     Text("We recommend a cloud model for full papers. Check the provider’s usage limits and pricing before generating.")
                         .foregroundStyle(.secondary)
                 }
-                LabeledContent("Model guide suggestion") {
-                    VStack(alignment: .trailing, spacing: 2) {
-                        Text(application.ollamaRecommendation.model)
-                        Text(application.ollamaRecommendation.downloadResource(locale: locale))
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
+                if OllamaModelGuide.isAvailable {
+                    Picker("Model guide option", selection: Binding(
+                        get: { guideOption.model },
+                        set: { guideSelection = $0 }
+                    )) {
+                        ForEach(OllamaModelGuide.document.tiers) { option in
+                            let title = InterfaceText.localizedResource(option.titleResource, locale: locale)
+                            Text("\(option.model) · \(String(localized: title))").tag(option.model)
+                        }
                     }
+                    Text(guideOption.downloadResource(locale: locale))
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+
+                    Text(InterfaceText.localizedResource(guideOption.detailResource, locale: locale))
+                        .foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
                 }
 
-                Text(InterfaceText.localizedResource(application.ollamaRecommendation.detailResource, locale: locale))
-                    .foregroundStyle(.secondary)
-                    .fixedSize(horizontal: false, vertical: true)
-
                 HStack {
-                    if application.recommendedModelIsInstalled {
-                        Button("Use suggested model") {
-                            application.useRecommendedOllamaModel(presentation: application.settingsPresentation)
+                    if application.canUseLocalModelGuide && application.availableModels.contains(guideOption.model) {
+                        Button("Use this model") {
+                            application.selectedModel = guideOption.model
                         }
-                            .disabled(application.selectedModelIsRecommended)
-                    } else if application.distributionMode.canManageOllama {
-                        Button("Download suggested model…") {
-                            downloadPresentation.present(application.requestRecommendedOllamaModel())
+                        .disabled(application.selectedModel == guideOption.model)
+                    } else if application.canUseLocalModelGuide && application.distributionMode.canManageOllama {
+                        Button("Download this model…") {
+                            checkLocalGuide(downloadModel: guideOption.model)
                         }
                             .disabled(!application.canRequestModelDownload || !canDownloadSuggestedModel)
                     }
@@ -288,11 +331,12 @@ private struct AISettingsTab: View {
                     }
                 }
 
-                if !application.recommendedModelIsInstalled,
+                if application.canUseLocalModelGuide,
+                   !application.availableModels.contains(guideOption.model),
                    application.distributionMode.canManageOllama,
                    !checkingLocalGuidance,
                    !checkedLocalGuidance {
-                    Text("Check this Mac before downloading the suggested model.")
+                    Text("Check this Mac before downloading a guide model.")
                         .foregroundStyle(.secondary)
                 }
 
@@ -300,7 +344,8 @@ private struct AISettingsTab: View {
 
                 Picker("Model", selection: $application.selectedModel) {
                     ForEach(application.ollamaModelOptions, id: \.self) { model in
-                        if model == application.ollamaRecommendation.model {
+                        if OllamaModelGuide.isAvailable,
+                           OllamaModelGuide.document.tiers.contains(where: { $0.model == model }) {
                             Text("\(model) (from model guide)").tag(model)
                         } else {
                             Text(model).tag(model)
