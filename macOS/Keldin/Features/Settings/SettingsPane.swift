@@ -220,6 +220,11 @@ private struct AISettingsTab: View {
         .onChange(of: application.deepSeekAPIKey) { _, _ in application.saveAISettings(presentation: application.settingsPresentation) }
     }
 
+    private var canDownloadSuggestedModel: Bool {
+        !checkingLocalGuidance
+            && localGuidance?.fittingModels.contains(application.ollamaRecommendation.model) == true
+    }
+
     @ViewBuilder
     private var providerSettings: some View {
         switch application.aiProvider {
@@ -250,7 +255,7 @@ private struct AISettingsTab: View {
                     Text("We recommend a cloud model for full papers. Check the provider’s usage limits and pricing before generating.")
                         .foregroundStyle(.secondary)
                 }
-                LabeledContent("Suggestion based on total memory") {
+                LabeledContent("Model guide suggestion") {
                     VStack(alignment: .trailing, spacing: 2) {
                         Text(application.ollamaRecommendation.model)
                         Text(application.ollamaRecommendation.downloadResource(locale: locale))
@@ -273,7 +278,7 @@ private struct AISettingsTab: View {
                         Button("Download suggested model…") {
                             downloadPresentation.present(application.requestRecommendedOllamaModel())
                         }
-                            .disabled(!application.canRequestModelDownload)
+                            .disabled(!application.canRequestModelDownload || !canDownloadSuggestedModel)
                     }
 
                     Button("Open Model Guide") {
@@ -283,12 +288,20 @@ private struct AISettingsTab: View {
                     }
                 }
 
+                if !application.recommendedModelIsInstalled,
+                   application.distributionMode.canManageOllama,
+                   !checkingLocalGuidance,
+                   !checkedLocalGuidance {
+                    Text("Check this Mac before downloading the suggested model.")
+                        .foregroundStyle(.secondary)
+                }
+
                 Divider()
 
                 Picker("Model", selection: $application.selectedModel) {
                     ForEach(application.ollamaModelOptions, id: \.self) { model in
                         if model == application.ollamaRecommendation.model {
-                            Text("\(model) (memory suggestion)").tag(model)
+                            Text("\(model) (from model guide)").tag(model)
                         } else {
                             Text(model).tag(model)
                         }
@@ -307,7 +320,7 @@ private struct AISettingsTab: View {
                     .foregroundStyle(Color("ForegroundAccent"))
 
                 if application.selectedModelIsRecommended {
-                    Label("Memory-fit suggestion selected", systemImage: "memorychip")
+                    Label("Model from the guide selected", systemImage: "memorychip")
                         .foregroundStyle(.primary)
                 } else {
                     Label {

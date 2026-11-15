@@ -75,17 +75,23 @@ does not copy credentials into the checkout. `SIGNING_STYLE=Manual` is available
 for a manually provisioned identity. Release uploads still require the appropriate
 distribution identity, provisioning, runtime testing and App Store review.
 
-## Recommended Ollama model
+## Choosing an Ollama model
 
-The app chooses a recommendation from the Mac's unified-memory capacity. For
-the intended paper-quality workflow, use `gemma4:12b` on a Mac with at least
-16 GB unified memory. On an 8 GB Mac, `qwen2.5:7b` is the memory-compatible
-choice, but its long-form questions and mark schemes need especially careful
-human review. Results may vary with any other model or quantisation.
+In Settings, choose **Check this Mac** before downloading a model. Keldin
+estimates fit using current memory pressure, available memory, and disk space.
+The estimate is not a guarantee, so generation checks memory again before it
+contacts the local model. Closing memory-heavy apps can help with available
+memory, but it cannot raise the Mac's physical memory limit.
 
-The recommendation, download sizes, explanation, warning, and source links are
-owned by `Resources/ollama-model-recommendations.json`; the macOS app, backend
-CLI, standalone generator CLIs, tests, and packaged helper consume that record.
+The bundled guide lists `gemma4:12b` and the smaller `qwen2.5:7b` as starting
+points, not as guaranteed fits. The listed 7B model exceeds Keldin's
+conservative memory limit on an 8 GB Mac. If no suitable local model fits,
+choose a hosted provider after reviewing its costs and privacy terms, or make
+an offline layout preview. No listed model has passed the complete live paper
+matrix. Check generated questions and marking guidance before using them.
+
+The guide's models, download estimates, warnings, and sources are maintained
+in `Resources/ollama-model-recommendations.json`.
 
 ## Development reference corpus
 

@@ -10,7 +10,7 @@ def test_model_status_labels_use_semantic_primary_text():
     workspace = (ROOT / "Features/Generation/GeneratorWorkspaceView.swift").read_text()
     guidance = (ROOT / "Features/Generation/GenerationGuidanceViews.swift").read_text()
     labels = (
-        settings.split('Label("Memory-fit suggestion selected"', 1)[1].split(
+        settings.split('Label("Model from the guide selected"', 1)[1].split(
             "} else", 1
         )[0],
         settings.split("OllamaModelGuide.document.otherModelWarningResource,", 1)[

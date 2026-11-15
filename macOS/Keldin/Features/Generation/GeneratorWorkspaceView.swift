@@ -178,7 +178,7 @@ private struct PaperConfiguration: View {
                             .truncationMode(.middle)
                             .help(application.activeModelName)
                         if application.aiProvider == .ollama && application.selectedModelIsRecommended {
-                            Text("Memory fit")
+                            Text("From model guide")
                                 .font(.caption)
                                 .foregroundStyle(.secondary)
                         }
@@ -250,8 +250,8 @@ private struct PaperConfiguration: View {
         guard application.aiProvider == .ollama, application.selectedModelIsRecommended else {
             return application.activeModelName
         }
-        let memoryFit = String(localized: InterfaceText.localizedResource("Memory fit", locale: locale))
-        return "\(application.activeModelName), \(memoryFit)"
+        let guideLabel = String(localized: InterfaceText.localizedResource("From model guide", locale: locale))
+        return "\(application.activeModelName), \(guideLabel)"
     }
 }
 
