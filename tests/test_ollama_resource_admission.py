@@ -63,6 +63,34 @@ def test_fitting_local_model_admitted(monkeypatch, host):
     admission.require_local_ollama_capacity(f"http://{host}:11434", "any-model")
 
 
+@pytest.mark.parametrize(
+    "name,metadata",
+    [
+        ("fixture:cloud", {}),
+        ("fixture:preview-cloud", {}),
+        ("fixture:latest", {"remote_model": "upstream"}),
+        ("fixture:latest", {"remote_host": "https://provider.invalid"}),
+    ],
+)
+def test_local_generation_admission_refuses_cloud_metadata(monkeypatch, name, metadata):
+    monkeypatch.setattr(admission, "_memory_snapshot", lambda: (16 * GIB, 1))
+    monkeypatch.setattr(admission, "_headroom_snapshot", lambda physical: 12 * GIB)
+
+    def installed_metadata(base_url, route):
+        if route == "tags":
+            return [{"name": name, "digest": DIGEST, "size": 4 * GIB, **metadata}]
+        return []
+
+    monkeypatch.setattr(admission, "_model_metadata", installed_metadata)
+    with pytest.raises(admission.ResourceAdmissionError, match="Ollama cloud"):
+        admission.require_local_ollama_capacity("http://localhost:11434", name)
+
+
+def test_bare_local_model_name_ending_in_cloud_is_not_a_cloud_tag(monkeypatch):
+    resources(monkeypatch, size=4 * GIB)
+    admission.require_local_ollama_capacity("http://localhost:11434", "school-cloud")
+
+
 @pytest.mark.parametrize("pressure", [2, 4, 3, 0, None, True, "1"])
 def test_non_normal_or_unknown_pressure_refused(monkeypatch, pressure):
     resources(monkeypatch, pressure=pressure)
@@ -99,6 +127,41 @@ def test_remote_ollama_does_not_read_local_resources():
 
 def test_resource_refusal_has_stable_presentation_code():
     assert admission.ResourceAdmissionError("detail").code == "local_memory_unavailable"
+
+
+def test_bridge_reports_cloud_route_as_refusal_without_sending_prompt(
+    tmp_path, monkeypatch, capsys
+):
+    from bridge import main
+
+    def forbidden(*args, **kwargs):
+        pytest.fail("The local model refusal must precede inference.")
+
+    monkeypatch.setattr(providers, "urllib_request", forbidden)
+    monkeypatch.delenv("KELDIN_API_KEY", raising=False)
+    result = main(
+        [
+            "generate",
+            "--subject",
+            "accounting_aqa",
+            "--paper",
+            "2",
+            "--seed",
+            "26080100",
+            "--provider",
+            "ollama",
+            "--model",
+            "fixture:cloud",
+            "--output",
+            str(tmp_path),
+        ]
+    )
+    assert result == 1
+    events = [json.loads(line) for line in capsys.readouterr().out.splitlines()]
+    assert events[-1]["type"] == "error"
+    assert events[-1]["code"] == "local_ollama_cloud_route"
+    assert not any(event["type"] in {"file", "done"} for event in events)
+    assert not list(tmp_path.rglob("*.pdf"))
 
 
 @pytest.mark.parametrize(

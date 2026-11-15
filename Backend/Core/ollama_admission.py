@@ -23,6 +23,33 @@ class ResourceAdmissionError(RuntimeError):
     code = "local_memory_unavailable"
 
 
+class LocalOllamaCloudRouteError(ResourceAdmissionError):
+    code = "local_ollama_cloud_route"
+
+
+def _is_cloud_model(name: str, metadata: object = None) -> bool:
+    # A registry host's port or a bare model name is not a model tag.
+    _, separator, tag = name.strip().rsplit("/", 1)[-1].rpartition(":")
+    tag = tag.strip().casefold()
+    return (bool(separator) and (tag == "cloud" or tag.endswith("-cloud"))) or (
+        isinstance(metadata, dict)
+        and any(
+            metadata.get(key) not in (None, "")
+            for key in ("remote_host", "remote_model")
+        )
+    )
+
+
+def require_local_ollama_route(
+    base_url: str, name: str, metadata: object = None
+) -> None:
+    if _is_local_endpoint(base_url) and _is_cloud_model(name, metadata):
+        raise LocalOllamaCloudRouteError(
+            "Ollama cloud models aren't supported by the local provider. "
+            "Choose an installed local model or a hosted provider in Settings."
+        )
+
+
 def _is_local_endpoint(base_url: str) -> bool:
     hostname = urlsplit(base_url).hostname
     if hostname == "localhost":
@@ -36,6 +63,7 @@ def _is_local_endpoint(base_url: str) -> bool:
 def require_local_ollama_capacity(base_url: str, model: str) -> None:
     if not _is_local_endpoint(base_url):
         return
+    require_local_ollama_route(base_url, model)
     physical = _checked_physical_memory()
     size, resident = _installed_model_state(base_url, model)
     if type(size) is not int or size <= 0 or type(resident) is not bool:
@@ -186,9 +214,7 @@ def local_ollama_cached_sizes() -> dict[str, int]:
             sizes.pop(name, None)
             continue
         seen.add(name)
-        if name.casefold().endswith((":cloud", "-cloud")) or any(
-            entry.get(key) not in (None, "") for key in ("remote_host", "remote_model")
-        ):
+        if _is_cloud_model(name, entry):
             continue
         size = entry.get("size")
         if type(size) is not int or size <= 0:
@@ -211,6 +237,7 @@ def _installed_model_state(base_url: str, model: str) -> tuple[int, bool]:
         ]
         if len(matches) != 1:
             raise ValueError("Missing or ambiguous installed model")
+        require_local_ollama_route(base_url, model, matches[0])
         size = matches[0].get("size")
         if type(size) is not int or size <= 0:
             raise ValueError("Invalid installed model size")

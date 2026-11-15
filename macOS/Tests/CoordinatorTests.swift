@@ -38,6 +38,30 @@ final class CoordinatorTests: XCTestCase {
     }
 
     @MainActor
+    func testOllamaCloudRefusalOffersLocalOrHostedChoicesWithoutLosingDetails() throws {
+        let raw = "Ollama cloud models aren't supported by the local provider."
+        for (language, expected) in [
+            ("en", "This Ollama model runs in the cloud. Choose an installed local model or a hosted provider in Settings. No paper was saved."),
+            ("fr", "Ce modèle Ollama s’exécute dans le cloud. Choisissez un modèle local installé ou un fournisseur hébergé dans Réglages. Aucun sujet n’a été enregistré."),
+        ] {
+            let defaults = isolatedDefaults()
+            defaults.set(language, forKey: "interfaceLanguage")
+            defaults.set(true, forKey: AppStorageKey.hasSeenWelcome)
+            defaults.set(false, forKey: AppStorageKey.notificationsEnabled)
+            let backend = ControlledRunBackend()
+            let app = isolatedApplication(defaults: defaults, backend: backend)
+            app.setDryRun(true)
+            app.generate()
+            let request = try XCTUnwrap(backend.requests.first)
+            request.onEvent(.error(message: raw, code: "local_ollama_cloud_route"))
+            XCTAssertEqual(app.errorMessage, expected)
+            XCTAssertEqual(app.progressEntries.last?.message, raw)
+            request.onFinish(.success(1))
+            XCTAssertEqual(app.recentDocumentStore.records.first?.state, .failed)
+        }
+    }
+
+    @MainActor
     func testExplicitGenerationQualityRefusalsShowRecoveryCopyWithoutLosingDetails() throws {
         let english = "The model's work did not pass the paper quality checks. Try again or choose a stronger model in Settings. You can copy diagnostics from Tools."
         let french = "Le résultat du modèle ne passe pas les contrôles de qualité du sujet. Réessayez ou choisissez un modèle plus performant dans Réglages. Les détails peuvent être copiés depuis Outils."

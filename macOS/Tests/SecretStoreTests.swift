@@ -5,6 +5,102 @@ import XCTest
 
 final class SecretStoreTests: XCTestCase {
     @MainActor
+    func testWithdrawHostedConsentPersistsWithoutTouchingOtherProvidersOrCredentials() {
+        let defaults = isolatedDefaults()
+        defaults.set(AIProvider.openAI.rawValue, forKey: AppStorageKey.aiProvider)
+        defaults.set(AppDefaults.openAIConsentVersion, forKey: AppStorageKey.openAIConsentVersion)
+        defaults.set(AppDefaults.anthropicConsentVersion, forKey: AppStorageKey.anthropicConsentVersion)
+        let secrets = FakeCredentialStore()
+        secrets.values[SecretAccount.openAIAPIKey] = "offline-openai-fixture"
+        let backend = ControlledRunBackend()
+        let history = FileManager.default.temporaryDirectory.appendingPathComponent("WithdrawConsent-\(UUID().uuidString)")
+        addTeardownBlock { try? FileManager.default.removeItem(at: history) }
+        let app = ApplicationCoordinator(defaults: defaults, secrets: secrets, historyDirectory: history, backend: backend)
+        XCTAssertTrue(app.hasHostedAIConsent(for: .openAI))
+        secrets.readAttempts.removeAll()
+
+        app.withdrawHostedAIConsent(for: .openAI)
+        app.withdrawHostedAIConsent(for: .openAI)
+
+        XCTAssertFalse(app.hasHostedAIConsent(for: .openAI))
+        XCTAssertTrue(app.hasHostedAIConsent(for: .anthropic))
+        XCTAssertEqual(app.aiProvider, .openAI)
+        XCTAssertEqual(secrets.values[SecretAccount.openAIAPIKey], "offline-openai-fixture")
+        XCTAssertTrue(secrets.readAttempts.isEmpty)
+        XCTAssertTrue(secrets.saveAttempts.isEmpty)
+        XCTAssertTrue(backend.requests.isEmpty)
+        let relaunched = isolatedApplication(defaults: defaults, backend: backend)
+        XCTAssertFalse(relaunched.hasHostedAIConsent(for: .openAI))
+        XCTAssertTrue(relaunched.hasHostedAIConsent(for: .anthropic))
+    }
+
+    @MainActor
+    func testFrenchGenerationRequiresConsentAgainAfterWithdrawal() {
+        let defaults = isolatedDefaults()
+        defaults.set(AIProvider.openAI.rawValue, forKey: AppStorageKey.aiProvider)
+        defaults.set(AppDefaults.openAIConsentVersion, forKey: AppStorageKey.openAIConsentVersion)
+        let backend = ControlledRunBackend()
+        let app = isolatedApplication(defaults: defaults, backend: backend, distributionMode: .direct)
+        app.openAIAPIKey = "offline-openai-fixture"
+        app.withdrawHostedAIConsent(for: .openAI)
+        app.generateFrenchPaper(largePrint: false)
+
+        XCTAssertTrue(app.showHostedAIConsent)
+        XCTAssertFalse(app.hasHostedAIConsent)
+        XCTAssertTrue(backend.requests.isEmpty)
+    }
+
+    @MainActor
+    func testReviewDisclosureCanRestoreWithdrawnConsentWithoutStartingGeneration() throws {
+        let defaults = isolatedDefaults()
+        defaults.set(AIProvider.openAI.rawValue, forKey: AppStorageKey.aiProvider)
+        defaults.set(AppDefaults.openAIConsentVersion, forKey: AppStorageKey.openAIConsentVersion)
+        let backend = ControlledRunBackend()
+        let app = isolatedApplication(defaults: defaults, backend: backend)
+        let owner = app.settingsPresentation
+        owner.activate()
+        app.setDryRun(true)
+        app.withdrawHostedAIConsent(for: .openAI)
+
+        app.reviewHostedAIConsent(for: .anthropic)
+        XCTAssertNil(owner.request)
+        app.reviewHostedAIConsent(for: .openAI)
+        let request = try XCTUnwrap(owner.request)
+        XCTAssertEqual(request.kind, .hostedConsent(.openAI))
+        XCTAssertFalse(app.hasHostedAIConsent)
+        owner.dismiss(id: request.id)
+        XCTAssertFalse(app.hasHostedAIConsent)
+
+        app.reviewHostedAIConsent(for: .openAI)
+        let approved = try XCTUnwrap(owner.request)
+        XCTAssertNotEqual(request.id, approved.id)
+        XCTAssertNotNil(owner.consume(id: approved.id))
+        app.acceptHostedAIConsent(for: .openAI, presentation: owner)
+        XCTAssertEqual(app.aiProvider, .openAI)
+        XCTAssertTrue(app.hasHostedAIConsent)
+        XCTAssertTrue(app.dryRun)
+        XCTAssertTrue(backend.requests.isEmpty)
+    }
+
+    @MainActor
+    func testWithdrawalInvalidatesPendingSettingsApproval() throws {
+        let defaults = isolatedDefaults()
+        defaults.set(AIProvider.openAI.rawValue, forKey: AppStorageKey.aiProvider)
+        defaults.set(AppDefaults.openAIConsentVersion, forKey: AppStorageKey.openAIConsentVersion)
+        let app = isolatedApplication(defaults: defaults)
+        let owner = app.settingsPresentation
+        owner.activate()
+        owner.requestConsent(for: .openAI)
+        let stale = try XCTUnwrap(owner.request)
+
+        app.withdrawHostedAIConsent(for: .openAI)
+
+        XCTAssertNil(owner.consume(id: stale.id))
+        app.acceptHostedAIConsent()
+        XCTAssertFalse(app.hasHostedAIConsent)
+    }
+
+    @MainActor
     func testHostedPreviewProviderSelectionDoesNotRequestConsentOrTouchCredentials() throws {
         for provider in [AIProvider.openAI, .anthropic] {
             for inSettings in [false, true] {

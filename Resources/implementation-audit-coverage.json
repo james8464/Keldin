@@ -4322,6 +4322,12 @@
       "reason": "Retained diagnostic/review evidence, not maintained executable implementation; exclusion does not certify its claims."
     },
     {
+      "path": "docs/quality/hosted-consent-and-local-routing-review.md",
+      "classification": "historical-evidence",
+      "status": "excluded",
+      "reason": "Retained diagnostic/review evidence, not maintained executable implementation; exclusion does not certify its claims."
+    },
+    {
       "path": "docs/quality/hosted-generation-cancellation-2026-10-29.md",
       "classification": "historical-evidence",
       "status": "excluded",
@@ -8573,10 +8579,10 @@
       "path": "tests/test_ollama_resource_admission.py",
       "classification": "test",
       "status": "reviewed",
-      "reason": "Recorded complete baseline plus complete independently reviewed repair delta and relevant call paths; not a fresh whole-file or whole-repository read. Targeted tests and source-only render limits remain explicit. Prior evidence retained at docs/quality/local-model-memory-admission-review.md SHA256 cf69a54da1b965e288139aea670bd2e5ad124e0d8353cb885c3188c51992263d. Current headroom repair adds independently reviewed changed hunks and relevant cancellation/transport/Linux contexts at the new exact pin, not a fresh complete 413-line EOF attestation.",
-      "source_sha256": "e2178c97a2240b5e11adc79817da9c5d554c1df88c3e290515aaf74041bc2b0f",
-      "review_evidence": "docs/quality/local-model-current-headroom-review.md",
-      "review_evidence_sha256": "56278db735289cf84ee185b23467621507581b8fc53a14b3e443ac598fe788ec"
+      "reason": "Prior complete baseline and reviewed headroom delta, plus complete independently reviewed 63-line cloud-route and bridge-test delta. Earlier exact evidence remains at docs/quality/local-model-current-headroom-review.md SHA256 56278db735289cf84ee185b23467621507581b8fc53a14b3e443ac598fe788ec. This is not a new 476-line EOF review or live model qualification.",
+      "source_sha256": "e5bf85e5691f8dea9c732e3f01eea3d9fcd842b969afd58a3ad071201766e809",
+      "review_evidence": "docs/quality/hosted-consent-and-local-routing-review.md",
+      "review_evidence_sha256": "f5a93a68b21a6b584aeb55d34c221b9e5430d3e47e94f9125802f0437a95f2ef"
     },
     {
       "path": "tests/test_ollama_status.py",
