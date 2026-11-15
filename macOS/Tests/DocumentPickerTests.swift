@@ -5,6 +5,76 @@ import XCTest
 
 final class DocumentPickerTests: XCTestCase {
     @MainActor
+    func testNativeMenuReportsOnlyItsOwnTrackingBoundary() throws {
+        let files = fixtures(count: 2)
+        var events: [Bool] = []
+        let hosting = NSHostingController(rootView: DocumentPickerView(
+            files: files, selection: .constant(files[0].id),
+            onTrackingChanged: { events.append($0) }
+        ))
+        hosting.view.frame = NSRect(x: 0, y: 0, width: 400, height: 44)
+        hosting.view.layoutSubtreeIfNeeded()
+        let picker = try XCTUnwrap(nativePicker(in: hosting.view))
+        let menu = try XCTUnwrap(picker.menu)
+
+        NotificationCenter.default.post(name: NSMenu.didBeginTrackingNotification, object: NSMenu())
+        XCTAssertTrue(events.isEmpty)
+        NotificationCenter.default.post(name: NSMenu.didBeginTrackingNotification, object: menu)
+        XCTAssertEqual(events, [true])
+        NotificationCenter.default.post(name: NSMenu.didEndTrackingNotification, object: menu)
+        XCTAssertEqual(events, [true, false])
+    }
+
+    @MainActor
+    func testNativeMenuCommitsSelectionBeforeReturning() throws {
+        let files = fixtures(count: 2)
+        var selection = files[0].id
+        let hosting = NSHostingController(rootView: DocumentPickerView(
+            files: files, selection: Binding(get: { selection }, set: { selection = $0 })
+        ))
+        hosting.view.frame = NSRect(x: 0, y: 0, width: 400, height: 44)
+        hosting.view.layoutSubtreeIfNeeded()
+        let picker = try XCTUnwrap(nativePicker(in: hosting.view))
+        let action = try XCTUnwrap(picker.action)
+
+        for index in [1, 0] {
+            picker.selectItem(at: index)
+            XCTAssertTrue(picker.sendAction(action, to: picker.target))
+            XCTAssertEqual(selection, files[index].id, "Commands may run before the next run loop turn")
+        }
+    }
+
+    @MainActor
+    func testNativeMenuKeepsFilesWithIdenticalLabelsSelectable() throws {
+        let files = ["/fixture/a.pdf", "/fixture/b.pdf"].map {
+            GeneratedFile(
+                role: "question_paper", url: URL(fileURLWithPath: $0),
+                createdAt: Date(timeIntervalSince1970: 1_793_232_000),
+                subject: "Accounting", paper: "Paper 1"
+            )
+        }
+        let hosting = NSHostingController(rootView: DocumentPickerView(
+            files: files, selection: .constant(files[1].id)
+        ))
+        hosting.view.frame = NSRect(x: 0, y: 0, width: 400, height: 44)
+        hosting.view.layoutSubtreeIfNeeded()
+        let picker = try XCTUnwrap(nativePicker(in: hosting.view))
+        XCTAssertEqual(picker.numberOfItems, 2)
+        XCTAssertEqual(picker.item(at: 0)?.title, picker.item(at: 1)?.title)
+        XCTAssertEqual(picker.selectedItem?.representedObject as? UUID, files[1].id)
+        XCTAssertEqual(picker.toolTip, files[1].url.path)
+    }
+
+    @MainActor
+    private func nativePicker(in view: NSView) -> NSPopUpButton? {
+        if let picker = view as? NSPopUpButton { return picker }
+        for child in view.subviews {
+            if let picker = nativePicker(in: child) { return picker }
+        }
+        return nil
+    }
+
+    @MainActor
     func testLargeLibrariesKeepNativeSelectorWithinProposedWidth() throws {
         for count in [30, 60] {
             let files = fixtures(count: count)

@@ -3755,6 +3755,12 @@
       "reason": "Retained diagnostic/review evidence, not maintained executable implementation; exclusion does not certify its claims."
     },
     {
+      "path": "docs/quality/document-picker-print-review-2026-11-15.md",
+      "classification": "historical-evidence",
+      "status": "excluded",
+      "reason": "Retained diagnostic/review evidence, not maintained executable implementation; exclusion does not certify its claims."
+    },
+    {
       "path": "docs/quality/document-recovery-interaction-review.md",
       "classification": "historical-evidence",
       "status": "excluded",
@@ -5549,10 +5555,10 @@
       "path": "macOS/Keldin/Application/AppCommands.swift",
       "classification": "maintained-source",
       "status": "reviewed",
-      "reason": "Full source read through EOF with bounded command routing and document-action eligibility review; not whole-app or paper-quality qualification.",
-      "source_sha256": "1e91189f2395200149bdc901b7db2f169c9351e156423b75e27ec01999d6d421",
-      "review_evidence": "docs/quality/pdf-loading-isolation-review.md",
-      "review_evidence_sha256": "87e6bd72457f757eed069d43480bf8f61dfc237f96a5346bc81990207de5a711"
+      "reason": "Previously reviewed full-file baseline and complete delta; selected-document commands respect the native picker's tracking state.",
+      "source_sha256": "7bc718e7d574e7d4a8839c45d7f42fd76eb43450f392f1ca9ac41d4aa36dc279",
+      "review_evidence": "docs/quality/document-picker-print-review-2026-11-15.md",
+      "review_evidence_sha256": "22cf09d25dcb7a1a306f30e0681590f9f13f64dd6401debf65f38e9cb1d7858b"
     },
     {
       "path": "macOS/Keldin/Application/AppConfiguration.swift",
@@ -5888,19 +5894,19 @@
       "path": "macOS/Keldin/Features/Documents/DocumentPickerView.swift",
       "classification": "maintained-source",
       "status": "reviewed",
-      "reason": "Complete-file semantic review within the documented boundary scope. Patch-only larger files and final release acceptance remain separate; no whole-project clearance.",
-      "source_sha256": "ae0ade372f695386a80562fd28733db16f1bd38b44f7f7dfca5081b0fa1083c6",
-      "review_evidence": "docs/quality/native-release-safety-review-2026-10-29.md",
-      "review_evidence_sha256": "67053cc5cc00ad0a12244a3b787c06427c802aa8b28680fa9883eeb395c1fd0c"
+      "reason": "Full-file review of scoped menu tracking, selection identity, native action delivery, labels and bounded layout.",
+      "source_sha256": "5c8c6126cc6d98840fa235281fd9a260ddd136c542b035c5cb1a145bbd12a805",
+      "review_evidence": "docs/quality/document-picker-print-review-2026-11-15.md",
+      "review_evidence_sha256": "22cf09d25dcb7a1a306f30e0681590f9f13f64dd6401debf65f38e9cb1d7858b"
     },
     {
       "path": "macOS/Keldin/Features/Documents/DocumentPreviewView.swift",
       "classification": "maintained-source",
       "status": "reviewed",
-      "reason": "Full source read through EOF with bounded actor, scoped-access, cancellation and document-action review; not whole-app or paper-quality qualification.",
-      "source_sha256": "2c7d33258a45d8434a468eeee8feb1b1195791c5629e02eacc5c00e7b0ddca64",
-      "review_evidence": "docs/quality/pdf-loading-isolation-review.md",
-      "review_evidence_sha256": "87e6bd72457f757eed069d43480bf8f61dfc237f96a5346bc81990207de5a711"
+      "reason": "Previously reviewed full-file baseline and complete delta; no old document presentation while the picker tracks or after intervening tracking invalidates a read.",
+      "source_sha256": "f026b84daf825c9f9d5219aa4c2274a3cab85abf726cbca7262d3f9570b3427c",
+      "review_evidence": "docs/quality/document-picker-print-review-2026-11-15.md",
+      "review_evidence_sha256": "22cf09d25dcb7a1a306f30e0681590f9f13f64dd6401debf65f38e9cb1d7858b"
     },
     {
       "path": "macOS/Keldin/Features/Documents/JobHistoryView.swift",
@@ -6244,8 +6250,11 @@
     {
       "path": "macOS/Tests/DocumentPickerTests.swift",
       "classification": "test",
-      "status": "pending",
-      "reason": "No file-level semantic implementation review recorded in this ledger."
+      "status": "reviewed",
+      "reason": "Full-file review of native picker event scope, selection identity, duplicate labels, localisation and width constraints.",
+      "source_sha256": "b4a2a6170ae88dc90a23e54bdb4d310c200806e9bb37ce0a341833b70b3c32fb",
+      "review_evidence": "docs/quality/document-picker-print-review-2026-11-15.md",
+      "review_evidence_sha256": "22cf09d25dcb7a1a306f30e0681590f9f13f64dd6401debf65f38e9cb1d7858b"
     },
     {
       "path": "macOS/Tests/DocumentRecoveryInteractiveTests.swift",

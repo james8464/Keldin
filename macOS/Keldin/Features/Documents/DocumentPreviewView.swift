@@ -31,9 +31,12 @@ struct DocumentPreviewView: View {
                 }
             } else {
                 VStack(spacing: 0) {
-                    DocumentPickerView(files: files, selection: selectedBinding)
-                    .padding()
-                    .frame(minWidth: 0, maxWidth: .infinity)
+                    DocumentPickerView(
+                        files: files, selection: selectedBinding,
+                        onTrackingChanged: documentActions.setDocumentPickerTracking
+                    )
+                        .padding()
+                        .frame(minWidth: 0, maxWidth: .infinity, alignment: .leading)
 
                     if documentActions.hasFormFields {
                         Text("This preview is read-only. Export the PDF to fill it in another app.")
@@ -96,7 +99,7 @@ struct DocumentPreviewView: View {
                     .disabled(!documentActions.canAccessDocument)
 
                 Button("Copy Provenance", systemImage: "doc.on.clipboard", action: documentActions.copyProvenance)
-                    .disabled(documentActions.provenance == nil)
+                    .disabled(!documentActions.canCopyProvenance)
 
                 Button("Reveal in Finder", systemImage: "folder", action: documentActions.revealSelected)
                     .disabled(!documentActions.canAccessDocument)
@@ -139,15 +142,20 @@ final class DocumentActionController: ObservableObject {
     @Published private(set) var hasFormFields = false
     @Published private(set) var loadFailure: PDFLoadFailure?
     @Published private(set) var isLoading = false
+    @Published private var isDocumentPickerTracking = false
     private let access: PDFDocumentAccess
     fileprivate let quickLook = QuickLookCoordinator()
     private var loadTask: Task<Void, Never>?
     private var revision = UUID()
+    private var pickerRevision = UUID()
     private var selectionLease: PDFReadLease?
     enum Action: Equatable { case quickLook, reveal, print, export }
     private let presentAction: (@MainActor (Action, GeneratedFile, LoadedPDF) -> Void)?
 
-    var canAccessDocument: Bool { !isLoading && loadedPDF != nil && selectedFile?.exists == true }
+    var canAccessDocument: Bool {
+        !isDocumentPickerTracking && !isLoading && loadedPDF != nil && selectedFile?.exists == true
+    }
+    var canCopyProvenance: Bool { !isDocumentPickerTracking && provenance != nil }
     var canQuickLookDocument: Bool {
         canAccessDocument && selectedFile.map { quickLook.canPresent(fileID: $0.id) } == true
     }
@@ -161,6 +169,13 @@ final class DocumentActionController: ObservableObject {
     }
 
     convenience init() { self.init(access: PDFDocumentAccess()) }
+
+    func setDocumentPickerTracking(_ isTracking: Bool) {
+        guard isDocumentPickerTracking != isTracking else { return }
+        // Cmd-P can arrive while AppKit is still tracking the popup and hasn't applied the choice.
+        if isTracking { pickerRevision = UUID() }
+        isDocumentPickerTracking = isTracking
+    }
 
     func selectionBinding(selection: Binding<GeneratedFile.ID?>, files: [GeneratedFile], records: [GenerationJobRecord]) -> Binding<GeneratedFile.ID> {
         Binding(
@@ -177,6 +192,7 @@ final class DocumentActionController: ObservableObject {
     }
 
     func update(file: GeneratedFile?, provenance: GenerationJobRecord?) {
+        if file == nil { setDocumentPickerTracking(false) }
         self.provenance = provenance
         guard selectedFile?.id != file?.id || selectedFile?.url != file?.url else { return }
         invalidateLoad()
@@ -191,6 +207,7 @@ final class DocumentActionController: ObservableObject {
 
     func clear() {
         invalidateLoad()
+        setDocumentPickerTracking(false)
         quickLook.closeOwnedPreview()
         selectionLease?.release()
         selectionLease = nil
@@ -291,10 +308,11 @@ final class DocumentActionController: ObservableObject {
     }
 
     private func startLoad(action: Action? = nil, recovering: URL? = nil) {
-        if action != nil && isLoading { return }
+        if action != nil && (isDocumentPickerTracking || isLoading) { return }
         invalidateLoad()
         guard let file = selectedFile else { return }
         let request = revision
+        let pickerRequest = pickerRevision
         isLoading = true
         loadFailure = nil
         let access = access
@@ -319,7 +337,9 @@ final class DocumentActionController: ObservableObject {
                 }
                 self.isLoading = false
                 self.loadTask = nil
-                if let action { self.perform(action, file: file, pdf: loaded.pdf) }
+                if let action, self.pickerRevision == pickerRequest {
+                    self.perform(action, file: file, pdf: loaded.pdf)
+                }
             } catch {
                 guard !Task.isCancelled, let self, self.revision == request, self.matches(file) else { return }
                 self.isLoading = false
@@ -346,7 +366,7 @@ final class DocumentActionController: ObservableObject {
     }
 
     func copyProvenance() {
-        guard let provenance else { return }
+        guard canCopyProvenance, let provenance else { return }
         let pasteboard = NSPasteboard.general
         pasteboard.clearContents()
         pasteboard.setString(provenance.provenanceSummary, forType: .string)

@@ -1235,8 +1235,8 @@
     "semantic_hash": "9089fa356046b0e497da7729dfba8605"
   },
   "Resources/repository-inventory.json": {
-    "mtime": 1794713979.160575,
-    "ast_hash": "95e1aaa697049b506208ab284521dad8",
+    "mtime": 1794717147.1332912,
+    "ast_hash": "3368255030591e925e8176e676d9cecd",
     "semantic_hash": ""
   },
   "bridge.py": {
@@ -3295,8 +3295,8 @@
     "semantic_hash": ""
   },
   "macOS/Keldin/Application/AppCommands.swift": {
-    "mtime": 1793923292.6863973,
-    "ast_hash": "24defa862c21f7f80af34ee32e3aca3a",
+    "mtime": 1794716881.9740102,
+    "ast_hash": "6aaf9a6efdc96763e660b6e96b472dfc",
     "semantic_hash": ""
   },
   "macOS/Keldin/Application/AppConfiguration.swift": {
@@ -3395,8 +3395,8 @@
     "semantic_hash": ""
   },
   "macOS/Keldin/Features/Documents/DocumentPreviewView.swift": {
-    "mtime": 1793925408.5185814,
-    "ast_hash": "87fadbfe4a1473949b938ed7e21b2dee",
+    "mtime": 1794716881.973655,
+    "ast_hash": "70f9a2ffd8946cf801b902c3cd6a2e40",
     "semantic_hash": ""
   },
   "macOS/Keldin/Features/Documents/JobHistoryView.swift": {
@@ -3885,8 +3885,8 @@
     "semantic_hash": ""
   },
   "Resources/implementation-audit-coverage.json": {
-    "mtime": 1794714084.8019269,
-    "ast_hash": "0a8e15df5913e83b5ff39222881e0dd2",
+    "mtime": 1794717156.1125793,
+    "ast_hash": "3f949086193b50688dca4205eb4ffb09",
     "semantic_hash": ""
   },
   "macOS/Keldin/Services/PDFDocumentAccess.swift": {
@@ -3905,8 +3905,8 @@
     "semantic_hash": ""
   },
   "macOS/Tests/PDFDocumentAccessTests.swift": {
-    "mtime": 1793923443.830117,
-    "ast_hash": "9321f30b974357f6c82dc711ba282b85",
+    "mtime": 1794716913.4295142,
+    "ast_hash": "fd0f3b6e4462b87c1cfa74954c3bc8e8",
     "semantic_hash": ""
   },
   "macOS/Tests/SecretStoreTests.swift": {
@@ -4250,13 +4250,13 @@
     "semantic_hash": ""
   },
   "macOS/Keldin/Features/Documents/DocumentPickerView.swift": {
-    "mtime": 1793273207.2349958,
-    "ast_hash": "f2d7400cbc03def35fd156c5a6a55959",
+    "mtime": 1794716881.9733305,
+    "ast_hash": "2e043bbdd095ef24d8b737f312e791ce",
     "semantic_hash": ""
   },
   "macOS/Tests/DocumentPickerTests.swift": {
-    "mtime": 1793275787.3038452,
-    "ast_hash": "b674fc4becbcf0d56686659cd36c2f95",
+    "mtime": 1794716823.8019075,
+    "ast_hash": "01cc30c36788df42029385bb25d39f80",
     "semantic_hash": ""
   },
   "tests/test_build_cleanup_safety.py": {
@@ -6317,6 +6317,11 @@
   "docs/quality/hosted-consent-and-local-routing-review.md": {
     "mtime": 1794713979.1607955,
     "ast_hash": "771822f502b9d80520cc6465a15015a5",
+    "semantic_hash": ""
+  },
+  "docs/quality/document-picker-print-review-2026-11-15.md": {
+    "mtime": 1794717146.9914818,
+    "ast_hash": "3d436c81b510bc8e82f833ab5826d9fe",
     "semantic_hash": ""
   }
 }

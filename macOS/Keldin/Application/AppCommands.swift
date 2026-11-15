@@ -64,7 +64,7 @@ struct AppCommands: Commands {
 
     private var canCopyProvenance: Bool {
         canNavigate
-            && documentActions?.provenance != nil
+            && documentActions?.canCopyProvenance == true
     }
 
     private func localized(_ resource: LocalizedStringResource) -> String {
