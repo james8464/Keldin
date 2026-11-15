@@ -121,10 +121,13 @@ def render_question_paper(blueprint: PaperBlueprint, output_path: Path) -> None:
             state,
             show_answer_space=blueprint.delivery_mode == "written",
         )
-    state = _ensure_space(pdf, state, 90)
-    pdf.setFont(FONT_BOLD, 10)
-    pdf.drawCentredString(282, state.y - 20, "END OF QUESTIONS")
-    state.y -= 80
+    marker_gap, marker_size = 20, 10
+    marker_space = 90
+    if blueprint.assessment_kind == "question-bank":
+        marker_space = marker_gap - pdfmetrics.getDescent(FONT_BOLD, marker_size)
+    state = _ensure_space(pdf, state, marker_space)
+    pdf.setFont(FONT_BOLD, marker_size)
+    pdf.drawCentredString(282, state.y - marker_gap, "END OF QUESTIONS")
     extra_pages = EXTRA_ANSWER_PAGES if blueprint.delivery_mode == "written" else 0
     for index in range(extra_pages):
         _draw_extra_answer_page(
