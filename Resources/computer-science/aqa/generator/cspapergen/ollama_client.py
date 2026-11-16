@@ -18,6 +18,7 @@ from Backend.Core.computer_science_authoring import (
     aqa_cs_difficulty_candidate,
     aqa_cs_solver_item,
     authoring_route,
+    is_timing_benchmark,
     question_content_sha256,
     reviewed_question_metadata,
     validate_question_review,
@@ -422,6 +423,23 @@ def _prompt(
     if _uses_scenario_only_generation(question):
         stem_numbers = ", ".join(numeric_tokens(question.stem)) or "none"
         scenario_terms = ", ".join(_required_scenario_terms(question)) or "none"
+        if is_timing_benchmark(question.model_dump(mode="json")):
+            scenario_instruction = (
+                "Write one concise sentence describing a new fictional setting "
+                "where timing two ways of processing data would be useful. "
+                "Leave out algorithm names, complexity notation, counts and results. "
+                "Keldin appends the fixed technical statement and keeps the parts "
+                "unchanged. Do not add exam-board branding."
+            )
+        else:
+            scenario_instruction = (
+                "Create a concise, materially new fictional scenario stem for the immutable multipart task below. "
+                "The stem must establish the same technical setting without copying a complete sentence from the draft. "
+                f"Preserve these numeric tokens from the draft stem exactly: {stem_numbers}. "
+                "Introduce no other numeric values. Do not repeat, rewrite or answer the parts. "
+                "Do not add exam-board branding.\n"
+                f"Preserve these marking-coupled scenario terms exactly: {scenario_terms}."
+            )
         return f"""You are writing an unofficial A-level Computer Science {blueprint.paper_code} Paper {blueprint.paper_number}.
 
 Use only this syllabus topic: {question.topic_id} {topic_title}
@@ -429,8 +447,7 @@ Immutable assessment focus: {question.title} ({question.style_id}). Do not subst
 Immutable reference-demand targets: {json.dumps(demand_targets, ensure_ascii=False)}
 {objective_guidance}
 
-Create a concise, materially new fictional scenario stem for the immutable multipart task below. The stem must establish the same technical setting without copying a complete sentence from the draft. Preserve these numeric tokens from the draft stem exactly: {stem_numbers}. Introduce no other numeric values. Do not repeat, rewrite or answer the parts. Do not add exam-board branding.
-Preserve these marking-coupled scenario terms exactly: {scenario_terms}.
+{scenario_instruction}
 
 Draft stem: {question.stem}
 Immutable parts for context only:
@@ -681,6 +698,14 @@ def _uses_review_only_generation(question: Question) -> bool:
 
 def _merge_question(question: Question, payload: dict[str, object]) -> Question:
     stem = _clean(str(payload.get("stem") or question.stem))
+    if is_timing_benchmark(question.model_dump(mode="json")):
+        raw_scenario = payload.get("stem")
+        if payload.get("parts") != [] or not isinstance(raw_scenario, str):
+            raise ValueError("the timing task accepts only a new scenario")
+        scenario = _clean(raw_scenario)
+        if not scenario.strip():
+            raise ValueError("the timing task requires a new scenario")
+        return question.model_copy(update={"stem": f"{scenario} {question.stem}"})
     if question.stimulus is not None:
         stem = question.stem
     if not _uses_scenario_only_generation(question) and numeric_tokens(
@@ -756,10 +781,30 @@ def _validate_ai_question(original: Question, candidate: Question) -> None:
             "question changed a required scenario term: "
             + ", ".join(missing_scenario_terms)
         )
+    timing_benchmark = is_timing_benchmark(original.model_dump(mode="json"))
     constrained_multipart = len(original.parts) >= 3 and bool(
         numeric_tokens(original_text)
     )
-    if constrained_multipart and original.stem.strip():
+    if timing_benchmark:
+        if candidate.parts != original.parts:
+            raise ValueError("the immutable timing task was changed")
+        suffix = f" {original.stem}"
+        if not candidate.stem.endswith(suffix):
+            raise ValueError(
+                "the timing task requires a new scenario before its fixed statement"
+            )
+        scenario = candidate.stem.removesuffix(suffix)
+        if not scenario.strip():
+            raise ValueError("the timing task requires a new scenario")
+        if numeric_tokens(candidate.stem) != numeric_tokens(original.stem):
+            raise ValueError("the timing scenario introduced a numeric quantity")
+        assert_materially_new(
+            original.stem,
+            scenario,
+            item_id=f"question-{original.number}-scenario",
+            preserve_numbers=False,
+        )
+    elif constrained_multipart and original.stem.strip():
         assert_materially_new(
             original.stem,
             candidate.stem,
@@ -767,12 +812,13 @@ def _validate_ai_question(original: Question, candidate: Question) -> None:
             similarity_limit=0.9,
             preserve_numbers=False,
         )
-    assert_materially_new(
-        original_text,
-        candidate_text,
-        item_id=f"question-{original.number}",
-        similarity_limit=0.98 if constrained_multipart else 0.9,
-    )
+    if not timing_benchmark:
+        assert_materially_new(
+            original_text,
+            candidate_text,
+            item_id=f"question-{original.number}",
+            similarity_limit=0.98 if constrained_multipart else 0.9,
+        )
     if len(candidate.parts) != len(original.parts):
         raise ValueError(f"question-{original.number} changed its part count")
     for original_part, candidate_part in zip(
@@ -835,6 +881,8 @@ def _text_list(raw: object, fallback: list[str]) -> list[str]:
 
 
 def _required_scenario_terms(question: Question) -> list[str]:
+    if is_timing_benchmark(question.model_dump(mode="json")):
+        return ["Algorithm X", "Algorithm Y", "O(n log n)", "O(n²)"]
     if question.style_id == "database_extended":
         return [
             "CLIENT",

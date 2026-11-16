@@ -178,4 +178,6 @@ def test_cropped_projection_review_cannot_be_reused_as_a_complete_source_review(
 
 
 def test_current_cs_checkpoint_identity_moves_past_the_cropped_source_policy():
-    assert ADAPTER.prompt_version.startswith("aqa-computer-science-v16-")
+    family = "aqa-computer-science-v"
+    assert ADAPTER.prompt_version.startswith(family)
+    assert int(ADAPTER.prompt_version.removeprefix(family).split("-", 1)[0]) >= 16

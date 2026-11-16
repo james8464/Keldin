@@ -316,11 +316,8 @@
     {
       "path": "Backend/Core/computer_science_authoring.py",
       "classification": "maintained-source",
-      "status": "reviewed",
-      "reason": "Complete 300-line EOF review, including the prior 289-line source and complete functional-source admission delta. Shared projection and saved-review/package boundaries checked; supported-language controls are not general Haskell interpretation, live quality qualification or a whole dependency audit.",
-      "source_sha256": "c85da33c357c41db9a725387f7a4f29810217ee564ca232e7adb591a88a843d4",
-      "review_evidence": "docs/quality/cs-functional-source-grammar-review.md",
-      "review_evidence_sha256": "2521a17e64dd40f437c5e26c835e8dbe534f70ca7c703f5258f717b5f595fa4d"
+      "status": "pending",
+      "reason": "No file-level semantic implementation review recorded in this ledger."
     },
     {
       "path": "Backend/Core/computer_science_question_content.py",
@@ -2317,11 +2314,8 @@
     {
       "path": "Resources/computer-science/aqa/generator/cspapergen/cli.py",
       "classification": "maintained-source",
-      "status": "reviewed",
-      "reason": "All 205 lines. Rule selection, family-adapter hooks, artifact order, Paper 1 supporting files, progress forwarding and command arguments were inspected. Runtime bootstrap, syllabus defaults and notes caching were read within the relevant boundaries. No new defect was established for the current caller contracts.",
-      "source_sha256": "08edd4d5b1c06f11354e3787a3a1b17e8e2b718053496ed37d75b5f6f6b44799",
-      "review_evidence": "docs/quality/implementation-audit-reconciliation-2026-11-10.md",
-      "review_evidence_sha256": "799d0c38f8fce9352aa3b7697bae3e7e9bd9ccf480cafc45c12e94e6d1582c10"
+      "status": "pending",
+      "reason": "No file-level semantic implementation review recorded in this ledger."
     },
     {
       "path": "Resources/computer-science/aqa/generator/cspapergen/exam_dates.py",
@@ -2335,11 +2329,8 @@
     {
       "path": "Resources/computer-science/aqa/generator/cspapergen/generator.py",
       "classification": "maintained-source",
-      "status": "reviewed",
-      "reason": "Existing complete generator baseline plus prior report-contract review and exact recital of the entire current recursion-credit delta. Scoped PDF and answer-key parity does not qualify live paper content.",
-      "source_sha256": "a4891a59d79b85cd270784d985f68a62dda82ac413716d2aa36dcc68ec628393",
-      "review_evidence": "docs/quality/cs1-recursion-marking-review.md",
-      "review_evidence_sha256": "aa47454a171cc093df0ad962e3adf18e75dfb95f422539d07a76ae0384e985f8"
+      "status": "pending",
+      "reason": "No file-level semantic implementation review recorded in this ledger."
     },
     {
       "path": "Resources/computer-science/aqa/generator/cspapergen/models.py",
@@ -2368,11 +2359,8 @@
     {
       "path": "Resources/computer-science/aqa/generator/cspapergen/ollama_client.py",
       "classification": "maintained-source",
-      "status": "reviewed",
-      "reason": "Explicit completed EOF or documented full baseline plus entire delta review; source ownership, retry or required-check preservation and reviewer attribution are bounded in the evidence.",
-      "source_sha256": "3059a9d0300aafe44d80413c865b5643846037b6f10796d7d1702b6b70db5466",
-      "review_evidence": "docs/quality/aqa-cs-checkpoint-admission-review-2026-11-02.md",
-      "review_evidence_sha256": "bdf39c0bbe51920026a1499ccb06fcdc1c0e336596c8147b254e6d082080939a"
+      "status": "pending",
+      "reason": "No file-level semantic implementation review recorded in this ledger."
     },
     {
       "path": "Resources/computer-science/aqa/generator/cspapergen/paper1_assets.py",
@@ -6709,11 +6697,8 @@
     {
       "path": "tests/test_aqa_cs_checkpoint_admission.py",
       "classification": "test",
-      "status": "reviewed",
-      "reason": "Explicit completed EOF or documented full baseline plus entire delta review; source ownership, retry or required-check preservation and reviewer attribution are bounded in the evidence.",
-      "source_sha256": "07ef680f865deb8cea345d63cd67205d921aefd1473b86d9449e4a4cf7af0613",
-      "review_evidence": "docs/quality/aqa-cs-checkpoint-admission-review-2026-11-02.md",
-      "review_evidence_sha256": "bdf39c0bbe51920026a1499ccb06fcdc1c0e336596c8147b254e6d082080939a"
+      "status": "pending",
+      "reason": "No file-level semantic implementation review recorded in this ledger."
     },
     {
       "path": "tests/test_aqa_cs_table_source_fidelity.py",

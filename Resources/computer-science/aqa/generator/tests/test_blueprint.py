@@ -1040,20 +1040,22 @@ def test_generated_part_with_new_quantity_keeps_verified_prompt() -> None:
     question = blueprint.questions[3]
     original_part = question.parts[0]
 
-    merged = _merge_question(
-        question,
-        {
-            "stem": "A benchmark compares 10 alternative implementations.",
-            "parts": [
-                {
-                    "label": original_part.label,
-                    "prompt": f"{original_part.prompt} Repeat the trial 10 times.",
-                    "marking_points": original_part.marking.points,
-                }
-            ],
-        },
-    )
+    payload = {
+        "stem": "A benchmark compares 10 alternative implementations.",
+        "parts": [
+            {
+                "label": original_part.label,
+                "prompt": f"{original_part.prompt} Repeat the trial 10 times.",
+                "marking_points": original_part.marking.points,
+            }
+        ],
+    }
+    with pytest.raises(ValueError, match="timing task accepts only"):
+        _merge_question(question, payload)
 
+    # The ordinary authored route still preserves verified numeric prompts.
+    legacy = question.model_copy(update={"style_id": "generic-numeric"})
+    merged = _merge_question(legacy, payload)
     assert merged.stem == question.stem
     assert merged.parts[0].prompt == original_part.prompt
 
