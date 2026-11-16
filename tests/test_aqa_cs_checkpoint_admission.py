@@ -9,7 +9,7 @@ from pathlib import Path
 
 import pytest
 from cspapergen import ollama_client as subject
-from cspapergen.generator import build_paper2_blueprint
+from cspapergen.generator import build_paper1_blueprint, build_paper2_blueprint
 from cspapergen.syllabus import load_syllabus
 from cspapergen.validation import validate_blueprint
 from jsonschema import Draft202012Validator
@@ -25,6 +25,67 @@ from Backend.Core.model_review import ReviewResult
 
 COMMON = "Explain the technical and legal considerations relevant to the organisation."
 STEM = "An organisation is planning changes to its services."
+
+
+def test_paper_one_timing_benchmark_authors_only_a_new_scenario():
+    blueprint, _ = build_paper1_blueprint(load_syllabus(), seed=26081608)
+    draft = next(q for q in blueprint.questions if q.number == 4)
+    assert subject._uses_scenario_only_generation(draft)
+    prompt = subject._prompt(draft, "Algorithms", "", blueprint)
+    assert "O(n log n)" in prompt and "O(n²)" in prompt
+    assert "Keldin appends the fixed technical statement" in prompt
+    scenario = "A museum archivist wants to process a collection of scanned records."
+    candidate = subject._merge_question(draft, {"stem": scenario, "parts": []})
+    assert candidate.stem == f"{scenario} {draft.stem}"
+    assert candidate.parts == draft.parts
+    subject._validate_ai_question(draft, candidate)
+    with pytest.raises(ValueError, match="new scenario"):
+        subject._validate_ai_question(draft, draft)
+    with pytest.raises(ValueError, match="numeric quantity"):
+        numbered = subject._merge_question(
+            draft, {"stem": "The archive contains 100 files.", "parts": []}
+        )
+        subject._validate_ai_question(draft, numbered)
+    changed = candidate.model_copy(
+        update={
+            "parts": [
+                candidate.parts[0].model_copy(
+                    update={"prompt": "Only do one timing trial."}
+                ),
+                *candidate.parts[1:],
+            ],
+        }
+    )
+    with pytest.raises(ValueError, match="timing task"):
+        subject._validate_ai_question(draft, changed)
+    with pytest.raises(ValueError, match="required scenario term"):
+        subject._validate_ai_question(
+            draft,
+            candidate.model_copy(
+                update={"stem": candidate.stem.replace("O(n log n)", "O(n)")}
+            ),
+        )
+
+
+def test_printed_timing_task_and_credit_agree_on_supplied_functions():
+    blueprint, _ = build_paper1_blueprint(load_syllabus(), seed=26081608)
+    question = next(q for q in blueprint.questions if q.number == 4)
+    implementation, interpretation = question.parts
+    assert [part.marks for part in question.parts] == [12, 1]
+    assert "Do not implement either algorithm" in implementation.prompt
+    assert (
+        "Do not include the time taken to make or copy the data"
+        in implementation.prompt
+    )
+    assert "report a tie" in implementation.prompt
+    assert any(
+        "equal" in point and "tie" in point for point in implementation.marking.points
+    )
+    assert "Link one source of variation" in interpretation.prompt
+    assert any(
+        "measured time" in point and "one mark" in point.casefold()
+        for point in interpretation.marking.points
+    )
 
 
 def fixture(numbers=(4, 5)):

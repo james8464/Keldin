@@ -39,12 +39,20 @@ REVIEW_FIELDS = {
 AQA_CS_VISIBLE_SOURCE_POLICY = "aqa-cs-visible-source-v2-whole-table"
 
 
+def is_timing_benchmark(question: dict[str, Any]) -> bool:
+    return question.get("style_id") == "complexity" and any(
+        part.get("task_operation") == "program" for part in question["parts"]
+    )
+
+
 def authoring_route(question: dict[str, Any]) -> str:
     if question.get("stimulus") is not None or question.get("style_id") in {
         "adapt_program",
         "extend_program",
     }:
         return "reviewed-fixed"
+    if is_timing_benchmark(question):
+        return "scenario-only"
     text = " ".join(
         [question.get("stem", ""), *(part["prompt"] for part in question["parts"])]
     )

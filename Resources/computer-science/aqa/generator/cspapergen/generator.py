@@ -1343,18 +1343,25 @@ def _align_paper1_structure(
             _paper1_part(
                 "1",
                 12,
-                "Write a program that compares two implementations for a supplied input size n. The functions run_X(data), run_Y(data), make_data(n) and timer() are available; timer() returns a monotonic time in seconds. Execute five comparable trials of each implementation, using fresh copies of the same data. Calculate each mean elapsed time and output the faster implementation and both means. Use a programming language or unambiguous executable pseudocode.",
+                "Write a program to compare the running times of two supplied algorithms for an input size n. "
+                "Call make_data(n) to create a list of n inputs. run_X(data) and run_Y(data) run the supplied "
+                "algorithms on a list and may modify it. Do not implement either algorithm. "
+                "Use timer(), which returns a monotonic time in seconds. "
+                "Time five calls to each algorithm, using a fresh copy of the same original list for every call. "
+                "Do not include the time taken to make or copy the data. Output both mean elapsed times "
+                "and identify the lower one; report a tie if the means are equal. "
+                "Use a programming language or unambiguous executable pseudocode.",
                 [
                     "Accept or receive the input size;",
-                    "Generate equivalent input data for both algorithms;",
-                    "Use a monotonic high-resolution timer;",
+                    "Create a common input list with make_data(n);",
+                    "Use the supplied monotonic timer();",
                     "Record the start time immediately before execution;",
                     "Record the end time immediately after execution;",
                     "Calculate elapsed time;",
                     "Repeat exactly five trials for each implementation;",
-                    "Use the same data or equivalent copies;",
+                    "Give each call its own fresh copy of the original list, made before timing starts;",
                     "Calculate each arithmetic mean as its sum of elapsed times divided by five;",
-                    "Select the algorithm with the lower measured time;",
+                    "Select the algorithm with the lower mean, or report a tie if the means are equal;",
                     "Return or display the selection and evidence;",
                     "Algorithm is complete, unambiguous and terminates;",
                 ],
@@ -1364,9 +1371,12 @@ def _align_paper1_structure(
             _paper1_part(
                 "2",
                 1,
-                "Evaluate this timing claim: one trial found X faster, so X will always be faster on this input size. State one limitation of the evidence.",
+                "In one trial, X finished faster than Y. Explain why this does not establish that X will "
+                "always be faster than Y at the same input size. Link one source of variation to the measured comparison.",
                 [
-                    "One trial does not distinguish an algorithm effect from caching, background processes or timer variation; repeated comparable trials are needed;"
+                    "Award one mark for linking a plausible source of variation to the measured time in this trial. "
+                    "For example, a background task may have slowed Y during the trial, so the observed advantage for X may not recur. "
+                    "Do not credit only restating that there was one trial."
                 ],
                 3,
                 "AO3",
