@@ -752,6 +752,8 @@ def _build_paper1_context(rng: random.Random) -> Paper1Context:
         for _ in range(8)
     ]
     program = f"""from dataclasses import dataclass
+from random import Random
+from time import perf_counter
 
 CATEGORIES = {categories!r}
 THRESHOLD = {threshold}
@@ -803,6 +805,30 @@ def add_record(records):
 def print_report(records):
     # Candidate task: display categories in descending adjusted-total order.
     pass
+
+
+# Supplied routines for the separate timing task in Question 4.
+def make_data(n):
+    rng = Random(33)
+    return [rng.randrange(-10000, 10001) for _ in range(n)]
+
+
+def run_X(data):
+    data.sort()
+
+
+def run_Y(data):
+    for index in range(1, len(data)):
+        value = data[index]
+        position = index
+        while position > 0 and data[position - 1] > value:
+            data[position] = data[position - 1]
+            position -= 1
+        data[position] = value
+
+
+def timer():
+    return perf_counter()
 
 
 def main():
@@ -922,7 +948,7 @@ def _build_paper1_questions(
             "4.3",
             "complexity",
             "Algorithm complexity",
-            "Two algorithms solve the same problem. Algorithm X is O(n log n) and Algorithm Y is O(n²).",
+            "Two algorithms solve the same problem. In the worst case, Algorithm X is O(n log n) and Algorithm Y is O(n²).",
             None,
             [
                 _paper1_part(
@@ -1343,10 +1369,10 @@ def _align_paper1_structure(
             _paper1_part(
                 "1",
                 12,
-                "Write a program to compare the running times of two supplied algorithms for an input size n. "
-                "Call make_data(n) to create a list of n inputs. run_X(data) and run_Y(data) run the supplied "
-                "algorithms on a list and may modify it. Do not implement either algorithm. "
-                "Use timer(), which returns a monotonic time in seconds. "
+                "Write a program to compare the running times of two algorithms for a supplied positive input size n. "
+                "Use the Question 4 functions in the supplied Skeleton Program. "
+                "make_data(n) returns a list of n integers; run_X(data) and run_Y(data) sort that list in place. "
+                "Do not implement either algorithm. Use timer(), which returns a monotonic time in seconds. "
                 "Time five calls to each algorithm, using a fresh copy of the same original list for every call. "
                 "Do not include the time taken to make or copy the data. Output both mean elapsed times "
                 "and identify the lower one; report a tie if the means are equal. "
@@ -1371,8 +1397,9 @@ def _align_paper1_structure(
             _paper1_part(
                 "2",
                 1,
-                "In one trial, X finished faster than Y. Explain why this does not establish that X will "
-                "always be faster than Y at the same input size. Link one source of variation to the measured comparison.",
+                "Evaluate this conclusion from the timing program: X was faster in one trial, "
+                "so X will always be faster than Y at the same input size. "
+                "Link one source of variation to the measured comparison.",
                 [
                     "Award one mark for linking a plausible source of variation to the measured time in this trial. "
                     "For example, a background task may have slowed Y during the trial, so the observed advantage for X may not recur. "

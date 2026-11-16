@@ -88,6 +88,28 @@ def test_printed_timing_task_and_credit_agree_on_supplied_functions():
     )
 
 
+def test_paper_one_skeleton_supplies_working_timing_functions():
+    blueprint, context = build_paper1_blueprint(load_syllabus(), seed=26081608)
+    question = next(q for q in blueprint.questions if q.number == 4)
+    assert "supplied Skeleton Program" in question.parts[0].prompt
+    functions = {"__name__": "_owned_timing_skeleton"}
+    exec(
+        compile(
+            context.skeleton_program, "owned_aqa_skeleton.py", "exec", dont_inherit=True
+        ),
+        functions,
+    )
+    data = functions["make_data"](8)
+    assert len(data) == 8
+    assert data == functions["make_data"](8)
+    for name in ("run_X", "run_Y"):
+        working = [5, 3, 5, 2]
+        functions[name](working)
+        assert working == [2, 3, 5, 5]
+    first = functions["timer"]()
+    assert functions["timer"]() >= first
+
+
 def fixture(numbers=(4, 5)):
     assert (
         Path(subject.__file__)
