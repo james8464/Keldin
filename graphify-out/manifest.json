@@ -1190,7 +1190,7 @@
     "semantic_hash": ""
   },
   "Resources/layout-profiles.json": {
-    "mtime": 1787743483.693061,
+    "mtime": 1795108636.6091573,
     "ast_hash": "727165e801a90250a489b93f10dc7ff9",
     "semantic_hash": "727165e801a90250a489b93f10dc7ff9"
   },
@@ -1745,13 +1745,13 @@
     "semantic_hash": ""
   },
   "tools/build_supported_layout_masters.py": {
-    "mtime": 1794344397.5607986,
-    "ast_hash": "805e3a5c069d1811460631c55b109f39",
+    "mtime": 1795109232.2904692,
+    "ast_hash": "ce87edc42d88d5f1f8ce062525e69cac",
     "semantic_hash": ""
   },
   "tools/calibrate_student_responses.py": {
-    "mtime": 1793234162.526741,
-    "ast_hash": "3f5045c2e636fb5374c0bc2bf53a86cb",
+    "mtime": 1795109232.2984204,
+    "ast_hash": "4dc4b5426d4adf2feb5aaecc3501d760",
     "semantic_hash": ""
   },
   "tools/coverage_matrix.py": {
@@ -1770,8 +1770,8 @@
     "semantic_hash": ""
   },
   "tools/live_generation_matrix.py": {
-    "mtime": 1794739660.0746193,
-    "ast_hash": "9aae34fdc872e7e5c91f31274fd6b4c5",
+    "mtime": 1795109232.2985957,
+    "ast_hash": "75cc1636d2bd26a3a5f7f2a5e2c4e478",
     "semantic_hash": ""
   },
   "tools/live_process.py": {
@@ -1790,8 +1790,8 @@
     "semantic_hash": ""
   },
   "tools/paper_fidelity_audit.py": {
-    "mtime": 1793591759.7053378,
-    "ast_hash": "66ac5a74e09e016ce2e5ee289ad46349",
+    "mtime": 1795109232.3000848,
+    "ast_hash": "985fd820e2e3c1f2e238036f64c2b748",
     "semantic_hash": ""
   },
   "tools/reference_corpus.py": {
@@ -1815,18 +1815,18 @@
     "semantic_hash": ""
   },
   "tools/scaffold_generator_family.py": {
-    "mtime": 1794695846.152819,
-    "ast_hash": "7d2752505cb1965db9debb189e425e85",
+    "mtime": 1795109232.2904646,
+    "ast_hash": "f47a259ac211027ba80e34398c37fc1b",
     "semantic_hash": ""
   },
   "tools/source_candidate_paths.py": {
-    "mtime": 1793205262.9564624,
-    "ast_hash": "8dd08d8fa88b9ba8fa083f41575bcc43",
+    "mtime": 1795109232.2984424,
+    "ast_hash": "98610247ba56acfb111be5fde3fc1053",
     "semantic_hash": ""
   },
   "tools/validate_generator_migration.py": {
-    "mtime": 1794695846.1557076,
-    "ast_hash": "7ef21ab489483e4444d334a1c6255bd6",
+    "mtime": 1795109232.290763,
+    "ast_hash": "49a8d5093034ad6a7013f42f3653b79b",
     "semantic_hash": ""
   },
   "Backend/Core/france/originality.py": {
@@ -1980,8 +1980,8 @@
     "semantic_hash": ""
   },
   "docs/project-analysis/PROJECT_ANALYSIS.md": {
-    "mtime": 1795033715.2359502,
-    "ast_hash": "0c861c3fe095b5d39d6c55ac2385b353",
+    "mtime": 1795108333.8878715,
+    "ast_hash": "d0d2359334a5844bc7716a36629f142c",
     "semantic_hash": ""
   },
   "docs/project-analysis/UI_AUDIT.md": {
@@ -2155,8 +2155,8 @@
     "semantic_hash": ""
   },
   "docs/quality/french-framework-migration-ledger.md": {
-    "mtime": 1793196890.1108277,
-    "ast_hash": "e8c058d4a869a6c4d2c4a800171b56ec",
+    "mtime": 1795108337.367965,
+    "ast_hash": "a7ec49e20a7e588a487be13b263895a3",
     "semantic_hash": ""
   },
   "tests/test_occitanie_submission.py": {
@@ -3875,8 +3875,8 @@
     "semantic_hash": ""
   },
   "Resources/implementation-audit-coverage.json": {
-    "mtime": 1795098481.0680664,
-    "ast_hash": "e1db424edf9fc4647fdf8edb3518d678",
+    "mtime": 1795109276.6391633,
+    "ast_hash": "878f40dd93f390fbee289baec2e660ce",
     "semantic_hash": ""
   },
   "macOS/Keldin/Services/PDFDocumentAccess.swift": {
@@ -4685,8 +4685,8 @@
     "semantic_hash": ""
   },
   "tests/test_native_model_quality_guidance.py": {
-    "mtime": 1795098430.275807,
-    "ast_hash": "8b7e5053f7606c4ec9996345be4991c4",
+    "mtime": 1795108348.8759832,
+    "ast_hash": "4a99ebad338c943a8f782eef1c4752cc",
     "semantic_hash": ""
   },
   "tools/french_model_capability.py": {
@@ -6385,8 +6385,8 @@
     "semantic_hash": ""
   },
   "macOS/Keldin/Services/WorkNotificationCenter.swift": {
-    "mtime": 1795033404.9812286,
-    "ast_hash": "a91f08483d6561c9e71bbf12e7becb37",
+    "mtime": 1795108414.3556845,
+    "ast_hash": "73e6ba2b179581a616eee262a461f8db",
     "semantic_hash": ""
   },
   "macOS/Keldin/State/RunSessionModels.swift": {
