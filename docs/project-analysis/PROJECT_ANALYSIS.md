@@ -96,7 +96,7 @@ flowchart LR
 ### 1. Catalogue and selection
 
 `macOS/Keldin/Domain/CatalogModels.swift` and the runtime resources load subject
-and board metadata. `macOS/Keldin/AppConfiguration.swift` joins the broad
+and board metadata. `macOS/Keldin/Application/AppConfiguration.swift` joins the broad
 catalogue with `Resources/generator-registry.json`, so only advertised generator
 families are shown as ready.
 
@@ -127,7 +127,7 @@ by other local tooling.
 
 ### 3. Process bridge and event protocol
 
-`macOS/Keldin/BackendClient.swift` launches either:
+`macOS/Keldin/Services/BackendClient.swift` launches either:
 
 - the PyInstaller backend inside the app bundle; or
 - the development Python interpreter and `bridge.py`.
@@ -398,16 +398,12 @@ contrast, localization, or reduced-motion audit.
 
 ### Observed workspace
 
-![Paper workspace](screenshots/01-paper-workspace.png)
-
 The workspace is calm and legible, but the collapsed subject groups hide the
 current board even while its detail is visible. The minimum 1120 × 740 frame
 makes the app less adaptable than a typical Mac utility. The large empty
 “Recent papers” panel has little value before a run.
 
 ### Observed first-use sheet
-
-![Create-paper introduction](screenshots/02-create-paper-introduction.png)
 
 The sheet is visually native and scoped. Its text says the user will choose a
 subject, paper, and model, but the sheet does not let them make those choices.
@@ -417,8 +413,6 @@ starting generation as the sheet was dismissed; that sequence needs a focused
 UI test before being treated as a confirmed defect.
 
 ### Observed generation state
-
-![Generation in progress](screenshots/03-generating-paper.png)
 
 Progress appears in the content and again at the bottom of the sidebar. Cancel
 appears in the workspace and toolbar. The duplication adds noise and creates

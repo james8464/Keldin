@@ -22,7 +22,7 @@ outputs. Re-run those checks whenever a boundary symbol is added.
 
 ### `ExamBoardOption` - six files - UK-specific, retained
 
-- `macOS/Keldin/Domain/AppModels.swift`
+- `macOS/Keldin/Domain/CatalogModels.swift`
 - `macOS/Keldin/Domain/GenerationEstimator.swift`
 - `macOS/Keldin/Features/Generation/GeneratorWorkspaceView.swift`
 - `macOS/Keldin/Navigation/SidebarView.swift`
