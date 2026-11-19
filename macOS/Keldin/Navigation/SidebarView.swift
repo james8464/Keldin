@@ -13,7 +13,7 @@ enum SidebarExpansionPolicy {
     }
 }
 
-struct Sidebar: View {
+struct SidebarView: View {
     @Binding var selection: SidebarItem?
     @EnvironmentObject private var application: ApplicationCoordinator
     @AppStorage(AppStorageKey.expandedSubjectIDs)
@@ -55,6 +55,20 @@ private struct CatalogSidebarSections: View {
 
     var body: some View {
         List(selection: $selection) {
+            if let error = ExamCatalog.loadError {
+                Section("Catalogue unavailable") {
+                    Label(
+                        error.localizedDescription,
+                        systemImage: "exclamationmark.triangle.fill"
+                    )
+                    .font(.caption)
+                    .foregroundStyle(.red)
+                    .accessibilityLabel(
+                        "Catalogue unavailable. \(error.localizedDescription)"
+                    )
+                }
+            }
+
             Section("Library") {
                 NavigationLink(value: SidebarItem.documents) {
                     Label("Documents", systemImage: "doc.richtext")

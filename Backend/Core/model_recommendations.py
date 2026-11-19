@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import json
 import math
 from dataclasses import dataclass
 from functools import lru_cache
@@ -10,6 +9,7 @@ from itertools import pairwise
 from pathlib import Path
 from typing import Any
 
+from Backend.Core.json_io import read_json
 from Backend.Core.paths import REPO_ROOT
 
 MODEL_RECOMMENDATIONS_PATH = (
@@ -35,7 +35,7 @@ class OllamaModelRecommendations:
 
 @lru_cache(maxsize=1)
 def model_recommendations() -> OllamaModelRecommendations:
-    payload = json.loads(MODEL_RECOMMENDATIONS_PATH.read_text(encoding="utf-8"))
+    payload = read_json(MODEL_RECOMMENDATIONS_PATH)
     return parse_model_recommendations(payload)
 
 
@@ -133,7 +133,7 @@ def handle_local_model_guidance(args: Any) -> int:
         return 0
     gib = 1 << 30
     budget = min(available, physical - max(4 * gib, (physical + 3) // 4))
-    payload = json.loads(MODEL_RECOMMENDATIONS_PATH.read_text(encoding="utf-8"))
+    payload = read_json(MODEL_RECOMMENDATIONS_PATH)
     candidates = [
         (row["model"], math.ceil(row["download_size_gb"] * 10**9))
         for row in reversed(payload["tiers"])

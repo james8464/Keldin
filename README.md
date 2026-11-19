@@ -1,6 +1,6 @@
 # Keldin
 
-Native macOS app and Python backend for generating unofficial A-level practice papers,
+Native macOS app and Python backend for unofficial A-level practice papers,
 with a French NSI extension in development.
 
 The app, build targets, backend helper, bundle identifier and new storage paths
@@ -9,6 +9,50 @@ Keldin data. See [migration notes](docs/keldin-migration.md) for sandbox and
 Keychain access limits and the manual import action.
 The editable app icon is `macOS/Keldin/AppIcon.icon`, an Icon Composer
 document with seven separate page shapes.
+
+## What it does
+
+Keldin generates exam-style practice papers and marking guidance on a Mac and writes
+them as PDFs. The app covers:
+
+- AQA Accounting Papers 1–2, AQA Business Papers 1–3, AQA Computer Science Papers 1–2
+  and topic banks, OCR Computer Science Papers 1–2, and AQA, OCR and Edexcel A
+  Economics Papers 1–3.
+- A question paper and mark scheme for each run, plus a source insert where the paper
+  needs one.
+- A layout preview that paginates a paper without calling a model, so page furniture
+  and answer space can be checked before spending compute.
+- Documents and History views for generated files, and a Mac Benchmark for hardware
+  speed. Benchmark results describe the Mac, not paper quality.
+- A provider choice per run: two local routes, three hosted ones, and one on-device
+  model, listed below.
+
+Subjects and boards come from `Resources/generator-registry.json`. The catalogue also
+lists wider subjects that are not finished; the app shows only families marked
+`advertised` in the registry.
+
+## Model providers
+
+| Provider | Where it runs | Notes |
+| --- | --- | --- |
+| Ollama | Local | No API key needed; the model must fit memory and disk. |
+| Local models (MLX) | Local | Uses prepared local weights on Apple Silicon. |
+| OpenAI | Hosted | Your API key and explicit consent. |
+| Anthropic | Hosted | Your API key and explicit consent. |
+| DeepSeek | Hosted | French NSI only; your API key and explicit consent. |
+| Apple Intelligence | On-device | Bounded system model; cannot produce complete French NSI papers. |
+
+API keys are stored in Keychain. Nothing leaves the Mac until you consent to a
+hosted request.
+
+## Requirements
+
+- macOS 15 or later on Apple Silicon.
+- Xcode 26.4.1 with the command-line tools selected, plus XcodeGen
+  (`brew install xcodegen`).
+- Python 3.12 for the backend virtual environment.
+- Poppler for the PDF checks (`brew install poppler`).
+- A local model that fits the Mac, or an account and API key for a hosted provider.
 
 ## French NSI prototype
 
@@ -43,6 +87,7 @@ are not live AI qualification evidence. See the
 
 ```bash
 cd macOS
+make backend-env     # once: creates .venv and installs backend dependencies
 make build-and-run
 ```
 
@@ -51,6 +96,17 @@ If Xcode command-line tools are selected instead of Xcode:
 ```bash
 sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
 ```
+
+## First run
+
+1. Pick a subject and board in the sidebar, then a paper.
+2. Open Settings and choose a provider. For Ollama, run **Check this Mac** before
+   downloading a model.
+3. Optionally run a layout preview to check pagination without a model call.
+4. Generate the paper and open both PDFs from Documents. PDFs are written to the output
+   folder chosen in Settings (Downloads for a direct build).
+5. Read the question paper and mark scheme before using them. Automated checks do not
+   certify their content.
 
 ## Build checks
 
@@ -171,7 +227,14 @@ python bridge.py generate --subject accounting_aqa --paper 2 --output ~/Download
 - `Resources/computer-science/ocr/`: OCR H446 Papers 1–2 and aggregate calibration evidence.
 - `Resources/business/aqa/`: AQA 7132 Papers 1–3, source insert, and aggregate calibration evidence.
 - `Resources/accounting/aqa/`: AQA 7127 Papers 1–2 and aggregate calibration evidence.
+- `Resources/configured-generators/`: shared rule-driven generator for registry entries
+  without their own package, such as AQA Mathematics and Cambridge International.
+- `Resources/mathematics/aqa/`: AQA Mathematics syllabus data for the shared
+  configured generator.
+- `Resources/france/`: French NSI source register and case-study data.
+- `Backend/Core/france/`: French NSI authoring, review, and paper code.
 - `Resources/ollama-model-recommendations.json`: hardware-aware local-model guidance.
+- `tools/`: maintenance, qualification, and audit CLIs.
 - `tests/`: backend integration tests.
 
 ## Architecture and quality analysis

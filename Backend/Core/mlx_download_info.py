@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import argparse
-import json
 import re
 from collections.abc import Callable
 from fnmatch import fnmatchcase
@@ -11,6 +10,7 @@ from pathlib import Path
 from typing import Any
 
 from Backend.Core.events import emit
+from Backend.Core.json_io import read_json
 from Backend.Core.mlx_setup import (
     MLX_MODEL_PATTERNS,
     MLXSetupError,
@@ -66,7 +66,7 @@ def _complete_cache(path: Path) -> tuple[bool, int]:
         # A snapshot directory can exist before every shard has arrived.
         # Do not describe a partial download as an offline-ready cache.
         try:
-            weights = json.loads(index.read_text(encoding="utf-8"))["weight_map"]
+            weights = read_json(index)["weight_map"]
             complete = (
                 isinstance(weights, dict)
                 and bool(weights)

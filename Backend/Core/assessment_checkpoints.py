@@ -18,6 +18,7 @@ from typing import Any, Literal, cast
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
 from Backend.Core.exam_blueprints import GeneratedQuestion
+from Backend.Core.json_io import read_json
 
 
 class DeferredCheckpoints:
@@ -290,7 +291,7 @@ class AssessmentCheckpointStore:
                 "items": {},
             }
         try:
-            document = json.loads(self.path.read_text(encoding="utf-8"))
+            document = read_json(self.path)
         except (OSError, UnicodeDecodeError, json.JSONDecodeError) as error:
             raise CheckpointCorrupt(f"checkpoint is unreadable: {self.path}") from error
         if not isinstance(document, dict) or document.get("schema_version") != 1:

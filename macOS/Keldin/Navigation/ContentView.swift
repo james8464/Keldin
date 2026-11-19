@@ -27,7 +27,7 @@ struct ContentView: View {
                 let layoutMode = WorkspaceLayoutPolicy.mode(for: geometry.size.width)
 
                 NavigationSplitView(columnVisibility: columnVisibility(for: layoutMode)) {
-                    Sidebar(selection: $catalog.sidebarSelection)
+                    SidebarView(selection: $catalog.sidebarSelection)
                 } detail: {
                     switch catalog.sidebarSelection ?? .board(catalog.selectedBoardID) {
                     case let .board(id):

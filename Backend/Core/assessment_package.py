@@ -28,6 +28,7 @@ from Backend.Core.computer_science_authoring import (
     validate_aqa_cs_reviews,
 )
 from Backend.Core.generator_registry import generator_capability
+from Backend.Core.json_io import read_json
 from Backend.Core.level_of_response import (
     BoardLevelPolicy,
     LevelOfResponseEngine,
@@ -57,7 +58,7 @@ class AssessmentPackageCompatibilityError(ValueError):
 
 
 def load_assessment_package(path: Path) -> dict[str, Any]:
-    document = json.loads(path.read_text(encoding="utf-8"))
+    document = read_json(path)
     if not isinstance(document, dict):
         raise AssessmentPackageCompatibilityError(
             "Assessment package must contain a JSON object."

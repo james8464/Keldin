@@ -14,6 +14,7 @@ from tempfile import TemporaryDirectory
 import pymupdf as fitz
 
 from Backend.Core.exam_blueprints import GeneratedPaper, GeneratedQuestion
+from Backend.Core.json_io import read_json
 from Backend.Core.layout_master import LayoutConformanceError
 from Backend.Core.paths import REPO_ROOT
 from Backend.Core.preview_presentation import preview_presentation
@@ -217,7 +218,7 @@ def verify_business_paper_two_scheme(
     from Backend.Core.assessment_package import _extract_items
 
     try:
-        package = json.loads(assessment_path.read_text(encoding="utf-8"))
+        package = read_json(assessment_path)
         raw = package.get("blueprint") or {}
         questions_raw = [
             q

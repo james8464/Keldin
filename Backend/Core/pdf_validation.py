@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import json
 import math
 import re
 import statistics
@@ -15,6 +14,7 @@ from typing import Any
 
 import pymupdf as fitz
 
+from Backend.Core.json_io import read_json
 from Backend.Core.paths import REPO_ROOT
 from Backend.Core.pdf_text import TEXT_DICT_WITHOUT_IMAGES
 
@@ -1002,7 +1002,7 @@ def _validate_typography_profile(
 
 @lru_cache(maxsize=1)
 def _layout_profiles() -> dict[tuple[str, str], dict[str, Any]]:
-    payload = json.loads(LAYOUT_PROFILES_PATH.read_text(encoding="utf-8"))
+    payload = read_json(LAYOUT_PROFILES_PATH)
     if payload.get("schema_version") != 1:
         raise ValueError("unsupported layout profile schema")
     return {

@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import json
 import math
 import os
 from collections.abc import Iterable
@@ -10,6 +9,8 @@ from dataclasses import dataclass
 from fractions import Fraction
 from pathlib import Path
 from typing import Any
+
+from Backend.Core.json_io import read_json
 
 
 class LayoutConformanceError(ValueError):
@@ -128,7 +129,7 @@ class PaperMaster:
 
 
 def load_layout_master(path: Path) -> PaperMaster:
-    payload = json.loads(path.read_text(encoding="utf-8"))
+    payload = read_json(path)
     if payload.get("schema_version") != 2:
         raise ValueError(
             f"unsupported layout-master schema: {payload.get('schema_version')}"

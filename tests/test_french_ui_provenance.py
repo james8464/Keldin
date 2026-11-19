@@ -92,7 +92,12 @@ def test_public_french_request_uses_model_without_family_fallback_and_verifies_i
         assert flag in request
     assert "savedFrenchFamilies" not in public
     assert "excludedFamilies" not in public
-    assert "KELDIN_API_KEY" in public
+    # The French path resolves its hosted credential and the shared builder
+    # exports it as KELDIN_API_KEY.
+    assert "BackendEnvironment.make(" in public
+    assert "hostedAPIKey: hostedAPIKey(for: request.provider)" in public
+    environment = (ROOT / "Services/BackendEnvironment.swift").read_text()
+    assert '"KELDIN_API_KEY"' in environment
     assert "--api-key" not in request
     for field in ("provider", "model", "seed"):
         assert f"publication.identity.{field} == configuration.{field}" in request

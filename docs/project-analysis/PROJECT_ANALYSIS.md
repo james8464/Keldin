@@ -77,7 +77,7 @@ well-written question in the wrong typography and pagination is not either.
 
 ```mermaid
 flowchart LR
-    A["SwiftUI subject / board / paper selection"] --> B["AppViewModel.generate()"]
+    A["SwiftUI subject / board / paper selection"] --> B["ApplicationCoordinator.generate()"]
     B --> C["BackendClient Process"]
     C --> D["bridge.py JSONL CLI"]
     D --> E["Backend.Core.generation.handle_generate()"]
@@ -95,8 +95,8 @@ flowchart LR
 
 ### 1. Catalogue and selection
 
-`macOS/Keldin/AppModels.swift` and the runtime resources load subject and
-board metadata. `macOS/Keldin/AppConfiguration.swift` joins the broad
+`macOS/Keldin/Domain/CatalogModels.swift` and the runtime resources load subject
+and board metadata. `macOS/Keldin/AppConfiguration.swift` joins the broad
 catalogue with `Resources/generator-registry.json`, so only advertised generator
 families are shown as ready.
 
@@ -107,7 +107,7 @@ reference is not the same as implementing or verifying a generator.
 
 ### 2. Swift state and command construction
 
-`macOS/Keldin/AppViewModel.swift` owns the selected board, paper, provider,
+`macOS/Keldin/State/ApplicationCoordinator.swift` owns the selected board, paper, provider,
 model, output location, consent state, generation progress, and output files.
 When generation starts it:
 
@@ -483,7 +483,7 @@ Relevant current Apple guidance:
 ### Architectural pressure points
 
 1. **Central dispatch hotspot.** `handle_generate` knows every generator.
-2. **Broad Swift state owner.** `AppViewModel` handles selection, preferences,
+2. **Broad Swift state owner.** `ApplicationCoordinator` handles selection, preferences,
    credentials, consent, process lifecycle, ETA, notifications, files, benchmark,
    diagnostics, and UI presentation.
 3. **Parallel generator frameworks.** Seven packages repeat infrastructure.
@@ -532,7 +532,7 @@ Extraction result:
 
 Most connected architectural nodes include `build_paper_blueprint`,
 `load_builtin_paper_config`, `load_syllabus`, `GeneratedQuestion`,
-`AppViewModel`, `GeneratedPaper`, and `render_question_paper`. This confirms that
+`ApplicationCoordinator`, `GeneratedPaper`, and `render_question_paper`. This confirms that
 blueprint/configuration construction, shared document models, rendering, and the
 Swift state owner are the main change-amplification points.
 
@@ -541,7 +541,7 @@ Future agents should query the graph before opening broad source areas:
 ```bash
 graphify query "How does the Swift UI produce a PDF?"
 graphify query "Where is paper difficulty calibrated?"
-graphify path "AppViewModel" "BackendClient"
+graphify path "ApplicationCoordinator" "BackendClient"
 graphify affected "build_paper_blueprint" --depth 2
 graphify explain "conform_generated_documents"
 ```

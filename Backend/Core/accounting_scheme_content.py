@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import html
-import json
 import re
 from decimal import Decimal
 from pathlib import Path
@@ -11,6 +10,7 @@ from pathlib import Path
 import pymupdf
 
 from Backend.Core.exam_blueprints import GeneratedPaper, GeneratedQuestion
+from Backend.Core.json_io import read_json
 from Backend.Core.layout_master import LayoutConformanceError
 from Backend.Core.subjects.accounting import solve_accounting_calculation
 
@@ -42,7 +42,7 @@ def _compact(text: str) -> str:
 
 def _require_paper_shape(paper: GeneratedPaper, paper_id: str = "paper_1") -> None:
     from aqaaccountgen.configs import RULES
-    from aqaaccountgen.generator import _number
+    from aqaaccountgen.numbering import question_number as printed_question_number
 
     rule = RULES[paper_id]
     if (
@@ -67,7 +67,7 @@ def _require_paper_shape(paper: GeneratedPaper, paper_id: str = "paper_1") -> No
         ]
         expected = [
             (
-                _number(rule.id, section_rule.id, index),
+                printed_question_number(rule.id, section_rule.id, index),
                 q.id,
                 q.kind,
                 q.marks,
@@ -410,7 +410,7 @@ def verify_accounting_scheme(
 
     from Backend.Core.assessment_package import _extract_items
 
-    package = json.loads(assessment_path.read_text(encoding="utf-8"))
+    package = read_json(assessment_path)
     blueprint = package.get("blueprint") or {}
     paper = GeneratedPaper.model_validate(blueprint)
     questions = [
@@ -605,7 +605,7 @@ def verify_accounting_paper_two_scheme(
 
     from Backend.Core.assessment_package import _extract_items
 
-    package = json.loads(assessment_path.read_text(encoding="utf-8"))
+    package = read_json(assessment_path)
     paper = GeneratedPaper.model_validate(package.get("blueprint") or {})
     if not paper_two_policy(paper):
         return None

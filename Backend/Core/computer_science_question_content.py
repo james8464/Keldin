@@ -12,6 +12,7 @@ from typing import cast
 
 import pymupdf
 
+from Backend.Core.json_io import read_json
 from Backend.Core.layout_master import LayoutConformanceError
 from Backend.Core.paths import CS_ROOT
 
@@ -69,7 +70,7 @@ def verify_cs_paper1_questions(
             raise ValueError("CS1 requires a bounded complete assessment package")
         if pdf_path.stat().st_size > _MAX_PDF_BYTES:
             raise ValueError("CS1 question PDF exceeds the existing content budget")
-        package = json.loads(assessment_path.read_text(encoding="utf-8"))
+        package = read_json(assessment_path)
         if (package.get("subject"), package.get("paper")) != ("computer_science", "1"):
             raise ValueError("CS1 content package identity differs")
         raw = package["blueprint"]

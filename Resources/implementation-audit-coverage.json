@@ -65,6 +65,12 @@
       "reason": "Prose/reference material is outside implementation review; content and publication claims are not certified."
     },
     {
+      "path": ".gitattributes",
+      "classification": "configuration-or-runtime-data",
+      "status": "pending",
+      "reason": "No file-level semantic implementation review recorded in this ledger."
+    },
+    {
       "path": ".github/CODEOWNERS",
       "classification": "configuration-or-runtime-data",
       "status": "reviewed",
@@ -190,11 +196,8 @@
     {
       "path": "Backend/Core/assessment_checkpoints.py",
       "classification": "maintained-source",
-      "status": "reviewed",
-      "reason": "Explicit full-file or full baseline plus complete delta review of caller-owned checkpoint admission, persistence, retry and cancellation; attribution and limits recorded in the evidence.",
-      "source_sha256": "dbf6e24d4beee4f1e5d314b82fbcfb8d6212a7403055b5c6e858837e4242729b",
-      "review_evidence": "docs/quality/assessment-checkpoint-admission-review-2026-11-02.md",
-      "review_evidence_sha256": "e85ea2628513021810543d013e846302c5a3384e86b20cc36d400c8cae2b9ca5"
+      "status": "pending",
+      "reason": "No file-level semantic implementation review recorded in this ledger."
     },
     {
       "path": "Backend/Core/assessment_contracts.py",
@@ -217,11 +220,8 @@
     {
       "path": "Backend/Core/assessment_package.py",
       "classification": "maintained-source",
-      "status": "reviewed",
-      "reason": "Recorded complete baseline plus complete independently reviewed repair delta and relevant call paths; not a fresh whole-file or whole-repository read. Targeted tests and source-only render limits remain explicit.",
-      "source_sha256": "54c10cce862565fe30eb01f3bd55d6e48f58660ffdca52a3c62e2121c27a1d3b",
-      "review_evidence": "docs/quality/accounting-level-contract-review.md",
-      "review_evidence_sha256": "56b2f63ac1b9e58b84238ea248129e627acf3d2a74bf8c0bec249eb7c874db22"
+      "status": "pending",
+      "reason": "No file-level semantic implementation review recorded in this ledger."
     },
     {
       "path": "Backend/Core/assessment_prompts.py",
@@ -247,11 +247,8 @@
     {
       "path": "Backend/Core/board_profiles.py",
       "classification": "maintained-source",
-      "status": "reviewed",
-      "reason": "release_gap_audit: EOF. Exact source identity verified at e4649b83; selective dependencies and broader runtime/qualification limits are documented separately.",
-      "source_sha256": "d6847e666e25ed022769c764c541d10d1fd75d3bba34b36d9b25733ebda84305",
-      "review_evidence": "docs/quality/remaining-native-backend-boundaries-review-2026-11-02.md",
-      "review_evidence_sha256": "af676cdb6e47d3d6e61361f2722f7b605c0ef7b3db9afeefcfd5562776c7787d"
+      "status": "pending",
+      "reason": "No file-level semantic implementation review recorded in this ledger."
     },
     {
       "path": "Backend/Core/branding.py",
@@ -265,11 +262,8 @@
     {
       "path": "Backend/Core/business_scheme_content.py",
       "classification": "maintained-source",
-      "status": "reviewed",
-      "reason": "Complete new helper/test file independently read to EOF; versioned printed-credit, body order, owned-date and historical-layout controls. No live-model or official-equivalence claim.",
-      "source_sha256": "81cd6bc655d17a2323b14281ebc8b7dcabd82a926e40e8d1b9f40ff6f6914559",
-      "review_evidence": "docs/quality/business-source-and-marking-review.md",
-      "review_evidence_sha256": "06e603c846a5c676e1b045434cf45573610b3a986ee084130e7d3839dea41af8"
+      "status": "pending",
+      "reason": "No file-level semantic implementation review recorded in this ledger."
     },
     {
       "path": "Backend/Core/calibration_store.py",
@@ -325,11 +319,8 @@
     {
       "path": "Backend/Core/computer_science_question_content.py",
       "classification": "maintained-source",
-      "status": "reviewed",
-      "reason": "Prior complete374-line verifier EOF review plus complete independently reviewed five-line production delta (canonical CS_ROOT import and explicit syllabus path), current377 lines; not a fresh current whole-file EOF read. Complete new 374-line verifier EOF independently reviewed. Owner-bound declared source/prompts/marks/material, bounded resources, A4 and nonempty checks; no production rerender. FSM text/table/node counts only, not exact arrows/state-label graphical equivalence. Evidence-note amendment records actual old-head frozen public HOLD and narrow resource follow-up; original scope/limits remain. Host regression is not repaired frozen-path qualification.",
-      "source_sha256": "e0306b7b6334d32a8c85ca8ae1691c152d75dae91f3c0e1b3e48d5ace7e546f6",
-      "review_evidence": "docs/quality/cs1-on-screen-source-flow-review-2026-11-07.md",
-      "review_evidence_sha256": "f94a21c18976dbf3d0de8485886413e405512a674d6ffd21c3109e3a265a5636"
+      "status": "pending",
+      "reason": "No file-level semantic implementation review recorded in this ledger."
     },
     {
       "path": "Backend/Core/computer_science_reference_solutions.py",
@@ -1526,6 +1517,12 @@
       "review_evidence_sha256": "749f4a81589a0670a4310ea244f7052d0cfe012c1860b159aced7dc2bc3e6896"
     },
     {
+      "path": "Backend/Core/json_io.py",
+      "classification": "maintained-source",
+      "status": "pending",
+      "reason": "No file-level semantic implementation review recorded in this ledger."
+    },
+    {
       "path": "Backend/Core/layout_conformance.py",
       "classification": "maintained-source",
       "status": "pending",
@@ -1534,11 +1531,8 @@
     {
       "path": "Backend/Core/layout_master.py",
       "classification": "maintained-source",
-      "status": "reviewed",
-      "reason": "Layout reviewer read original 492 lines through EOF; author, root and independent reviewers reviewed complete repair deltas (net 48 lines) and final tests. Current 540-line source uses bounded exact-grid search under ordinary monotonic font metrics. No current default-native renderer defect claim.",
-      "source_sha256": "206f00003ea5a1011133269722d7129fae5640d9a1f8e024924fb3878ba512fb",
-      "review_evidence": "docs/quality/reference-and-slot-boundary-review.md",
-      "review_evidence_sha256": "ff98e4bb5e3ec2be7218c3f16bc6ecef8cc83426408de1a1a202fb7228c0ec6b"
+      "status": "pending",
+      "reason": "No file-level semantic implementation review recorded in this ledger."
     },
     {
       "path": "Backend/Core/legacy_migration.py",
@@ -1552,11 +1546,8 @@
     {
       "path": "Backend/Core/level_of_response.py",
       "classification": "maintained-source",
-      "status": "reviewed",
-      "reason": "Complete-file semantic review within the documented boundary scope. Patch-only larger files and final release acceptance remain separate; no whole-project clearance.",
-      "source_sha256": "4a77bb0f1a3e7960328bbc0abad77983dfb458d430bdd86039003289afa46d81",
-      "review_evidence": "docs/quality/core-policy-boundaries-review-2026-10-29.md",
-      "review_evidence_sha256": "c472b24feceb968224a9a24e3d19c1aa0187ed66cee254f050567baa498e57e7"
+      "status": "pending",
+      "reason": "No file-level semantic implementation review recorded in this ledger."
     },
     {
       "path": "Backend/Core/mark_scheme_enrichment.py",
@@ -1597,11 +1588,8 @@
     {
       "path": "Backend/Core/mlx_download_info.py",
       "classification": "maintained-source",
-      "status": "reviewed",
-      "reason": "Author read the final 193-line file through EOF, traced cache/setup consumers and verified the bounded empty-required-file repair, retaining valid empty BPE merge tables. No real model setup, UI or paper-quality certification.",
-      "source_sha256": "dbf5ed828d4fbd51c1351e0fd4997810e64ba53128d6c3cc15a3991c90dd8a4c",
-      "review_evidence": "docs/quality/mlx-cache-preflight-review-2026-11-03.md",
-      "review_evidence_sha256": "8f4fa032862aac34bb72fc7878df447972c405784b689c50cbcc1cec21acb5db"
+      "status": "pending",
+      "reason": "No file-level semantic implementation review recorded in this ledger."
     },
     {
       "path": "Backend/Core/mlx_setup.py",
@@ -1636,11 +1624,8 @@
     {
       "path": "Backend/Core/ocr_scheme_content.py",
       "classification": "maintained-source",
-      "status": "reviewed",
-      "reason": "Complete file-level review at the recorded source hash; scope and limits are in the linked note. Not whole-project or live-quality certification.",
-      "source_sha256": "fe9af01297f6cee8ecdbe8e9de343eec6c6acdd8cccd2262af4739e0ad9bc956",
-      "review_evidence": "docs/quality/shared-generation-boundary-audit.md",
-      "review_evidence_sha256": "10afd18fa24faad1a480e60634761cb46ebf9d6d32668062f3ef2f4ed8f0426f"
+      "status": "pending",
+      "reason": "No file-level semantic implementation review recorded in this ledger."
     },
     {
       "path": "Backend/Core/ollama.py",
@@ -1750,11 +1735,8 @@
     {
       "path": "Backend/Core/pdf_validation.py",
       "classification": "maintained-source",
-      "status": "reviewed",
-      "reason": "Existing complete baseline (answer-field-clearance review) plus complete text extraction delta; image resolution, positions, visible marks and explicit padding checks remain separate.",
-      "source_sha256": "558e10e939519c9768c9dc3423b99aae12453b1ddd919e79477a0dfd12f935cd",
-      "review_evidence": "docs/quality/pdf-text-inspection-memory-review.md",
-      "review_evidence_sha256": "6d1791c9c5ded24228f90cbd0d28464bebe14c8190a8e4a6429b103df33beb36"
+      "status": "pending",
+      "reason": "No file-level semantic implementation review recorded in this ledger."
     },
     {
       "path": "Backend/Core/preview_presentation.py",
@@ -1774,11 +1756,8 @@
     {
       "path": "Backend/Core/psychometrics.py",
       "classification": "maintained-source",
-      "status": "reviewed",
-      "reason": "Root read original 558-line module through EOF; author, root and independent reviewer then reviewed the exact two-line saved-policy check and complete new tests. Composite source review pinned to current 560 lines, not a claimed fresh full reread. Synthetic checks do not authenticate external approval.",
-      "source_sha256": "19d9d10a1800fae0ee4977d03acfab9e237bf04d78a37169ee0c04ec7af4da5f",
-      "review_evidence": "docs/quality/assessment-helper-boundary-review.md",
-      "review_evidence_sha256": "0d0fe0dd3e01b2739fa5321d40675e60e8cb275c1d56cefe60d462838789e6f1"
+      "status": "pending",
+      "reason": "No file-level semantic implementation review recorded in this ledger."
     },
     {
       "path": "Backend/Core/qualification/__init__.py",
@@ -2094,6 +2073,12 @@
     },
     {
       "path": "Resources/accounting/aqa/generator/aqaaccountgen/marking_policy.py",
+      "classification": "maintained-source",
+      "status": "pending",
+      "reason": "No file-level semantic implementation review recorded in this ledger."
+    },
+    {
+      "path": "Resources/accounting/aqa/generator/aqaaccountgen/numbering.py",
       "classification": "maintained-source",
       "status": "pending",
       "reason": "No file-level semantic implementation review recorded in this ledger."
@@ -5569,11 +5554,8 @@
     {
       "path": "macOS/Keldin/Application/KeldinApp.swift",
       "classification": "maintained-source",
-      "status": "reviewed",
-      "reason": "Fresh full 67-line EOF review of scene ownership, startup factory ordering and isolated XCTest launch. Whole-app interaction coverage remains separate.",
-      "source_sha256": "598630bc372237cae43ffb797c5aa154685632bf3d28568d6a060e21c3611ede",
-      "review_evidence": "docs/quality/native-startup-import-review-2026-11-02.md",
-      "review_evidence_sha256": "3be606ce9a37c34aae59be0dbe2cac0a1b6aad389ea3ade09cd64323500681fb"
+      "status": "pending",
+      "reason": "No file-level semantic implementation review recorded in this ledger."
     },
     {
       "path": "macOS/Keldin/Application/KeldinMigration.swift",
@@ -5744,25 +5726,25 @@
       "reason": "Visual/font asset requires a separate design, rendering and rights review, not a code-practice review."
     },
     {
+      "path": "macOS/Keldin/Components/GeneratedFilesTable.swift",
+      "classification": "maintained-source",
+      "status": "pending",
+      "reason": "No file-level semantic implementation review recorded in this ledger."
+    },
+    {
       "path": "macOS/Keldin/Components/NativeVisualStyle.swift",
       "classification": "maintained-source",
-      "status": "reviewed",
-      "reason": "Root complete-file EOF review of the final source, followed by independent source/test delta review. Native tests passed; hang causality and final native acceptance are not claimed.",
-      "source_sha256": "1db48b8dfbdfd36d2b958568c766cf0741b929fd139e0d75e4d4f86d64cc71ab",
-      "review_evidence": "docs/quality/sidebar-preference-stability-2026-11-03.md",
-      "review_evidence_sha256": "badf114cc4ac22e82ba74e584e9a539ba8935591abc677fabb45144c65afd8c5"
+      "status": "pending",
+      "reason": "No file-level semantic implementation review recorded in this ledger."
     },
     {
-      "path": "macOS/Keldin/Components/SharedViews.swift",
+      "path": "macOS/Keldin/Components/PanelEmptyState.swift",
       "classification": "maintained-source",
-      "status": "reviewed",
-      "reason": "quality_status_review: EOF. Exact source identity verified at e4649b83; selective dependencies and broader runtime/qualification limits are documented separately.",
-      "source_sha256": "828e4ec018f2911aa840515f26c89bb0aac98f1f2ada4bee668a17973302fdfa",
-      "review_evidence": "docs/quality/remaining-native-backend-boundaries-review-2026-11-02.md",
-      "review_evidence_sha256": "af676cdb6e47d3d6e61361f2722f7b605c0ef7b3db9afeefcfd5562776c7787d"
+      "status": "pending",
+      "reason": "No file-level semantic implementation review recorded in this ledger."
     },
     {
-      "path": "macOS/Keldin/Domain/AppModels.swift",
+      "path": "macOS/Keldin/Components/WorkspaceLayout.swift",
       "classification": "maintained-source",
       "status": "pending",
       "reason": "No file-level semantic implementation review recorded in this ledger."
@@ -5775,6 +5757,36 @@
       "source_sha256": "02ebc95c6b5a67b42ce3a0a9fa542b8eace0777be4a172798e8a9d42498c5b2e",
       "review_evidence": "docs/quality/remaining-native-backend-boundaries-review-2026-11-02.md",
       "review_evidence_sha256": "af676cdb6e47d3d6e61361f2722f7b605c0ef7b3db9afeefcfd5562776c7787d"
+    },
+    {
+      "path": "macOS/Keldin/Domain/BackendEventModels.swift",
+      "classification": "maintained-source",
+      "status": "pending",
+      "reason": "No file-level semantic implementation review recorded in this ledger."
+    },
+    {
+      "path": "macOS/Keldin/Domain/BenchmarkModels.swift",
+      "classification": "maintained-source",
+      "status": "pending",
+      "reason": "No file-level semantic implementation review recorded in this ledger."
+    },
+    {
+      "path": "macOS/Keldin/Domain/CatalogModels.swift",
+      "classification": "maintained-source",
+      "status": "pending",
+      "reason": "No file-level semantic implementation review recorded in this ledger."
+    },
+    {
+      "path": "macOS/Keldin/Domain/CustomAssessmentModels.swift",
+      "classification": "maintained-source",
+      "status": "pending",
+      "reason": "No file-level semantic implementation review recorded in this ledger."
+    },
+    {
+      "path": "macOS/Keldin/Domain/DocumentModels.swift",
+      "classification": "maintained-source",
+      "status": "pending",
+      "reason": "No file-level semantic implementation review recorded in this ledger."
     },
     {
       "path": "macOS/Keldin/Domain/FrenchAssessmentRequest.swift",
@@ -5817,6 +5829,12 @@
       "source_sha256": "c0b204433261b12cbd3796101b4ee6a9520a8058c5d3910e7f031023d924d359",
       "review_evidence": "docs/quality/native-startup-import-review-2026-11-02.md",
       "review_evidence_sha256": "3be606ce9a37c34aae59be0dbe2cac0a1b6aad389ea3ade09cd64323500681fb"
+    },
+    {
+      "path": "macOS/Keldin/Domain/GenerationModels.swift",
+      "classification": "maintained-source",
+      "status": "pending",
+      "reason": "No file-level semantic implementation review recorded in this ledger."
     },
     {
       "path": "macOS/Keldin/Domain/GenerationPresentation.swift",
@@ -5868,6 +5886,12 @@
     },
     {
       "path": "macOS/Keldin/Domain/PaperQualityGuidance.swift",
+      "classification": "maintained-source",
+      "status": "pending",
+      "reason": "No file-level semantic implementation review recorded in this ledger."
+    },
+    {
+      "path": "macOS/Keldin/Domain/ProviderModels.swift",
       "classification": "maintained-source",
       "status": "pending",
       "reason": "No file-level semantic implementation review recorded in this ledger."
@@ -6062,6 +6086,12 @@
       "reason": "No file-level semantic implementation review recorded in this ledger."
     },
     {
+      "path": "macOS/Keldin/Services/BackendEnvironment.swift",
+      "classification": "maintained-source",
+      "status": "pending",
+      "reason": "No file-level semantic implementation review recorded in this ledger."
+    },
+    {
       "path": "macOS/Keldin/Services/BackendProcessLifecycle.swift",
       "classification": "maintained-source",
       "status": "reviewed",
@@ -6102,6 +6132,12 @@
       "source_sha256": "3bae77bab523657c214c2d734c3ded751b89f793d42973bc2ba4cd1c07336303",
       "review_evidence": "docs/quality/paper-conformance-file-review-2026-11-02.md",
       "review_evidence_sha256": "5501a7e1c162767e464cdef4cffd7706adadb060b3a7188eb28fa36ea13cf0e3"
+    },
+    {
+      "path": "macOS/Keldin/Services/WorkNotificationCenter.swift",
+      "classification": "maintained-source",
+      "status": "pending",
+      "reason": "No file-level semantic implementation review recorded in this ledger."
     },
     {
       "path": "macOS/Keldin/State/ApplicationCoordinator.swift",
@@ -6164,6 +6200,12 @@
       "reason": "No file-level semantic implementation review recorded in this ledger."
     },
     {
+      "path": "macOS/Keldin/State/RunSessionModels.swift",
+      "classification": "maintained-source",
+      "status": "pending",
+      "reason": "No file-level semantic implementation review recorded in this ledger."
+    },
+    {
       "path": "macOS/Keldin/State/SettingsActionPresentation.swift",
       "classification": "maintained-source",
       "status": "reviewed",
@@ -6201,6 +6243,12 @@
     },
     {
       "path": "macOS/Tests/AppleIntelligenceProviderTests.swift",
+      "classification": "test",
+      "status": "pending",
+      "reason": "No file-level semantic implementation review recorded in this ledger."
+    },
+    {
+      "path": "macOS/Tests/BackendEnvironmentTests.swift",
       "classification": "test",
       "status": "pending",
       "reason": "No file-level semantic implementation review recorded in this ledger."

@@ -38,9 +38,10 @@ def test_uk_provider_picker_labels_deepseek_without_making_it_selectable():
         1
     ].split("ForEach(board.supportedProviders)", 1)[0]
     assert 'Label("DeepSeek (French NSI only)"' in selected_only
+    compact_selected_only = " ".join(selected_only.split())
     assert (
-        ".tag(AIProvider.deepSeek)\n                            .selectionDisabled(true)"
-        in selected_only
+        ".tag(AIProvider.deepSeek) .selectionDisabled(true)"
+        in compact_selected_only
     )
     assert "ForEach(board.supportedProviders)" in workspace
     catalog = json.loads((APP / "Localizable.xcstrings").read_text())["strings"]

@@ -93,7 +93,6 @@ struct GeneratorWorkspace: View {
 }
 
 private struct PaperConfiguration: View {
-    @Environment(\.locale) private var locale
     @EnvironmentObject private var application: ApplicationCoordinator
     let board: ExamBoardOption
 
@@ -150,89 +149,15 @@ private struct PaperConfiguration: View {
                 .id(application.selectedPaperDetail)
             }
 
-            Section("Generation") {
-                Picker(
-                    "AI provider",
-                    selection: Binding(
-                        get: { application.aiProvider },
-                        set: { application.selectAIProvider($0) }
-                    )
-                ) {
-                    if application.aiProvider == .deepSeek {
-                        Label("DeepSeek (French NSI only)", systemImage: AIProvider.deepSeek.systemImage)
-                            .tag(AIProvider.deepSeek)
-                            .selectionDisabled(true)
-                    }
-                    ForEach(board.supportedProviders) { provider in
-                        Label(provider.title, systemImage: provider.systemImage)
-                            .tag(provider)
-                    }
-                }
-                .pickerStyle(.menu)
-
-                LabeledContent("Model") {
-                    HStack(spacing: 8) {
-                        Text(application.activeModelName)
-                            .foregroundStyle(.secondary)
-                            .lineLimit(1)
-                            .truncationMode(.middle)
-                            .help(application.activeModelName)
-                        if application.aiProvider == .ollama && application.selectedModelIsRecommended {
-                            Text("From model guide")
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
-                        }
-                    }
-                }
-                // LabeledContent does not expose every Text child in this row on macOS.
-                .accessibilityElement(children: .ignore)
-                .accessibilityLabel("Model")
-                .accessibilityValue(Text(verbatim: modelAccessibilityValue))
-
-                if board.usesAI && !application.dryRun {
-                    ModelQualityAdviceView(provider: application.aiProvider, model: application.activeModelName)
-                }
-
-                LabeledContent("Save to") {
-                    HStack(spacing: 8) {
-                        Text(application.outputFolderDisplayPath)
-                            .foregroundStyle(.secondary)
-                            .lineLimit(1)
-                            .truncationMode(.middle)
-                            .help(application.outputFolderDisplayPath)
-                        Button("Choose…", action: application.chooseOutputFolder)
-                    }
-                }
-
-                Toggle(
-                    "Create a layout preview",
-                    isOn: Binding(
-                        get: { application.dryRun },
-                        set: { application.setDryRun($0) }
-                    )
-                )
-                .help("Preview layout without contacting an AI provider. Preview questions are not release output.")
-            }
+            GenerationSettingsSection(board: board)
 
             if !application.isRunning,
                application.lastQualityReport != nil || !application.currentGenerationFiles.isEmpty {
                 PaperQualitySummarySection(report: application.lastQualityReport, frenchReport: application.lastFrenchDraftQualityReport)
             }
 
-            if !application.isRunning, let blocker = application.generationBlockerResource {
-                Section("Action required") {
-                    HStack(alignment: .firstTextBaseline, spacing: 10) {
-                        Image(systemName: "exclamationmark.triangle.fill")
-                            .foregroundStyle(.orange)
-                            .accessibilityHidden(true)
-                        Text(InterfaceText.localizedResource(blocker, locale: locale))
-                        Spacer()
-                        SettingsLink {
-                            Text("Open Settings…")
-                        }
-                    }
-                    .accessibilityElement(children: .combine)
-                }
+            if !application.isRunning {
+                GenerationBlockerSection(blocker: application.generationBlockerResource)
             }
         }
         .formStyle(.grouped)
@@ -246,13 +171,6 @@ private struct PaperConfiguration: View {
             : board.fullPapers
     }
 
-    private var modelAccessibilityValue: String {
-        guard application.aiProvider == .ollama, application.selectedModelIsRecommended else {
-            return application.activeModelName
-        }
-        let guideLabel = String(localized: InterfaceText.localizedResource("From model guide", locale: locale))
-        return "\(application.activeModelName), \(guideLabel)"
-    }
 }
 
 private struct RecentDocuments: View {
@@ -343,104 +261,7 @@ private struct QualityReviewView: View {
             }
 
             if let report = application.lastQualityReport {
-                Section("Latest package") {
-                    LabeledContent("Items", value: "\(report.itemCount)")
-                    LabeledContent("Saved mode", value: text(report.savedMode.titleResource))
-                    if let subject = report.identity.subject,
-                       let paper = report.identity.paper {
-                        LabeledContent("Saved target", value: "\(subject) · \(paper)")
-                    }
-                    if let seed = report.identity.seed {
-                        LabeledContent("Saved seed", value: "\(seed)")
-                    }
-                    if let jobID = report.identity.jobID {
-                        LabeledContent("Saved job", value: jobID)
-                    }
-                    if let formID = report.identity.formID {
-                        LabeledContent("Saved form", value: formID)
-                    }
-                    if let generatorID = report.identity.generatorID {
-                        let value = [generatorID, report.identity.generatorVersion]
-                            .compactMap { $0 }
-                            .joined(separator: " · ")
-                        LabeledContent("Saved generator", value: value)
-                    }
-                    LabeledContent(
-                        "Fingerprints",
-                        value: text(report.fingerprintsVerified ? "Verified" : "Failed")
-                    )
-                    LabeledContent(
-                        "History checks",
-                        value: "\(report.historicComparisons)"
-                    )
-                    if let nearest = report.nearestSimilarity {
-                        LabeledContent(
-                            "Nearest match",
-                            value: nearest.formatted(.percent.precision(.fractionLength(1)))
-                        )
-                    }
-                    LabeledContent("Validated PDFs", value: "\(report.pdfCount)")
-                    LabeledContent(
-                        "Demand profile",
-                        value: text(GenerationQualityPolicy.presentation(for: report, locale: locale).referenceDemandState.titleResource)
-                    )
-                    if let count = report.candidatePathCount {
-                        LabeledContent("Legal candidate paths", value: "\(count)")
-                    }
-                    if let marks = report.candidateMarkRange, marks.count == 2 {
-                        LabeledContent("Candidate marks") {
-                            Text("\(marks[0]) to \(marks[1])")
-                        }
-                    }
-                    if let marks = report.printedMarks {
-                        LabeledContent("Printed marks (all alternatives)", value: "\(marks)")
-                    }
-                    if report.referenceDemandItems > 0 {
-                        LabeledContent(
-                            "Demand evidence",
-                            value: "\(report.referenceDemandItems) items · \(report.referenceDemandDocuments) reference papers"
-                        )
-                    }
-                    if let distance = report.referenceDemandMaxDistance {
-                        LabeledContent(
-                            "Maximum demand drift",
-                            value: distance.formatted(.number.precision(.fractionLength(2)))
-                        )
-                    }
-                    if report.difficultyReviewedItems > 0 {
-                        LabeledContent(
-                            "Independent item reviews",
-                            value: "\(report.difficultyReviewedItems) of \(report.referenceDemandItems)"
-                        )
-                        LabeledContent(
-                            "Reasoning range",
-                            value: fitCount(
-                                report.difficultyReasoningFitItems,
-                                reviewed: report.difficultyReviewedItems
-                            )
-                        )
-                        LabeledContent(
-                            "Context use",
-                            value: fitCount(
-                                report.difficultyContextFitItems,
-                                reviewed: report.difficultyReviewedItems
-                            )
-                        )
-                        LabeledContent(
-                            "Shortcut resistance",
-                            value: fitCount(
-                                report.difficultyShortcutFitItems,
-                                reviewed: report.difficultyReviewedItems
-                            )
-                        )
-                    }
-                    if let coverage = report.referenceDemandExtractionCoverage {
-                        LabeledContent(
-                            "Reference extraction",
-                            value: coverage.formatted(.percent.precision(.fractionLength(0)))
-                        )
-                    }
-                }
+                LatestPackageQualitySection(report: report)
             }
 
             if application.isRunning || !application.progressEntries.isEmpty {
@@ -569,6 +390,227 @@ private extension GenerationQualityState {
         case .atCreation: .secondary
         case .unknown: .secondary
         case .insufficient: .orange
+        }
+    }
+}
+
+private struct LatestPackageQualitySection: View {
+    @Environment(\.locale) private var locale
+    let report: GenerationQualityReport
+
+    var body: some View {
+        Section("Latest package") {
+            LabeledContent("Items", value: "\(report.itemCount)")
+            LabeledContent("Saved mode", value: text(report.savedMode.titleResource))
+            if let subject = report.identity.subject,
+               let paper = report.identity.paper {
+                LabeledContent("Saved target", value: "\(subject) · \(paper)")
+            }
+            if let seed = report.identity.seed {
+                LabeledContent("Saved seed", value: "\(seed)")
+            }
+            if let jobID = report.identity.jobID {
+                LabeledContent("Saved job", value: jobID)
+            }
+            if let formID = report.identity.formID {
+                LabeledContent("Saved form", value: formID)
+            }
+            if let generatorID = report.identity.generatorID {
+                let value = [generatorID, report.identity.generatorVersion]
+                    .compactMap { $0 }
+                    .joined(separator: " · ")
+                LabeledContent("Saved generator", value: value)
+            }
+            LabeledContent(
+                "Fingerprints",
+                value: text(report.fingerprintsVerified ? "Verified" : "Failed")
+            )
+            LabeledContent("History checks", value: "\(report.historicComparisons)")
+            if let nearest = report.nearestSimilarity {
+                LabeledContent(
+                    "Nearest match",
+                    value: nearest.formatted(.percent.precision(.fractionLength(1)))
+                )
+            }
+            LabeledContent("Validated PDFs", value: "\(report.pdfCount)")
+            LabeledContent(
+                "Demand profile",
+                value: text(
+                    GenerationQualityPolicy.presentation(for: report, locale: locale)
+                        .referenceDemandState.titleResource
+                )
+            )
+            if let count = report.candidatePathCount {
+                LabeledContent("Legal candidate paths", value: "\(count)")
+            }
+            if let marks = report.candidateMarkRange, marks.count == 2 {
+                LabeledContent("Candidate marks") {
+                    Text("\(marks[0]) to \(marks[1])")
+                }
+            }
+            if let marks = report.printedMarks {
+                LabeledContent("Printed marks (all alternatives)", value: "\(marks)")
+            }
+            if report.referenceDemandItems > 0 {
+                LabeledContent(
+                    "Demand evidence",
+                    value: "\(report.referenceDemandItems) items · \(report.referenceDemandDocuments) reference papers"
+                )
+            }
+            if let distance = report.referenceDemandMaxDistance {
+                LabeledContent(
+                    "Maximum demand drift",
+                    value: distance.formatted(.number.precision(.fractionLength(2)))
+                )
+            }
+            if report.difficultyReviewedItems > 0 {
+                LabeledContent(
+                    "Independent item reviews",
+                    value: "\(report.difficultyReviewedItems) of \(report.referenceDemandItems)"
+                )
+                LabeledContent(
+                    "Reasoning range",
+                    value: fitCount(
+                        report.difficultyReasoningFitItems,
+                        reviewed: report.difficultyReviewedItems
+                    )
+                )
+                LabeledContent(
+                    "Context use",
+                    value: fitCount(
+                        report.difficultyContextFitItems,
+                        reviewed: report.difficultyReviewedItems
+                    )
+                )
+                LabeledContent(
+                    "Shortcut resistance",
+                    value: fitCount(
+                        report.difficultyShortcutFitItems,
+                        reviewed: report.difficultyReviewedItems
+                    )
+                )
+            }
+            if let coverage = report.referenceDemandExtractionCoverage {
+                LabeledContent(
+                    "Reference extraction",
+                    value: coverage.formatted(.percent.precision(.fractionLength(0)))
+                )
+            }
+        }
+    }
+
+    private func fitCount(_ count: Int?, reviewed: Int) -> String {
+        count.map { text("\($0) of \(reviewed)") } ?? text("Unknown")
+    }
+
+    private func text(_ resource: LocalizedStringResource) -> String {
+        String(localized: InterfaceText.localizedResource(resource, locale: locale))
+    }
+}
+
+private struct GenerationSettingsSection: View {
+    @Environment(\.locale) private var locale
+    @EnvironmentObject private var application: ApplicationCoordinator
+    let board: ExamBoardOption
+
+    var body: some View {
+        Section("Generation") {
+            Picker(
+                "AI provider",
+                selection: Binding(
+                    get: { application.aiProvider },
+                    set: { application.selectAIProvider($0) }
+                )
+            ) {
+                if application.aiProvider == .deepSeek {
+                    Label("DeepSeek (French NSI only)", systemImage: AIProvider.deepSeek.systemImage)
+                        .tag(AIProvider.deepSeek)
+                        .selectionDisabled(true)
+                }
+                ForEach(board.supportedProviders) { provider in
+                    Label(provider.title, systemImage: provider.systemImage)
+                        .tag(provider)
+                }
+            }
+            .pickerStyle(.menu)
+
+            LabeledContent("Model") {
+                HStack(spacing: 8) {
+                    Text(application.activeModelName)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
+                        .truncationMode(.middle)
+                        .help(application.activeModelName)
+                    if application.aiProvider == .ollama
+                        && application.selectedModelIsRecommended {
+                        Text("From model guide")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+            }
+            // LabeledContent does not expose every Text child in this row on macOS.
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel("Model")
+            .accessibilityValue(Text(verbatim: modelAccessibilityValue))
+
+            if board.usesAI && !application.dryRun {
+                ModelQualityAdviceView(
+                    provider: application.aiProvider,
+                    model: application.activeModelName
+                )
+            }
+
+            LabeledContent("Save to") {
+                HStack(spacing: 8) {
+                    Text(application.outputFolderDisplayPath)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
+                        .truncationMode(.middle)
+                        .help(application.outputFolderDisplayPath)
+                    Button("Choose…", action: application.chooseOutputFolder)
+                }
+            }
+
+            Toggle(
+                "Create a layout preview",
+                isOn: Binding(
+                    get: { application.dryRun },
+                    set: { application.setDryRun($0) }
+                )
+            )
+            .help("Preview layout without contacting an AI provider. Preview questions are not release output.")
+        }
+    }
+
+    private var modelAccessibilityValue: String {
+        guard application.aiProvider == .ollama, application.selectedModelIsRecommended else {
+            return application.activeModelName
+        }
+        let guideLabel = String(localized: InterfaceText.localizedResource("From model guide", locale: locale))
+        return "\(application.activeModelName), \(guideLabel)"
+    }
+}
+
+private struct GenerationBlockerSection: View {
+    @Environment(\.locale) private var locale
+    let blocker: LocalizedStringResource?
+
+    var body: some View {
+        if let blocker {
+            Section("Action required") {
+                HStack(alignment: .firstTextBaseline, spacing: 10) {
+                    Image(systemName: "exclamationmark.triangle.fill")
+                        .foregroundStyle(.orange)
+                        .accessibilityHidden(true)
+                    Text(InterfaceText.localizedResource(blocker, locale: locale))
+                    Spacer()
+                    SettingsLink {
+                        Text("Open Settings…")
+                    }
+                }
+                .accessibilityElement(children: .combine)
+            }
         }
     }
 }

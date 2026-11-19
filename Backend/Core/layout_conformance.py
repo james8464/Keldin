@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import hashlib
-import json
 import re
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
@@ -28,6 +27,7 @@ from Backend.Core.computer_science_question_content import (
     verify_cs_paper1_questions,
 )
 from Backend.Core.computer_science_reference_solutions import paper1_reference_code
+from Backend.Core.json_io import read_json
 from Backend.Core.layout_master import (
     LayoutConformanceError,
     PageCountPolicy,
@@ -73,7 +73,7 @@ def _aqa_cs_printed_credit(
         raise LayoutConformanceError(
             "Content-driven CS pagination requires its assessment package"
         )
-    package = json.loads(assessment_path.read_text(encoding="utf-8"))
+    package = read_json(assessment_path)
     if (
         package.get("subject") != "computer_science"
         or str(package.get("paper")) != paper
@@ -317,7 +317,7 @@ def _edexcel_printed_credit(
         raise LayoutConformanceError(
             "Content-driven Edexcel pagination requires its assessment package"
         )
-    package = json.loads(assessment_path.read_text(encoding="utf-8"))
+    package = read_json(assessment_path)
     if package.get("subject") != "economics" or str(package.get("paper")) != paper:
         raise LayoutConformanceError(
             "Content-driven pagination package identity differs"
@@ -642,7 +642,7 @@ def conform_generated_documents(
 ) -> dict[str, _ContentReport]:
     if not REGISTRY_PATH.exists():
         return {}
-    registry = json.loads(REGISTRY_PATH.read_text(encoding="utf-8"))
+    registry = read_json(REGISTRY_PATH)
     record = registry.get("papers", {}).get(f"{subject}:{paper}")
     if not record:
         return {}

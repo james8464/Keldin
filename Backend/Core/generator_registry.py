@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import json
 import re
 from collections.abc import Mapping
 from dataclasses import dataclass
@@ -16,6 +15,7 @@ from Backend.Core.generator_entry_points import (
     EntryPointContract,
     parse_entry_point_contract,
 )
+from Backend.Core.json_io import read_json
 from Backend.Core.paths import REPO_ROOT
 from Backend.Core.subject_plugins import validate_subject_plugin
 
@@ -96,7 +96,7 @@ class GeneratorCapability:
 
 @lru_cache(maxsize=1)
 def generator_capabilities() -> Mapping[str, GeneratorCapability]:
-    payload = json.loads(REGISTRY_PATH.read_text(encoding="utf-8"))
+    payload = read_json(REGISTRY_PATH)
     if payload.get("schema_version") not in {2, 3, 4, 5}:
         raise ValueError(
             f"unsupported generator registry schema: {payload.get('schema_version')}"
@@ -129,7 +129,7 @@ def generator_subjects() -> tuple[str, ...]:
 def assessment_framework(identifier: str):
     from Backend.Core.education_context import NSI_2027
 
-    payload = json.loads(REGISTRY_PATH.read_text(encoding="utf-8"))
+    payload = read_json(REGISTRY_PATH)
     frameworks = payload.get("assessment_frameworks", [])
     matches = [item for item in frameworks if item.get("id") == identifier]
     if payload.get("schema_version") != 5 or len(matches) != 1:

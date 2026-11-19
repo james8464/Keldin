@@ -1,0 +1,22 @@
+# Keep text sources LF and stop Git from diffing or merging binary assets as text.
+# Fonts and icons previously had no attributes, so Git treated them as text.
+* text=auto eol=lf
+
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.ttf binary
+*.otf binary
+*.icns binary
+*.pdf binary
+*.pages binary
+*.zip binary
+*.dmg binary
+*.pkg binary
+*.mov binary
+*.mp4 binary
+
+# Derived or machine-generated files: keep them out of language statistics and
+# collapsed reviews. They stay tracked because the app and audit trail read them.
+macOS/Keldin/Localizable.xcstrings linguist-generated=true
+graphify-out/** linguist-generated=true

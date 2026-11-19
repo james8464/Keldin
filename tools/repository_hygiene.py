@@ -31,6 +31,7 @@ BINARY_SUFFIXES = {
     ".zip",
 }
 ROOT_FILES = {
+    ".gitattributes": "build-release-configuration",
     ".gitignore": "build-release-configuration",
     ".graphifyignore": "durable-derived-configuration",
     "AGENTS.md": "documentation",

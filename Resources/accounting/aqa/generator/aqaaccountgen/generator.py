@@ -21,6 +21,7 @@ from aqaaccountgen.marking_policy import (
     apply_marking_policy,
     finalise_marking_policy,
 )
+from aqaaccountgen.numbering import question_number
 from aqaaccountgen.selected_response import build_accounting_choice
 from aqaaccountgen.syllabus import Syllabus, Topic
 from Backend.Core.accounting_levels import accounting_level_policy
@@ -466,26 +467,7 @@ def _level_credit(question: GeneratedQuestion) -> list[MarkSchemePoint]:
 
 
 def _number(paper_id: str, section_id: str, index: int) -> str:
-    if section_id == "A":
-        if index < 10:
-            return f"{index + 1:02d}"
-        if paper_id == "paper_1":
-            return ["11", "12", "13.1", "13.2"][index - 10]
-        return ["11", "12.1", "12.2", "13"][index - 10]
-    if section_id == "B":
-        if paper_id == "paper_1":
-            return ["14.1", "14.2", "15.1", "15.2", "15.3"][index]
-        return [
-            "14.1",
-            "14.2",
-            "14.3",
-            "14.4",
-            "15.1",
-            "15.2",
-            "15.3",
-            "15.4",
-        ][index]
-    return str(16 + index)
+    return question_number(paper_id, section_id, index)
 
 
 def _values(rng: random.Random) -> list[float]:

@@ -15,6 +15,7 @@ from itertools import combinations
 from pathlib import Path
 from typing import Any
 
+from Backend.Core.json_io import read_json
 from Backend.Core.paths import REPO_ROOT
 
 DEFAULT_POLICY_PATH = REPO_ROOT / "Resources" / "empirical-calibration-policy.json"
@@ -47,7 +48,7 @@ class CalibrationPolicy:
 
 def load_calibration_policy(path: Path | None = None) -> CalibrationPolicy:
     source = path or DEFAULT_POLICY_PATH
-    payload = json.loads(source.read_text(encoding="utf-8"))
+    payload = read_json(source)
     if not isinstance(payload, dict) or payload.get("schema_version") != 1:
         raise ValueError("unsupported empirical calibration policy")
     status = str(payload.get("status", ""))
@@ -287,7 +288,7 @@ def validate_calibration(
     form_id: str,
     policy_path: Path | None = None,
 ) -> dict[str, Any]:
-    payload = json.loads(path.read_text(encoding="utf-8"))
+    payload = read_json(path)
     if not isinstance(payload, dict) or payload.get("schema_version") != 1:
         raise ValueError("unsupported response-calibration evidence")
     if (

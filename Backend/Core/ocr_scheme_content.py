@@ -2,13 +2,13 @@
 
 from __future__ import annotations
 
-import json
 import re
 import unicodedata
 from pathlib import Path
 
 import pymupdf
 
+from Backend.Core.json_io import read_json
 from Backend.Core.layout_master import LayoutConformanceError
 
 OCR_ECONOMICS_SCHEME_PAGINATION = "generated-ocr-economics-mark-scheme-content-v1"
@@ -44,7 +44,7 @@ def verify_ocr_scheme_content(
         raise LayoutConformanceError(
             "OCR scheme pagination requires its assessment package"
         )
-    package = json.loads(assessment_path.read_text(encoding="utf-8"))
+    package = read_json(assessment_path)
     if package.get("subject") != "economics_ocr" or str(package.get("paper")) != paper:
         raise LayoutConformanceError("OCR scheme assessment package identity differs")
     blueprint = package.get("blueprint") or {}

@@ -22,6 +22,7 @@ from pydantic import (
 )
 
 from Backend.Core.assessment_objectives import objective_policy_for
+from Backend.Core.json_io import read_json
 from Backend.Core.model_review import validate_saved_difficulty_evidence
 from Backend.Core.paths import REPO_ROOT
 
@@ -174,7 +175,7 @@ def load_reference_demand_document(
     path: Path = PROFILES_PATH,
 ) -> ReferenceDemandDocument:
     try:
-        payload = json.loads(path.read_text(encoding="utf-8"))
+        payload = read_json(path)
     except FileNotFoundError as error:
         raise ValueError("reference demand profiles are missing") from error
     return ReferenceDemandDocument.model_validate(payload)

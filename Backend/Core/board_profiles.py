@@ -2,11 +2,11 @@
 
 from __future__ import annotations
 
-import json
 from dataclasses import dataclass
 from functools import cache
 from typing import Any
 
+from Backend.Core.json_io import read_json_object
 from Backend.Core.paths import REPO_ROOT
 
 PROFILE_ROOT = REPO_ROOT / "Resources" / "board-profiles"
@@ -32,7 +32,7 @@ def board_profile(identifier: str) -> BoardProfile:
     path = PROFILE_ROOT / f"{normalized}.json"
     if not path.is_file():
         raise ValueError(f"unknown board profile: {identifier}")
-    payload = json.loads(path.read_text(encoding="utf-8"))
+    payload = read_json_object(path)
     if payload.get("id") != normalized or payload.get("schema_version") != 1:
         raise ValueError(f"invalid board profile: {identifier}")
     return BoardProfile(

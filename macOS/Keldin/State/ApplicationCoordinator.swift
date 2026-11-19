@@ -4,7 +4,6 @@ import AppKit
 import Combine
 import Foundation
 import UniformTypeIdentifiers
-@preconcurrency import UserNotifications
 
 @MainActor
 final class ApplicationCoordinator: ObservableObject {
@@ -104,7 +103,7 @@ final class ApplicationCoordinator: ObservableObject {
     private let generationRecordsFolder: URL
     private let appleIntelligenceChecker: @Sendable (URL) async -> AppleIntelligenceAvailability
     private var appleIntelligenceCheckTask: Task<Void, Never>?
-    private let notificationCenter = UNUserNotificationCenter.current()
+    private let notifications = WorkNotificationCenter()
     private var ollamaRefreshRevision = UUID()
     private var etaTimer: AnyCancellable?
     private var pendingHostedProvider: AIProvider?
@@ -408,7 +407,6 @@ final class ApplicationCoordinator: ObservableObject {
         openAIAPIKey = settings.openAIAPIKey
         anthropicAPIKey = settings.anthropicAPIKey
         deepSeekAPIKey = settings.deepSeekAPIKey
-        notificationCenter.delegate = NotificationPresenter.shared
         notificationsEnabled = settings.notificationsEnabled
         showWelcome = !defaults.bool(forKey: AppStorageKey.hasSeenWelcome)
         if let bookmark = defaults.data(forKey: AppStorageKey.outputFolderBookmark) {
@@ -684,15 +682,13 @@ final class ApplicationCoordinator: ObservableObject {
             ), state: .pending, artifacts: [],
             qualification: QualificationSnapshot(engineeringValidated: false, visuallyCalibrated: false, empiricallyCalibrated: false)
         )
-        var environment = [
-            "KELDIN_PARALLEL_LOCAL_REVIEWS": settingsStore.parallelLocalReviews ? "1" : "0",
-            "KELDIN_PARALLEL_MLX_GENERATION": settingsStore.parallelMLXGeneration ? "1" : "0",
-        ]
-        if request.provider == .apple { environment["HF_HOME"] = AppDefaults.mlxCacheFolder().path }
-        if request.provider == .appleIntelligence { environment["KELDIN_APPLE_INTELLIGENCE_HELPER"] = AppleIntelligenceAvailability.helperURL(distributionMode: distributionMode).path }
-        if request.provider == .openAI { environment["KELDIN_API_KEY"] = openAIAPIKey.trimmingCharacters(in: .whitespacesAndNewlines) }
-        if request.provider == .anthropic { environment["KELDIN_API_KEY"] = anthropicAPIKey.trimmingCharacters(in: .whitespacesAndNewlines) }
-        if request.provider == .deepSeek { environment["KELDIN_API_KEY"] = deepSeekAPIKey.trimmingCharacters(in: .whitespacesAndNewlines) }
+        let environment = BackendEnvironment.make(
+            provider: request.provider,
+            distributionMode: distributionMode,
+            parallelLocalReviews: settingsStore.parallelLocalReviews,
+            parallelMLXGeneration: settingsStore.parallelMLXGeneration,
+            hostedAPIKey: hostedAPIKey(for: request.provider)
+        )
         let session = beginRunSession(
             intent: .paper, documents: RunDocuments(frameworkID: FrenchAssessmentRequest.assessmentID,
                 subject: "Baccalauréat général · NSI", paper: "Partie écrite · 2027", workingFolder: request.output),
@@ -1086,6 +1082,24 @@ final class ApplicationCoordinator: ObservableObject {
         persistSettings()
     }
 
+    private func hostedAPIKey(for provider: AIProvider) -> String {
+        switch provider {
+        case .openAI: openAIAPIKey
+        case .anthropic: anthropicAPIKey
+        case .deepSeek: deepSeekAPIKey
+        case .ollama, .apple, .appleIntelligence: ""
+        }
+    }
+
+    /// UK generation passes credentials only for the two hosted providers it
+    /// supports; the French path resolves DeepSeek separately.
+    private func ukHostedAPIKey(for provider: AIProvider) -> String {
+        switch provider {
+        case .openAI, .anthropic: hostedAPIKey(for: provider)
+        case .ollama, .deepSeek, .apple, .appleIntelligence: ""
+        }
+    }
+
     func generate() {
         pendingFrenchLargePrint = nil
         guard canGenerate else { return }
@@ -1178,32 +1192,24 @@ final class ApplicationCoordinator: ObservableObject {
             String(generationSeed),
         ]
 
-        var backendEnvironment = [
-            "KELDIN_PARALLEL_LOCAL_REVIEWS": settingsStore.parallelLocalReviews ? "1" : "0",
-            "KELDIN_PARALLEL_MLX_GENERATION": settingsStore.parallelMLXGeneration ? "1" : "0",
-            "KELDIN_GENERATED_ON": Self.generationDateFormatter.string(from: Date()),
-            "KELDIN_JOB_ID": UUID().uuidString,
-            "KELDIN_APP_VERSION": Bundle.main.object(
-                forInfoDictionaryKey: "CFBundleShortVersionString"
-            ) as? String ?? "development",
-            "KELDIN_APP_BUILD": Bundle.main.object(
-                forInfoDictionaryKey: "CFBundleVersion"
-            ) as? String ?? "development",
-        ]
-        if aiProvider == .apple {
-            backendEnvironment["HF_HOME"] = AppDefaults.mlxCacheFolder().path
-        }
-        if aiProvider == .appleIntelligence {
-            backendEnvironment["KELDIN_APPLE_INTELLIGENCE_HELPER"] = AppleIntelligenceAvailability.helperURL(distributionMode: distributionMode).path
-        }
-        switch selectedBoard.usesAI ? aiProvider : .ollama {
-        case .ollama, .apple, .appleIntelligence, .deepSeek:
-            break
-        case .openAI:
-            backendEnvironment["KELDIN_API_KEY"] = openAIAPIKey.trimmingCharacters(in: .whitespacesAndNewlines)
-        case .anthropic:
-            backendEnvironment["KELDIN_API_KEY"] = anthropicAPIKey.trimmingCharacters(in: .whitespacesAndNewlines)
-        }
+        let effectiveProvider = selectedBoard.usesAI ? aiProvider : .ollama
+        let backendEnvironment = BackendEnvironment.make(
+            provider: effectiveProvider,
+            distributionMode: distributionMode,
+            parallelLocalReviews: settingsStore.parallelLocalReviews,
+            parallelMLXGeneration: settingsStore.parallelMLXGeneration,
+            hostedAPIKey: ukHostedAPIKey(for: effectiveProvider),
+            runMetadata: [
+                "KELDIN_GENERATED_ON": Self.generationDateFormatter.string(from: Date()),
+                "KELDIN_JOB_ID": UUID().uuidString,
+                "KELDIN_APP_VERSION": Bundle.main.object(
+                    forInfoDictionaryKey: "CFBundleShortVersionString"
+                ) as? String ?? "development",
+                "KELDIN_APP_BUILD": Bundle.main.object(
+                    forInfoDictionaryKey: "CFBundleVersion"
+                ) as? String ?? "development",
+            ]
+        )
 
         if dryRun {
             arguments.append("--dry-run")
@@ -2318,120 +2324,14 @@ final class ApplicationCoordinator: ObservableObject {
     }
 
     private func requestNotificationAuthorization() {
-        Task {
-            _ = try? await notificationCenter.requestAuthorization(options: [.alert, .sound])
-        }
+        notifications.requestAuthorization()
     }
 
     private func sendNotification(_ event: WorkNotification) {
-        let copy = event.content(language: presentationLanguage)
-        sendNotification(title: copy.title, body: copy.body)
+        notifications.post(
+            event,
+            language: presentationLanguage,
+            enabled: notificationsEnabled
+        )
     }
-
-    private func sendNotification(title: String, body: String) {
-        guard notificationsEnabled else { return }
-        Task {
-            let settings = await notificationCenter.notificationSettings()
-            let allowed: Bool
-            switch settings.authorizationStatus {
-            case .authorized, .provisional, .ephemeral:
-                allowed = true
-            case .notDetermined:
-                allowed = (try? await notificationCenter.requestAuthorization(options: [.alert, .sound])) ?? false
-            default:
-                allowed = false
-            }
-            guard allowed else { return }
-
-            let content = UNMutableNotificationContent()
-            content.title = title
-            content.body = body
-            content.sound = .default
-            let request = UNNotificationRequest(identifier: UUID().uuidString, content: content, trigger: nil)
-            try? await notificationCenter.add(request)
-        }
-    }
-}
-
-@MainActor
-final class NotificationPresenter: NSObject, UNUserNotificationCenterDelegate {
-    static let shared = NotificationPresenter()
-
-    private override init() {
-        super.init()
-    }
-
-    nonisolated func userNotificationCenter(
-        _ center: UNUserNotificationCenter,
-        willPresent notification: UNNotification
-    ) async -> UNNotificationPresentationOptions {
-        [.banner, .sound]
-    }
-}
-
-private enum RunningOperation {
-    case none
-    case generation
-    case modelPull
-    case mlxSetup
-}
-
-private enum BackendRunIntent {
-    case paper, referencePreparation, reviewRecord, modelPull, mlxSetup, mlxDownloadInfo
-
-    var operation: RunningOperation {
-        switch self {
-        case .paper: .generation
-        case .referencePreparation, .reviewRecord, .mlxDownloadInfo: .none
-        case .modelPull: .modelPull
-        case .mlxSetup: .mlxSetup
-        }
-    }
-}
-
-private struct RunDocuments {
-    let frameworkID: String?
-    let subject: String?
-    let paper: String?
-    let workingFolder: URL?
-    var fileIDs = Set<UUID>()
-
-    init(frameworkID: String? = nil, subject: String? = nil, paper: String? = nil, workingFolder: URL? = nil) {
-        self.frameworkID = frameworkID
-        self.subject = subject
-        self.paper = paper
-        self.workingFolder = workingFolder
-    }
-}
-
-private struct BackendRun {
-    let id = UUID()
-    let intent: BackendRunIntent
-    var documents: RunDocuments
-    let model: String
-    let retryTarget: GenerationRetryTarget?
-    let errorPresentation: SettingsActionPresentation?
-    let selectAfterDownload: Bool
-    var ownedJobID: UUID?
-    var process: Process?
-    var phase = BackendRunPhase.running
-    var backendErrorMessage: String?
-    var failureKind: GenerationFailureKind = .generationFailed
-    var mlxDownloadInfo: MLXDownloadInfo?
-    var receivedArtifactRoles = Set<String>()
-}
-
-private struct GenerationRetryTarget: Equatable {
-    let boardID: String
-    let paperID: String
-    let provider: AIProvider
-    let model: String
-    let dryRun: Bool
-    let output: URL
-    let seed: Int?
-    let frenchLargePrint: Bool?
-}
-
-private enum BackendRunPhase {
-    case running, cancelling
 }

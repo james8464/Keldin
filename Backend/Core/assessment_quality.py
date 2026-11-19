@@ -3,13 +3,14 @@
 from __future__ import annotations
 
 import hashlib
-import json
 import re
 import unicodedata
 from collections import Counter
 from collections.abc import Iterable, Mapping, Sequence
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
+
+from Backend.Core.json_io import read_json
 
 if TYPE_CHECKING:
     from Backend.Core.assessment_contracts import AssessmentContract
@@ -432,7 +433,7 @@ def _shingles(value: str, *, width: int) -> Counter[tuple[str, ...]]:
 
 
 def _load_package(path: Path) -> dict[str, Any]:
-    raw = json.loads(path.read_text(encoding="utf-8"))
+    raw = read_json(path)
     if not isinstance(raw, dict) or raw.get("schema_version") != 1:
         raise ValueError(f"unsupported assessment package: {path}")
     return raw

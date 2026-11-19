@@ -2,12 +2,12 @@
 
 from __future__ import annotations
 
-import json
 import math
 from pathlib import Path
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
+from Backend.Core.json_io import read_json
 from Backend.Core.response_simulation import CandidateResponse
 
 
@@ -170,7 +170,7 @@ class LevelOfResponseEngine:
 
 
 def load_level_policies(path: Path) -> dict[str, BoardLevelPolicy]:
-    payload = json.loads(path.read_text(encoding="utf-8"))
+    payload = read_json(path)
     if payload.get("schema_version") != 1:
         raise ValueError("unsupported level-of-response policy schema")
     policies = [
