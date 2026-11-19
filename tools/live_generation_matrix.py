@@ -18,7 +18,13 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
-from Backend.Core.apple_intelligence import HELPER_NAME as APPLE_SYSTEM_HELPER
+# Support direct script execution as well as `python -m tools.<name>`.
+if __package__ in {None, ""}:
+    sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+
+from Backend.Core.apple_intelligence import (
+    HELPER_NAME as APPLE_SYSTEM_HELPER,
+)
 from Backend.Core.apple_intelligence import MODEL as APPLE_SYSTEM_MODEL
 from Backend.Core.events import BACKEND_VERSION
 from Backend.Core.model_recommendations import default_ollama_model

@@ -25,7 +25,14 @@ from PIL import (
     ImageStat,
 )
 
-from Backend.Core.pdf_validation import compare_page_evidence, extract_pdf_evidence
+# Support direct script execution as well as `python -m tools.<name>`.
+if __package__ in {None, ""}:
+    sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+
+from Backend.Core.pdf_validation import (
+    compare_page_evidence,
+    extract_pdf_evidence,
+)
 from tools.build_supported_layout_masters import REFERENCES
 
 ROOT = Path(__file__).resolve().parents[1]

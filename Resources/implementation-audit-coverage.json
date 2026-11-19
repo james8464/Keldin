@@ -9058,11 +9058,8 @@
     {
       "path": "tools/calibrate_student_responses.py",
       "classification": "maintained-source",
-      "status": "reviewed",
-      "reason": "Recovered explicit complete-file review from the recorded unchanged checkpoint; scope and unresolved findings remain in the evidence, with no whole-project clearance.",
-      "source_sha256": "81efacf64efea96a9d02a1576e046b65976fcd219972b61a9bf958397a65df48",
-      "review_evidence": "docs/quality/implementation-audit-file-review-2026-10-28.md",
-      "review_evidence_sha256": "ad8cc62a31b706b0dcf8ac96da0e2a5521779475634dbd237fbcd0871f806b08"
+      "status": "pending",
+      "reason": "No file-level semantic implementation review recorded in this ledger."
     },
     {
       "path": "tools/calibration_common.py",

@@ -8,13 +8,21 @@ from __future__ import annotations
 
 import hashlib
 import re
+import sys
 from collections import Counter
 from pathlib import Path
 from typing import Any
 
 import pymupdf
 
-from Backend.Core.candidate_paths import CandidateTopology, enumerate_candidate_paths
+# Support direct script execution as well as `python -m tools.<name>`.
+if __package__ in {None, ""}:
+    sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+
+from Backend.Core.candidate_paths import (
+    CandidateTopology,
+    enumerate_candidate_paths,
+)
 from Backend.Core.reference_demand import (
     _collapse_command_distribution,
     operation_response_mode,

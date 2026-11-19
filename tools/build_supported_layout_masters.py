@@ -4,6 +4,12 @@ from __future__ import annotations
 
 import argparse
 import json
+import sys
+from pathlib import Path
+
+# Support direct script execution as well as `python -m tools.<name>`.
+if __package__ in {None, ""}:
+    sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from Backend.Core.layout_conformance import runtime_page_count_policy
 from tools.build_layout_masters import ROOT, write_layout_master
