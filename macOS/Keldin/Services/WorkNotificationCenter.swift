@@ -1,7 +1,7 @@
 // Deliver generation and download results as user notifications.
 
 import Foundation
-import UserNotifications
+@preconcurrency import UserNotifications
 
 /// Wraps `UNUserNotificationCenter` so the coordinator does not own the
 /// authorization state machine or build notification content itself.
