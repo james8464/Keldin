@@ -31,17 +31,14 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		467908D3C6729BE6401BD80E /* PBXFileSystemSynchronizedBuildFileExceptionSet */ = {
+		467908D3C6729BE6401BD80E /* Exceptions for "Keldin" folder in "Keldin" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Info.plist,
-				Keldin.entitlements,
-				KeldinBackend.entitlements,
-				KeldinDirect.entitlements,
 			);
 			target = 1B86E9AFA30A6F73AAC3FC81 /* Keldin */;
 		};
-		CC5EAC71AEC7AFB0CF4847F6 /* PBXFileSystemSynchronizedBuildFileExceptionSet */ = {
+		CC5EAC71AEC7AFB0CF4847F6 /* Exceptions for "Tests" folder in "KeldinTests" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Info.plist,
@@ -54,11 +51,7 @@
 		86C4EBD5E73E4A3A19C1964A /* Tests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
-				CC5EAC71AEC7AFB0CF4847F6 /* PBXFileSystemSynchronizedBuildFileExceptionSet */,
-			);
-			explicitFileTypes = {
-			};
-			explicitFolders = (
+				CC5EAC71AEC7AFB0CF4847F6 /* Exceptions for "Tests" folder in "KeldinTests" target */,
 			);
 			path = Tests;
 			sourceTree = "<group>";
@@ -66,11 +59,7 @@
 		CD247602C4C0D35128B3D75C /* Keldin */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
-				467908D3C6729BE6401BD80E /* PBXFileSystemSynchronizedBuildFileExceptionSet */,
-			);
-			explicitFileTypes = {
-			};
-			explicitFolders = (
+				467908D3C6729BE6401BD80E /* Exceptions for "Keldin" folder in "Keldin" target */,
 			);
 			path = Keldin;
 			sourceTree = "<group>";

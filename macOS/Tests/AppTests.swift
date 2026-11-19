@@ -102,7 +102,7 @@ final class KeldinTests: XCTestCase {
     }
     func testOllamaAvailabilityStatusUsesFrenchTranslation() {
         let expected = [
-            "Not checked": "Non vérifié",
+			"Not checked": "Non vérifié",
             "Ollama is available.": "Ollama est disponible.",
             "Ollama is not installed.": "Ollama n’est pas installé.",
             "Ollama is installed but not responding.": "Ollama est installé mais ne répond pas.",
