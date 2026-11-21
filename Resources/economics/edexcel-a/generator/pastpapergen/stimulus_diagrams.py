@@ -385,6 +385,67 @@ DIAGRAM_RELATIONSHIPS = {
 }
 
 
+# Candidate-visible geometry for the remaining supplied renderer plots, not
+# the code's hidden calibration parameters or the intended answers.
+_PRINTED_PLOT_RELATIONSHIPS = {
+    "cost_revenue_graph": "MC, AC, AR and MR curves; guide lines mark the labelled output and price.",
+    "market_diagram": "The downward D and upward S curves meet at the marked equilibrium with Pe and Qe guides.",
+    "ad_as_diagram": "The downward AD and rising AS curves meet at the marked price level and real GDP.",
+    "keynesian_as_diagram": "The downward AD curve crosses AS (Keynesian), where supply is flatter at lower output and steeper at higher output.",
+    "phillips_curve": "The downward SRPC is shown against the dashed vertical LRPC, labelled U*=5.0% by default.",
+    "lorenz_curve": "The Lorenz curve lies beneath the dashed equality line; the gap is shaded.",
+    "laffer_curve": "Tax revenue rises and then falls as the tax rate increases; the peak has a T*=50% guide.",
+    "externality_diagram": "MPB, MPC, MSC and MSB curves with two marked intersections and shaded DWL.",
+    "production_possibility_frontier": "A downward bowed frontier between Good X and Good Y with point A on the frontier.",
+    "perfect_competition_diagram": "MC and AC curves against the horizontal D = AR = MR line.",
+    "monopoly_diagram": "AR (Demand), MR and MC curves; dotted guides mark Qm and Pm.",
+    "trade_cycle": "Actual GDP rises and falls around the dashed, upward Trend GDP line over time.",
+    "tax_subsidy_diagram": "The D curve is shown with S0 and shifted S1; a wedge and DWL are shaded.",
+    "consumer_surplus_diagram": "The downward D and upward S meet; areas CS and PS are shaded on opposite sides of the equilibrium price.",
+}
+_PRINTED_PLOT_ALIASES = {
+    "macro_chart": "ad_as_diagram",
+    "multiplier_context": "trade_cycle",
+    "producer_surplus_diagram": "consumer_surplus_diagram",
+}
+
+
+def printed_diagram_review_context(kind, params=None) -> tuple[str, ...]:
+    """Describe evidence from the candidate's supplied figure only."""
+    supplied = diagram_description(kind, params)
+    if supplied is not None:
+        return (
+            f"Supplied diagram: {kind.replace('_', ' ')}.",
+            *supplied["relationships"],
+            *(
+                f"Labelled {name.replace('_', ' ')}: {value:g}."
+                for name, value in sorted(supplied["printed_values"].items())
+            ),
+        )
+    base_kind = _PRINTED_PLOT_ALIASES.get(kind, kind)
+    relationship = _PRINTED_PLOT_RELATIONSHIPS.get(base_kind)
+    if relationship is None:
+        return ()
+    scenario = (params or {}).get("kind")
+    if base_kind == "externality_diagram":
+        relationship += (
+            " MSB is above MPB." if scenario == "positive" else " MSC is above MPC."
+        )
+    if base_kind == "tax_subsidy_diagram":
+        relationship += (
+            " S1 is below S0 and the wedge is labelled Subsidy cost."
+            if scenario == "subsidy"
+            else " S1 is above S0 and the wedge is labelled Tax revenue."
+        )
+    if base_kind == "ad_as_diagram":
+        relationship += (
+            " The AS curve slopes upward throughout."
+            if scenario == "classical"
+            else " The AS curve is flatter at low output and steeper at high output."
+        )
+    return (f"Supplied diagram: {base_kind.replace('_', ' ')}.", relationship)
+
+
 def diagram_description(kind, params=None):
     if kind not in DIAGRAM_RELATIONSHIPS:
         return None

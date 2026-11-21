@@ -14,6 +14,159 @@ from Backend.Core.subjects.economics_contracts import solve_economics_contract
 from tests.support.edexcel import forced_part
 
 
+def test_supplied_diagram_is_bound_to_each_question_part_without_private_parameters():
+    from pastpapergen.cli import ADAPTER
+
+    from Backend.Core.assessment_package import whole_paper_review_items
+
+    syllabus = ADAPTER.load_syllabus(
+        Path("Resources/economics/edexcel-a/generator/data/syllabus_seed.json")
+    )
+    paper = ADAPTER.build(ADAPTER.load_rule("2"), syllabus, 26080119).assessment
+    raw = paper.model_dump(mode="json")
+    position = 3
+    question = raw["questions"][position]
+    question["stimulus_kind"] = "poverty_trap_diagram"
+    question["graph_params"] = {"kind": "poverty_trap"}
+    question["source_instance"]["kind"] = "poverty_trap_diagram"
+    question["source_instance"]["context"] = "The caption identifies the plotted case."
+    rows = [
+        item
+        for item in whole_paper_review_items(raw, subject="economics", paper_number="2")
+        if item.id.split("@", 1)[1].startswith(f"questions.{position}.parts.")
+    ]
+    assert len(rows) == 2
+    for item in rows:
+        text = "\n".join(item.context)
+        assert "The caption identifies the plotted case." in text
+        assert (
+            "Low income -> low savings -> low investment -> low productivity -> low income"
+            in text
+        )
+        assert "parameters" not in text and "source_fingerprint" not in text
+
+
+def test_every_rendered_edexcel_stimulus_diagram_has_visible_review_evidence():
+    from pastpapergen.render_pdf import _GRAPH_FUNCS
+    from pastpapergen.stimulus_diagrams import printed_diagram_review_context
+
+    for kind in _GRAPH_FUNCS:
+        context = printed_diagram_review_context(kind)
+        assert len(context) >= 2, kind
+        assert all(line.strip() for line in context), kind
+
+
+def test_paper_three_review_matches_printed_figure_rows_and_merged_extracts():
+    from pastpapergen.cli import ADAPTER
+
+    from Backend.Core.assessment_package import whole_paper_review_items
+
+    syllabus = ADAPTER.load_syllabus(
+        Path("Resources/economics/edexcel-a/generator/data/syllabus_seed.json")
+    )
+    paper = ADAPTER.build(ADAPTER.load_rule("3"), syllabus, 26080120).assessment
+    raw = paper.model_dump(mode="json")
+    questions = raw["questions"]
+    cell = questions[1]["source_instance"]["rows"][1][0]["text"]
+    questions[1]["source_instance"]["source_id"] = "private-figure-provenance"
+    items = {
+        item.id.split("@", 1)[0]: item.context
+        for item in whole_paper_review_items(raw, subject="economics", paper_number="3")
+    }
+    assert "Figure 1: illustrative case information" in items["1(a)"]
+    assert "Figure 2: illustrative case information" in items["1(b)"]
+    assert any(cell in line for line in items["1(b)"])
+    assert not any(cell in line for line in items["1(c)"])
+    assert all("private-figure-provenance" not in line for line in items["1(b)"])
+    assert any(questions[0]["source_text"] in line for line in items["1(b)"])
+    assert any(questions[1]["source_text"] in line for line in items["1(a)"])
+    assert "Figure 3: illustrative case information" in items["2(a)"]
+    assert not any("Figure 3" in line for line in items["2(b)"])
+    assert any(questions[7]["source_text"] in line for line in items["2(b)"])
+
+
+def test_edexcel_shared_extract_c_uses_the_same_question_for_print_and_review():
+    from pastpapergen.cli import ADAPTER
+    from pastpapergen.render_pdf import _extract_source_questions, _section_b_extracts
+
+    from Backend.Core.assessment_package import whole_paper_review_items
+
+    syllabus = ADAPTER.load_syllabus(
+        Path("Resources/economics/edexcel-a/generator/data/syllabus_seed.json")
+    )
+    paper = ADAPTER.build(ADAPTER.load_rule("1"), syllabus, 26080100).assessment
+    section_b = [question for question in paper.questions if question.section == "B"]
+    section_b[2].source_text = "Wrong source for the extract C label."
+    section_b[3].source_text = "Use the study of competing food suppliers."
+    booklet = _extract_source_questions(section_b)
+    inline = dict(_section_b_extracts(section_b))
+    assert inline["Extract C"] == booklet[2].source_text == section_b[3].source_text
+    items = whole_paper_review_items(paper, subject="economics", paper_number="1")
+    explicit = next(item for item in items if item.id.startswith("6(d)@"))
+    implicit = next(item for item in items if item.id.startswith("6(c)@"))
+    expected = f"Extract C: {section_b[3].source_text}"
+    assert expected in explicit.context
+    assert expected in implicit.context
+    assert section_b[2].source_text not in "\n".join(implicit.context)
+
+
+def test_whole_paper_review_binds_printed_table_not_private_data():
+    from Backend.Core.assessment_package import whole_paper_review_items
+    from Backend.Core.whole_paper_review import ReviewedPaper
+
+    question = forced_part("household_savings_line_chart", "calculate", 2)
+    contract = question.model_dump(mode="json")
+    source = contract["source_instance"]
+    source["rows"] = [
+        [{"text": "Period"}, {"text": "Import cost"}],
+        [{"text": "March"}, {"number": "713.21", "unit": "GBP"}],
+    ]
+    source["values"] = []
+    source["labels"] = []
+    source["givens"] = {"freight_charge": {"number": "17.41", "unit": "GBP"}}
+    source["source_id"] = "not printed source identifier"
+    paper = {"paper_id": "paper_1", "questions": [contract]}
+
+    def review():
+        return whole_paper_review_items(paper, subject="economics", paper_number="1")
+
+    original = review()
+    context = "\n".join(original[0].context)
+    assert all(
+        label in context for label in ("Import cost", "March", "£713.21", "£17.41")
+    )
+    assert "not printed source identifier" not in context
+    assert "source_fingerprint" not in context
+    assert (
+        whole_paper_review_items(
+            json.loads(json.dumps(paper, sort_keys=True)),
+            subject="economics",
+            paper_number="1",
+        )
+        == original
+    )
+    previous = whole_paper_review_items(
+        paper, subject="economics", paper_number="1", policy="whole-paper-review-v2"
+    )
+    assert "£713.21" not in "\n".join(previous[0].context)
+    source["rows"][1][1]["number"] = "813.21"
+    assert (
+        ReviewedPaper(review(), ()).receipt() != ReviewedPaper(original, ()).receipt()
+    )
+
+
+def test_whole_paper_review_does_not_invent_a_candidate_drawn_figure():
+    from Backend.Core.assessment_package import whole_paper_review_items
+
+    question = forced_part("household_savings_line_chart", "calculate", 2)
+    contract = question.model_dump(mode="json")
+    contract["parts"][0]["command_word"] = "draw"
+    contract["source_instance"]["rows"] = [[{"text": "Unprinted table token"}]]
+    paper = {"paper_id": "paper_1", "questions": [contract]}
+    (item,) = whole_paper_review_items(paper, subject="economics", paper_number="1")
+    assert "Unprinted table token" not in "\n".join(item.context)
+
+
 def projected_item(kind):
     root = Path(__file__).resolve().parents[1]
     for path in [

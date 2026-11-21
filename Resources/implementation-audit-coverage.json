@@ -1697,6 +1697,12 @@
       "review_evidence_sha256": "78a70a2bbbc9f2c9da6406f6c6c4c9ec4d23392ff8260fae2e939b05a0a81eaf"
     },
     {
+      "path": "Backend/Core/paper_review_contract.py",
+      "classification": "maintained-source",
+      "status": "pending",
+      "reason": "No file-level semantic implementation review recorded in this ledger."
+    },
+    {
       "path": "Backend/Core/paths.py",
       "classification": "maintained-source",
       "status": "reviewed",
@@ -1954,11 +1960,8 @@
     {
       "path": "Backend/Core/subjects/selected_response.py",
       "classification": "maintained-source",
-      "status": "reviewed",
-      "reason": "Complete prior 974-line EOF and two-line domain-admission delta reviewed, now 976 lines. Owned unsupported-equal rate refusal repaired with 251 focused tests; not general semantic interpretation, full dependency audit or live paper qualification.",
-      "source_sha256": "cf84797e281307ec3e1d2a3dd2b7eee0b3fe18a8292075623cd943bcb141a231",
-      "review_evidence": "docs/quality/business-strategic-rate-domain-review.md",
-      "review_evidence_sha256": "d19823d9decaab60d8e422a4614dbc396a8c00ff566afa84f68e40b0c34e7c29"
+      "status": "pending",
+      "reason": "No file-level semantic implementation review recorded in this ledger."
     },
     {
       "path": "Backend/Core/subjects/sql_contracts.py",
@@ -2188,11 +2191,8 @@
     {
       "path": "Resources/business/aqa/generator/aqabizgen/financials.py",
       "classification": "maintained-source",
-      "status": "reviewed",
-      "reason": "Complete-file implementation review recorded with scope and limitations in the linked evidence.",
-      "source_sha256": "d5acfd47bce25528c78ca9af80bb1e0fef969bee16f22ef2cac4cb57c38c0bc4",
-      "review_evidence": "docs/quality/business-rounding-and-benchmark-completion-2026-11-03.md",
-      "review_evidence_sha256": "99dbd2c83dbbdb74f6c6aa07666bb33cbcb458a391f02c32c92a6d7036d596da"
+      "status": "pending",
+      "reason": "No file-level semantic implementation review recorded in this ledger."
     },
     {
       "path": "Resources/business/aqa/generator/aqabizgen/generator.py",
@@ -2202,6 +2202,12 @@
     },
     {
       "path": "Resources/business/aqa/generator/aqabizgen/render_pdf.py",
+      "classification": "maintained-source",
+      "status": "pending",
+      "reason": "No file-level semantic implementation review recorded in this ledger."
+    },
+    {
+      "path": "Resources/business/aqa/generator/aqabizgen/source_figures.py",
       "classification": "maintained-source",
       "status": "pending",
       "reason": "No file-level semantic implementation review recorded in this ledger."
@@ -2893,11 +2899,8 @@
     {
       "path": "Resources/economics/edexcel-a/generator/pastpapergen/stimulus_diagrams.py",
       "classification": "maintained-source",
-      "status": "reviewed",
-      "reason": "Complete 424-line EOF review of declared illustrative models, finite geometry, public labels and source projection; scoped independent review and owned diagram QA, not academic qualification.",
-      "source_sha256": "c4a1ceaed6fc15fc27642edad6f93b8ea8b46c558d26932e26ee78ed508fd809",
-      "review_evidence": "docs/quality/economics-stimulus-figures-review-2026-11-03.md",
-      "review_evidence_sha256": "1bb919e9187c1667d0da9f28c391dfecb686c71786a73d80b490b68763cc83fe"
+      "status": "pending",
+      "reason": "No file-level semantic implementation review recorded in this ledger."
     },
     {
       "path": "Resources/economics/edexcel-a/generator/pastpapergen/syllabus.py",
@@ -6692,6 +6695,12 @@
       "review_evidence_sha256": "21e54e294ba1b655d4d1505c198934e0e7f71ae6b10f2f66a269ddf29edb1c3c"
     },
     {
+      "path": "tests/test_accounting_whole_paper_source.py",
+      "classification": "test",
+      "status": "pending",
+      "reason": "No file-level semantic implementation review recorded in this ledger."
+    },
+    {
       "path": "tests/test_ai_assessment.py",
       "classification": "test",
       "status": "pending",
@@ -6850,11 +6859,8 @@
     {
       "path": "tests/test_business_strategic_rate_domain.py",
       "classification": "test",
-      "status": "reviewed",
-      "reason": "Complete 92-line EOF review of offline strategic-rate domain refusals, supported/case variants, malformed shape controls and input immutability. Genuine red/green evidence; no model, native or full-project qualification.",
-      "source_sha256": "e00e2e3cba20005560ef2588ff67db6b4fc6a92fe119dd4a31a29aadf1ed8181",
-      "review_evidence": "docs/quality/business-strategic-rate-domain-review.md",
-      "review_evidence_sha256": "d19823d9decaab60d8e422a4614dbc396a8c00ff566afa84f68e40b0c34e7c29"
+      "status": "pending",
+      "reason": "No file-level semantic implementation review recorded in this ledger."
     },
     {
       "path": "tests/test_calibration_helpers.py",
@@ -6894,6 +6900,12 @@
     },
     {
       "path": "tests/test_checkpoint_ownership.py",
+      "classification": "test",
+      "status": "pending",
+      "reason": "No file-level semantic implementation review recorded in this ledger."
+    },
+    {
+      "path": "tests/test_choice_stem_leakage.py",
       "classification": "test",
       "status": "pending",
       "reason": "No file-level semantic implementation review recorded in this ledger."
@@ -7132,11 +7144,8 @@
     {
       "path": "tests/test_economics_source_binding.py",
       "classification": "test",
-      "status": "reviewed",
-      "reason": "Complete 237-line new test file reviewed by author and independently. Valid v2 control, descriptor mutations, v1 replay and serialization, immutable inputs and unchanged canonical answers; no live quality qualification.",
-      "source_sha256": "7938f8847264c8c8f3f1cde103e326780d8ac733a52cedc17e4ece15b82b986d",
-      "review_evidence": "docs/quality/economics-source-binding-review.md",
-      "review_evidence_sha256": "0821e1420f8755120d25289cb89b0a08697ed45cc0e5b77f94c88d9e0da122db"
+      "status": "pending",
+      "reason": "No file-level semantic implementation review recorded in this ledger."
     },
     {
       "path": "tests/test_edexcel_branding_facade.py",

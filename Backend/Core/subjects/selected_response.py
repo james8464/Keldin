@@ -80,6 +80,40 @@ class SelectedResponseContract(BaseModel):
     decimal_places: int = Field(ge=0, le=4)
 
 
+def business_selected_response_printed_table(
+    number: int, contract: SelectedResponseContract
+) -> list[list[str]]:
+    values = contract.inputs
+    if number == 7:
+        return [
+            ["Financial data", "£m"],
+            ["Sales revenue", str(values["revenue"])],
+            ["Cost of sales", str(values["cost_of_sales"])],
+            ["Operating expenses", str(values["operating_expenses"])],
+            ["Taxation", str(values["taxation"])],
+        ]
+    if number == 10:
+        return [
+            ["Factory", "Output", "Employees"],
+            *[
+                [row.label, str(row.output), str(row.employees)]
+                for row in contract.rows
+            ],
+        ]
+    if number == 12:
+        return [
+            ["Evidence", "Observed rate of change"],
+            ["External environment", str(values["external_change"]).title()],
+            ["Business strategy", str(values["strategic_change"]).title()],
+        ]
+    if number == 13:
+        return [
+            ["Measure of performance", "Target", "Actual"],
+            *[[row.label, f"{row.target}%", f"{row.actual}%"] for row in contract.rows],
+        ]
+    return []
+
+
 # Build a contract from the one operation-owned output format policy.
 def selected_response_contract(
     operation: SelectedOperation,

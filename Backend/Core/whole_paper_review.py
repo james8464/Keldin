@@ -6,15 +6,20 @@ from collections.abc import Callable, Iterable
 from dataclasses import asdict, dataclass
 from hashlib import sha256
 from itertools import combinations, combinations_with_replacement, product
-from typing import Literal, get_args
+from typing import get_args
 from unicodedata import normalize
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
 from Backend.Core.assessment_checkpoints import AssessmentCheckpointStore
-from Backend.Core.france.generation_budget import FrenchGenerationBudget
+from Backend.Core.france.generation_budget import (
+    FrenchGenerationBudget,
+    GenerationLimitError,
+)
 from Backend.Core.generation_requests import GenerationRequest, request_json
 from Backend.Core.json_client import JSONGenerationClient
+from Backend.Core.paper_review_contract import FindingKind
+from Backend.Core.paper_review_contract import PaperFinding as PaperFinding
 
 _REQUEST_BYTES = 12_000
 _REVIEW_OUTPUT_TOKENS = 1024
@@ -22,13 +27,6 @@ _MAX_GROUPS = 7
 _MAX_ITEM_WINDOWS = 128
 _MAX_CROSS_WINDOWS = 256
 WHOLE_PAPER_REVIEW_V1 = "whole-paper-review-v1"
-FindingKind = Literal[
-    "answer_leakage",
-    "self_answer_leakage",
-    "duplicate_demand",
-    "contradiction",
-    "credit_mismatch",
-]
 _KEY_EVIDENCE = {"answer_leakage", "self_answer_leakage", "credit_mismatch"}
 _SAME_ITEM_EVIDENCE = {"self_answer_leakage", "credit_mismatch"}
 
@@ -45,17 +43,6 @@ class ReviewItem:
     context: tuple[str, ...] = ()
     options: tuple[str, ...] = ()
     marks: int | str | None = None
-
-
-class PaperFinding(BaseModel):
-    model_config = ConfigDict(extra="forbid", frozen=True, strict=True)
-
-    kind: FindingKind
-    target_id: str = Field(min_length=1, max_length=80)
-    peer_id: str = Field(min_length=1, max_length=80)
-    target_quote: str = Field(min_length=4, max_length=240)
-    peer_quote: str = Field(min_length=4, max_length=240)
-    reason: str = Field(min_length=4, max_length=320)
 
 
 class PaperVerdict(BaseModel):
@@ -668,12 +655,19 @@ def _findings(
             return
         try:
             windows = _review_windows(items, encode)
+            preflight(len(windows))
         except _WholeItemBudgetError:
-            if french_transport or reference_evidence:
+            if reference_evidence:
                 raise
             yield from scan_staged()
             return
-        preflight(len(windows))
+        except GenerationLimitError:
+            if reference_evidence:
+                raise
+            # Admission failed before dispatch; use a complete evidence plan
+            # only if it fits the same remaining request and token limits.
+            yield from scan_staged()
+            return
         for window, payload in windows:
             presented = {item.id: item for item in window}
             yield (
@@ -875,6 +869,10 @@ def validate_finding_evidence(
         )
 
 
+class PaperRepairRejected(ValueError):
+    """A locally accepted repair still failed whole-paper review."""
+
+
 def review_and_repair_paper(
     items: tuple[ReviewItem, ...],
     client: JSONGenerationClient,
@@ -936,7 +934,7 @@ def review_and_repair_paper(
                 for item in changed
             )
         ):
-            raise ValueError(
+            raise PaperRepairRejected(
                 "paper repair did not produce a changed, complete owned item"
             )
         by_id.update((item.id, item) for item in changed)
@@ -950,5 +948,5 @@ def review_and_repair_paper(
         staged_evidence=staged_evidence,
         window_checkpoint=window_checkpoint,
     ):
-        raise ValueError("paper still has findings after targeted repair")
+        raise PaperRepairRejected("paper still has findings after targeted repair")
     return ReviewedPaper(repaired, tuple(key for key in by_id if key in repaired_ids))

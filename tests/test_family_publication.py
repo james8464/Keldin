@@ -226,6 +226,125 @@ def test_family_renders_only_the_reviewed_repair(tmp_path, monkeypatch, changes_
     assert len(seen) == (1 if changes_peer else 2)
 
 
+def test_same_seed_retry_reauthors_a_rejected_whole_paper_repair(tmp_path, monkeypatch):
+    from Backend.Core.generation_requests import GenerationRequest, request_json
+    from Backend.Core.item_stage_checkpoints import checkpoint_stage
+
+    original = {
+        "id": "owned-paper-1",
+        "seed": 1,
+        "sections": [
+            {
+                "options": [
+                    {
+                        "questions": [
+                            {
+                                "number": "1",
+                                "prompt": "Explain the delay.",
+                                "marks": 1,
+                                "mark_scheme": ["Credit a specific cause."],
+                            }
+                        ]
+                    }
+                ]
+            }
+        ],
+    }
+
+    def failing_verdict(stem):
+        return {
+            "findings": [
+                {
+                    "kind": "credit_mismatch",
+                    "target_id": "1@sections.0.options.0.questions.0",
+                    "peer_id": "1@sections.0.options.0.questions.0",
+                    "target_quote": stem,
+                    "peer_quote": "Credit a specific cause.",
+                    "reason": "The task asks for an explanation but only one cause earns credit.",
+                }
+            ]
+        }
+
+    class Reviewer:
+        def __init__(self, replacement, verdicts):
+            self.replacement = replacement
+            self.verdicts = iter(verdicts)
+
+        def generate_json(self, prompt):
+            return (
+                {"prompt": self.replacement}
+                if prompt == "Repair the question."
+                else next(self.verdicts)
+            )
+
+    def repair(_original, _current, *, client, stage_store, **_):
+        from copy import deepcopy
+
+        revised = deepcopy(original)
+        replacement = checkpoint_stage(
+            stage_store,
+            "whole-paper-repair:0/0/0",
+            "difficulty",
+            lambda: request_json(
+                client,
+                GenerationRequest(
+                    "Repair the question.",
+                    "difficulty",
+                    {"type": "object", "properties": {"prompt": {"type": "string"}}},
+                ),
+            ),
+        )
+        revised["sections"][0]["options"][0]["questions"][0]["prompt"] = replacement[
+            "prompt"
+        ]
+        return revised
+
+    rendered = []
+
+    def artifacts(assessment, *_):
+        rendered.append(
+            assessment["sections"][0]["options"][0]["questions"][0]["prompt"]
+        )
+        raise RuntimeError("reached publication with repaired content")
+
+    adapter = replace(
+        owned_adapter(),
+        build=lambda *_: original,
+        load_syllabus=lambda _: SimpleNamespace(topics=(), topic_ids=()),
+        artifacts=artifacts,
+    )
+    monkeypatch.setattr(family_adapter, "profile_for", lambda *_: None)
+    monkeypatch.setattr(
+        family_adapter, "generate_unique_paper", lambda *_a, **_kw: original
+    )
+    monkeypatch.setattr(family_adapter, "regenerate_generic_paper_item", repair)
+
+    def run(client):
+        return family_adapter.run_family_adapter(
+            adapter,
+            paper="1",
+            syllabus_path=tmp_path / "unused",
+            output_dir=tmp_path / "output",
+            seed=1,
+            dry_run=False,
+            client=client,
+            checkpoint_path=tmp_path / "paper.json",
+        )
+
+    rejected = "Explain why traffic was delayed."
+    with pytest.raises(ValueError, match="still has findings"):
+        run(
+            Reviewer(
+                rejected,
+                [failing_verdict("Explain the delay."), failing_verdict(rejected)],
+            )
+        )
+    assert not rendered
+    with pytest.raises(RuntimeError, match="reached publication"):
+        run(Reviewer("State one cause of the delay.", [{"findings": []}]))
+    assert rendered == ["State one cause of the delay."]
+
+
 @pytest.mark.parametrize("failure_type", [RuntimeError, InterruptedError])
 def test_actual_direct_edexcel_late_render_failure_preserves_old_set(
     tmp_path, monkeypatch, failure_type

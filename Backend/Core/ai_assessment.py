@@ -51,7 +51,11 @@ from Backend.Core.independent_solver import (
     reconcile_solution,
     solution_failure_evidence,
 )
-from Backend.Core.item_stage_checkpoints import checkpoint_stage, discard_stages
+from Backend.Core.item_stage_checkpoints import (
+    checkpoint_stage,
+    discard_stages,
+    whole_paper_repair_stage,
+)
 from Backend.Core.json_client import JSONGenerationClient
 from Backend.Core.mark_scheme_quality import validate_mark_scheme_item
 from Backend.Core.model_review import (
@@ -377,7 +381,7 @@ def regenerate_generic_paper_item(
             + json.dumps(evidence, ensure_ascii=False)
         ),
         stage_store=stage_store,
-        stage_id=f"whole-paper-repair:{task.id}",
+        stage_id=whole_paper_repair_stage(item_id),
     )
     section_index, option_index, question_index = task.key
     sections = list(current.sections)

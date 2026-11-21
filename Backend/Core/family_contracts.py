@@ -8,7 +8,7 @@ from pathlib import Path
 
 from Backend.Core.assessment_checkpoints import AssessmentCheckpointStore
 from Backend.Core.json_client import JSONGenerationClient
-from Backend.Core.whole_paper_review import PaperFinding
+from Backend.Core.paper_review_contract import PaperFinding
 
 ProgressCallback = Callable[[str], None]
 

@@ -1031,6 +1031,82 @@ def test_french_review_plan_must_fit_all_remaining_calls(
     assert budget.snapshot()["reserved_output_tokens"] == 0
 
 
+def test_french_oversized_item_uses_staged_review_without_dropping_evidence():
+    from Backend.Core.france.generation_budget import FrenchGenerationBudget
+
+    controller = _controller()
+    long_context = " ".join(
+        f"Équipe {index} retient le résultat de cette étape." for index in range(245)
+    )
+    items = (
+        controller.ReviewItem(
+            "E1/1", "Expliquer la règle.", "Donner la règle correcte.", (long_context,)
+        ),
+        controller.ReviewItem("E2/1", "Identifier la structure.", "Une file."),
+    )
+    requests = []
+
+    class LocalReviewer:
+        def generate_request(self, request):
+            requests.append(request)
+            return {"findings": []}
+
+    budget = FrenchGenerationBudget(LocalReviewer())
+    result = controller.review_and_repair_paper(
+        items, budget, repair=lambda item, _: item, french_transport=True
+    )
+    assert result.items == items
+    assert 1 < len(requests) == budget.snapshot()["started_requests"]
+    assert all(request.operation == "french_nsi_authoring" for request in requests)
+    assert all(
+        len(request.prompt.split("\n", 1)[-1].encode()) <= 12_000
+        for request in requests
+    )
+    packets = [json.loads(request.prompt.split("\n", 1)[-1]) for request in requests]
+    sent = {
+        text
+        for packet in packets
+        for field, text, _owners in packet["references"]
+        if field == "context"
+    }
+    assert sent == {
+        long_context[start : start + 240] for start in range(0, len(long_context), 240)
+    }
+
+
+def test_french_review_can_choose_a_smaller_complete_plan_before_dispatch(monkeypatch):
+    from Backend.Core.france import generation_budget
+
+    controller = _controller()
+    items = tuple(
+        controller.ReviewItem(
+            f"E{i + 1}/1",
+            f"Question {i}",
+            "".join(f"{i:02d}{index:04d}" for index in range(2900 // 6)),
+            ("Faits partagés." * 10,),
+        )
+        for i in range(5)
+    )
+    requests = []
+
+    class LocalReviewer:
+        def generate_request(self, request):
+            requests.append(request)
+            return {"findings": []}
+
+    monkeypatch.setattr(generation_budget, "MAX_REQUESTS", 5)
+    budget = generation_budget.FrenchGenerationBudget(LocalReviewer())
+    result = controller.review_and_repair_paper(
+        items, budget, repair=lambda item, _: item, french_transport=True
+    )
+    assert result.items == items
+    assert len(requests) == budget.snapshot()["started_requests"] == 5
+    assert all(
+        "references" in json.loads(request.prompt.split("\n", 1)[-1])
+        for request in requests
+    )
+
+
 def test_uk_export_receipt_verifies_exact_reviewed_content(tmp_path):
     from Backend.Core import assessment_package
 

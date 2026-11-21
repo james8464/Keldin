@@ -25,6 +25,7 @@ from Backend.Core.family_contracts import ArtifactSpec as ArtifactSpec
 from Backend.Core.family_contracts import BuildResult as BuildResult
 from Backend.Core.family_contracts import FamilyAdapter as FamilyAdapter
 from Backend.Core.family_contracts import ProgressCallback as ProgressCallback
+from Backend.Core.item_stage_checkpoints import discard_stages, whole_paper_repair_stage
 from Backend.Core.json_client import JSONGenerationClient
 from Backend.Core.model_recommendations import default_ollama_model
 from Backend.Core.numeric_integrity import NUMERIC_INTEGRITY_VERSION
@@ -34,6 +35,7 @@ from Backend.Core.reference_demand import profile_for
 from Backend.Core.render_transaction import render_pdf_atomically
 from Backend.Core.whole_paper_review import (
     PaperFinding,
+    PaperRepairRejected,
     ReviewItem,
     multipart_review_owner,
     review_and_repair_paper,
@@ -183,6 +185,7 @@ def run_family_adapter[Syllabus, Rule, Assessment, Context](
 
         repair_route = adapter.repair_whole_paper_item
         owner = multipart_review_owner if repair_route is not None else None
+        repair_stages: list[str] = []
 
         def repair(
             item: ReviewItem, findings: tuple[PaperFinding, ...]
@@ -205,6 +208,8 @@ def run_family_adapter[Syllabus, Rule, Assessment, Context](
                     f"whole-paper review found an unresolved issue at {item.id}"
                 )
             else:
+                if checkpoint_store is not None:
+                    repair_stages.append(whole_paper_repair_stage(item.id))
                 assessment = regenerate_generic_paper_item(
                     original,
                     assessment,
@@ -236,13 +241,21 @@ def run_family_adapter[Syllabus, Rule, Assessment, Context](
                 raise ValueError("whole-paper repair changed an unrelated item")
             return tuple(view for view in after if view.id in owned_ids)
 
-        reviewed = review_and_repair_paper(
-            project(assessment),
-            question_client,
-            repair=repair,
-            owner=owner,
-            window_checkpoint=checkpoint_store,
-        )
+        try:
+            reviewed = review_and_repair_paper(
+                project(assessment),
+                question_client,
+                repair=repair,
+                owner=owner,
+                window_checkpoint=checkpoint_store,
+            )
+        except PaperRepairRejected:
+            # Preserve original items and verified review windows. Only the
+            # rejected repair transaction needs fresh model responses.
+            if checkpoint_store is not None:
+                for stage in repair_stages:
+                    discard_stages(checkpoint_store, stage)
+            raise
         if project(assessment) != reviewed.items:
             raise ValueError(
                 "whole-paper review does not match the rendered assessment"

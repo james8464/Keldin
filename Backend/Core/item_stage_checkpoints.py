@@ -28,6 +28,18 @@ def discard_stages(
     store.discard_payloads((item_id, *keys) if include_item else keys)
 
 
+def whole_paper_repair_stage(item_id: str) -> str:
+    path = item_id.rpartition("@")[2]
+    offsets = path.split(".")
+    if (
+        len(offsets) != 6
+        or offsets[::2] != ["sections", "options", "questions"]
+        or not all(offset.isascii() and offset.isdecimal() for offset in offsets[1::2])
+    ):
+        raise ValueError(f"whole-paper repair requires a question path: {item_id}")
+    return "whole-paper-repair:" + "/".join(offsets[1::2])
+
+
 def checkpoint_stage[Result](
     store: AssessmentCheckpointStore | None,
     item_id: str,

@@ -59,6 +59,12 @@ from Backend.Core.whole_paper_review import (
 
 _CANONICAL_WHOLE_PAPER_REVIEW = "whole-paper-review-v2"
 _ACCOUNTING_PAPER_ONE_REVIEW = "accounting-paper-one-printed-source-review-v1"
+_EDEXCEL_PAPERS_ONE_TWO_REVIEW = (
+    "edexcel-economics-papers-one-two-printed-source-review-v1"
+)
+_EDEXCEL_PAPER_THREE_REVIEW = "edexcel-economics-paper-three-printed-source-review-v1"
+_BUSINESS_PAPER_ONE_REVIEW = "business-paper-one-printed-source-review-v1"
+_BUSINESS_CASE_REVIEW = "business-papers-two-three-printed-source-review-v1"
 
 
 # The package cannot be upgraded safely by this application version.
@@ -253,7 +259,7 @@ def validate_assessment_package(
             or source_scope_version != 1
             or not isinstance(review_receipt, dict)
             or not isinstance(review_policy, str)
-            or review_policy not in (WHOLE_PAPER_REVIEW_V1, current_policy)
+            or review_policy not in _readable_review_policies(current_policy)
             or (require_whole_paper_review and review_policy != current_policy)
             or type(review_receipt.get("reviewed_items")) is not int
             or not isinstance(review_receipt.get("repaired_ids"), list)
@@ -530,7 +536,227 @@ def _validate_published_choice_stems(items: list[dict[str, Any]]) -> None:
 def _whole_paper_review_policy(subject: str, paper_number: str) -> str:
     if (subject, paper_number) == ("accounting_aqa", "1"):
         return _ACCOUNTING_PAPER_ONE_REVIEW
+    if subject == "economics" and paper_number in ("1", "2"):
+        return _EDEXCEL_PAPERS_ONE_TWO_REVIEW
+    if (subject, paper_number) == ("economics", "3"):
+        return _EDEXCEL_PAPER_THREE_REVIEW
+    if (subject, paper_number) == ("business_aqa", "1"):
+        return _BUSINESS_PAPER_ONE_REVIEW
+    if subject == "business_aqa" and paper_number in ("2", "3"):
+        return _BUSINESS_CASE_REVIEW
     return _CANONICAL_WHOLE_PAPER_REVIEW
+
+
+def _readable_review_policies(current_policy: str) -> tuple[str, ...]:
+    return (WHOLE_PAPER_REVIEW_V1, _CANONICAL_WHOLE_PAPER_REVIEW, current_policy)
+
+
+def _business_paper_one_review_context(
+    item_path: str, question: dict[str, Any]
+) -> tuple[str, ...]:
+    from Backend.Core.subjects.selected_response import (
+        SelectedResponseContract,
+        business_selected_response_printed_table,
+    )
+
+    components = item_path.split(".")
+    if not (
+        len(components) == 6
+        and components[:3] == ["sections", "0", "options"]
+        and components[-2:] == ["questions", "0"]
+    ):
+        return ()
+    context = question.get("authoring_context") or {}
+    raw = context.get("selected_response_contract")
+    number = str(question.get("number", ""))
+    if not isinstance(raw, dict) or not (number.isascii() and number.isdecimal()):
+        return ()
+    contract = SelectedResponseContract.model_validate(raw)
+    if int(number) == 6:
+        from aqabizgen.source_figures import BreakEvenFigure
+
+        return BreakEvenFigure.from_contract(contract).review_context()
+    return tuple(
+        " | ".join(row)
+        for row in business_selected_response_printed_table(int(number), contract)
+    )
+
+
+def _edexcel_section_a_review_context(
+    blueprint: dict[str, Any], item_path: str
+) -> tuple[str, ...]:
+    from Backend.Core.subjects.economics_contracts import EconomicsSource
+
+    components = item_path.split(".")
+    if components[0] != "questions" or len(components) < 2:
+        return ()
+    question = blueprint["questions"][int(components[1])]
+    # These are the data/figure pages rendered inline in Papers 1 and 2.
+    # A first-part drawing task replaces the supplied figure with text.
+    parts = question.get("parts") or ()
+    raw = question.get("source_instance")
+    if (
+        question.get("section") != "A"
+        or not isinstance(raw, dict)
+        or question.get("stimulus_kind") != raw.get("kind")
+        or (parts and parts[0].get("command_word") == "draw")
+    ):
+        return ()
+    source = EconomicsSource.model_validate(raw)
+    if not (source.rows or source.values):
+        from pastpapergen.models import GraphParams
+        from pastpapergen.stimulus_diagrams import printed_diagram_review_context
+
+        diagram = printed_diagram_review_context(
+            source.kind,
+            GraphParams.from_dict(question.get("graph_params") or {}).to_dict(),
+        )
+        return (source.context, *diagram) if diagram and source.context else diagram
+    content = tuple(sorted(source.printed_givens()))
+    if source.context:
+        content = (source.context, *content)
+    if source.rows:
+        return (*content, *(" | ".join(row) for row in source.printed_rows()))
+    return (
+        *content,
+        *(title for title in (source.y_label, source.x_label) if title),
+        *(f"{label}: {value}" for label, value in source.printed_points()),
+    )
+
+
+def _edexcel_section_b_review_context(
+    blueprint: dict[str, Any], item_path: str
+) -> tuple[str, ...] | None:
+    from Backend.Core.subjects.economics_contracts import section_b_extract_indices
+
+    path = item_path.split(".")
+    if len(path) < 2 or path[0] != "questions":
+        return None
+    questions = blueprint["questions"]
+    question = questions[int(path[1])]
+    if question.get("section") != "B":
+        return None
+    section = [row for row in questions if row.get("section") == "B"]
+    reference = question.get("source_reference")
+    return tuple(
+        f"{label}: {section[index]['source_text']}"
+        for position, index in enumerate(section_b_extract_indices(len(section)))
+        if (label := f"Extract {chr(65 + position)}") == reference or not reference
+    )
+
+
+def _edexcel_paper_three_review_context(
+    blueprint: dict[str, Any], item_path: str
+) -> tuple[str, ...] | None:
+    from Backend.Core.subjects.economics_contracts import (
+        EconomicsSource,
+        case_figure_title,
+        paper_three_extracts,
+    )
+
+    path = item_path.split(".")
+    if len(path) < 2 or path[0] != "questions":
+        return None
+    questions = blueprint["questions"]
+    question = questions[int(path[1])]
+    section = question.get("section")
+    reference = question.get("source_reference", "")
+    section_questions = [row for row in questions if row.get("section") == section]
+    if section not in {"A", "B"} or len(section_questions) != 5 or not reference:
+        return None
+    extracts = paper_three_extracts(
+        section, [row["source_text"] for row in section_questions]
+    )
+    figure_owners = (
+        {"Figure 1": 0, "Figure 2": 1} if section == "A" else {"Figure 3": 0}
+    )
+    content = []
+    for name in dict.fromkeys(
+        re.findall(r"\b(?:Figure [123]|Extract [A-F])\b", reference)
+    ):
+        if name in extracts:
+            content.append(f"{name}: {extracts[name]}")
+        elif name in figure_owners and section_questions[0].get("source_instance"):
+            raw = section_questions[figure_owners[name]]["source_instance"]
+            source = EconomicsSource.model_validate(raw)
+            content.append(case_figure_title(int(name[-1])))
+            if source.rows:
+                content.extend(" | ".join(row) for row in source.printed_case_rows())
+            else:
+                content.append(source.context)
+    return tuple(filter(None, content)) or None
+
+
+def _business_paper_one_section_b_context(
+    blueprint: dict[str, Any], item_path: str
+) -> tuple[str, ...] | None:
+    prefix = "sections.1.options.0.questions."
+    if not item_path.startswith(prefix):
+        return None
+    position = item_path.removeprefix(prefix)
+    # Paper 1 prints two case tables, not the option's generic bookkeeping
+    # extracts. Q19 and Q20 are standalone even though they share the option.
+    if position not in {"0", "1", "2"}:
+        return ()
+    from aqabizgen.financials import FinancialPosition, restructuring_printed_rows
+
+    option = blueprint["sections"][1]["options"][0]
+    chart_values = option["chart_values"]
+    rows = (
+        FinancialPosition.from_chart_values(chart_values).printed_rows(option["title"])
+        if position in {"0", "1"}
+        else restructuring_printed_rows(chart_values)
+    )
+    return tuple(" | ".join(cell for cell in row if cell) for row in rows if any(row))
+
+
+def _business_case_figure_context(
+    blueprint: dict[str, Any], item_path: str, paper_number: str
+) -> tuple[str, ...]:
+    from aqabizgen.source_figures import (
+        chart_values,
+        grouped_chart_title,
+        market_chart_values,
+        printed_points,
+        source_table_rows,
+    )
+
+    from Backend.Core.exam_blueprints import GeneratedOption
+
+    parts = item_path.split(".")
+    if len(parts) != 6 or parts[::2] != ["sections", "options", "questions"]:
+        return ()
+    section_index, option_index = int(parts[1]), int(parts[3])
+    if option_index != 0 or (paper_number == "3" and section_index != 0):
+        return ()
+    option = GeneratedOption.model_validate(
+        blueprint["sections"][section_index]["options"][option_index]
+    )
+    if paper_number == "2":
+        points = printed_points(option, chart_values(option))
+        if section_index == 0:
+            return (
+                grouped_chart_title(option.title),
+                "Business sales index (labelled), market value index (unlabelled bars)",
+                *(f"{label}: {value}" for label, value in points),
+                *(
+                    f"{label} market bar height represents {value:.1f} (not a printed label)"
+                    for (label, _), value in zip(
+                        points, market_chart_values(option), strict=True
+                    )
+                ),
+            )
+        return (option.chart_title, *(f"{label}: {value}" for label, value in points))
+    figures = []
+    for extract in range(1, len(option.stimulus) + 1):
+        figures.append(f"Extract {extract} figures")
+        figures.extend(" | ".join(row) for row in source_table_rows(option, extract))
+        figures.append(option.chart_title)
+        figures.extend(
+            f"{label}: {value}"
+            for label, value in printed_points(option, chart_values(option, extract))
+        )
+    return tuple(figures)
 
 
 def _accounting_paper_one_review_context(
@@ -599,7 +825,7 @@ def whole_paper_review_items(
     blueprint = _serialise(paper)
     current_policy = _whole_paper_review_policy(subject, paper_number)
     policy = current_policy if policy is None else policy
-    if policy not in (WHOLE_PAPER_REVIEW_V1, current_policy):
+    if policy not in _readable_review_policies(current_policy):
         raise AssessmentPackageCompatibilityError(
             "Unsupported whole-paper review policy"
         )
@@ -635,6 +861,26 @@ def whole_paper_review_items(
         context = tuple(item["context"])
         if policy == _ACCOUNTING_PAPER_ONE_REVIEW:
             context += _accounting_paper_one_review_context(blueprint, item_path, raw)
+        elif policy == _EDEXCEL_PAPERS_ONE_TWO_REVIEW:
+            case = _edexcel_section_b_review_context(blueprint, item_path)
+            if case is None:
+                printed = _edexcel_section_a_review_context(blueprint, item_path)
+                context = tuple(dict.fromkeys((*context, *printed)))
+            else:
+                context = case
+        elif policy == _EDEXCEL_PAPER_THREE_REVIEW:
+            printed = _edexcel_paper_three_review_context(blueprint, item_path)
+            if printed is not None:
+                context = printed
+        elif policy == _BUSINESS_PAPER_ONE_REVIEW:
+            case_source = _business_paper_one_section_b_context(blueprint, item_path)
+            context = (
+                context + _business_paper_one_review_context(item_path, raw)
+                if case_source is None
+                else case_source
+            )
+        elif policy == _BUSINESS_CASE_REVIEW:
+            context += _business_case_figure_context(blueprint, item_path, paper_number)
         result.append(
             ReviewItem(
                 id=item["id"],
