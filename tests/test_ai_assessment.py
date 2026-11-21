@@ -2193,6 +2193,15 @@ def test_levels_scheme_requires_explicit_descriptors() -> None:
     [
         "Indicative content",
         "Award each reason only when it is developed in the business context.",
+        "Credit any suitable answer.",
+        "Credit balance if the candidate gives the correct value.",
+        "Credit is awarded for a correct entry.",
+        "Credit is recorded only if the candidate gives the correct total.",
+        "Credit sales increase as an alternative.",
+        "Credit is used for a correct entry.",
+        "Credit is recorded if the calculation is correct.",
+        "Credit is entered for any valid method.",
+        "Credit is recorded in a ledger account; allow any answer.",
         "Examiner guidance: accept any other reasonable response.",
     ],
 )
@@ -2220,6 +2229,34 @@ def test_awarded_mark_points_reject_examiner_meta_guidance(text: str) -> None:
                 )
             ],
         )
+
+
+@pytest.mark.parametrize(
+    "text",
+    [
+        "Credit is recorded on the right-hand side of a ledger account.",
+        "Credit balances are carried down to the next period.",
+        "Credit purchases increase trade payables.",
+        "Credit notes are issued to correct an overcharge.",
+        "Credit sales are recognised when control passes to the customer.",
+    ],
+)
+def test_awarded_mark_points_accept_credit_as_an_accounting_noun(text: str) -> None:
+    question = GeneratedQuestion(
+        rule_id="q1",
+        number="1",
+        marks=1,
+        kind="short_answer",
+        command_word="state",
+        topic_id="bookkeeping",
+        prompt="State one bookkeeping fact.",
+        mark_scheme=[text],
+        assessment_objectives={"AO1": 1},
+    )
+    _validate_mark_points(
+        question,
+        [MarkSchemePoint(text=text, marks=1, assessment_objective="AO1")],
+    )
 
 
 def test_levels_scheme_normalises_model_arithmetic_to_blueprint() -> None:

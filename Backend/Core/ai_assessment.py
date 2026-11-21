@@ -1434,6 +1434,24 @@ def _is_examiner_meta_guidance(text: str) -> bool:
     normalised = " ".join(text.casefold().split())
     if normalised in {"answer", "guidance", "indicative content", "mark scheme"}:
         return True
+    # “Credit” can be a bookkeeping noun, not an instruction to award a mark.
+    # Only exempt unambiguous accounting predicates from the imperative check.
+    if re.match(
+        r"^credit (?:balances?|notes?|sales?|purchases?) "
+        r"(?:is|are|was|were) "
+        r"(?:recorded|posted|entered|carried|issued|recogni[sz]ed|"
+        r"used to (?:record|track|document))\b"
+        r"|^credit (?:sales|purchases) (?:increase|decrease|reduce) "
+        r"(?:trade (?:payables|receivables)|current liabilities|inventory|revenue)\b"
+        r"|^credit (?:is|was) (?:recorded|posted|entered) (?:in|on|to) "
+        r"[^.!?;]{0,80}\b(?:ledger|accounts?|journals?)\b",
+        normalised,
+    ) and not re.search(
+        r"\b(?:candidate|response|examiner|marks?)\b"
+        r"|[.!?:;]\s*(?:award|accept|allow|ignore|do not accept)\b",
+        normalised,
+    ):
+        return False
     return bool(
         re.match(
             r"^(?:award|credit|accept|allow|ignore|do not accept|examiner|marker|"
