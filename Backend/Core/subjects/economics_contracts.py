@@ -58,6 +58,24 @@ class EconomicsSource(BaseModel):
     unit: Literal["1", "%", "index"] = "1"
     givens: dict[str, SourceCell] = Field(default_factory=dict)
 
+    def printed_givens(self) -> tuple[str, ...]:
+        return tuple(
+            f"{name.replace('_', ' ').capitalize()}: {cell.printed()}."
+            for name, cell in self.givens.items()
+        )
+
+    def printed_rows(self) -> list[list[str]]:
+        return [[cell.printed() for cell in row] for row in self.rows]
+
+    def printed_points(self) -> tuple[tuple[str, str], ...]:
+        return tuple(
+            (label, format(value, "f"))
+            for label, value in zip(self.labels, self.values, strict=True)
+        )
+
+    def printed_case_rows(self) -> list[tuple[str, str]]:
+        return [(row[0], row[1]) for row in self.printed_rows()]
+
     @model_validator(mode="after")
     def coherent(self):
         if len(self.values) != len(self.labels) or any(
@@ -130,6 +148,32 @@ UNSUPPORTED_CALCULATIONS = {
 
 
 # Code-owned requested operation, not a draft/model-provided instruction.
+def section_b_extract_indices(question_count: int) -> tuple[int, ...]:
+    # Q6(c) has no separately labelled extract. Q6(d) owns Extract C.
+    return (0, 1, 3, 4) if question_count >= 5 else tuple(range(question_count))
+
+
+def paper_three_extracts(section: str, texts: list[str]) -> dict[str, str]:
+    first, second, third, fourth, fifth = texts
+    if section == "A":
+        return {
+            "Extract A": " ".join(dict.fromkeys((first, second))),
+            "Extract B": third,
+            "Extract C": f"{fourth} {fifth}",
+        }
+    if section == "B":
+        return {
+            "Extract D": first,
+            "Extract E": " ".join(dict.fromkeys((second, third, fourth))),
+            "Extract F": fifth,
+        }
+    raise ValueError("unrecognised Edexcel Paper 3 source section")
+
+
+def case_figure_title(number: int) -> str:
+    return f"Figure {number}: illustrative case information"
+
+
 def calculation_prompt(source: EconomicsSource, marks: int) -> str:
     kind = source.kind
     if (kind, marks) not in SUPPORTED_CALCULATIONS:

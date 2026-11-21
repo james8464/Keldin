@@ -95,7 +95,7 @@ def test_adapter_passes_the_same_minimal_client_without_requiring_metadata(
 ):
     from Backend.Core import family_adapter
 
-    client = MinimalClient()
+    client = MinimalClient({"findings": []})
     factories, observed, packages = [], [], []
 
     def factory(model, url):
@@ -115,7 +115,18 @@ def test_adapter_passes_the_same_minimal_client_without_requiring_metadata(
         prompt_version="fixture-v1",
         load_syllabus=lambda _: None,
         load_rule=lambda _: None,
-        build=lambda *_: {"paper_id": "fixture", "seed": 123},
+        build=lambda *_: {
+            "paper_id": "fixture",
+            "seed": 123,
+            "questions": [
+                {
+                    "number": "1",
+                    "prompt": "Explain the result.",
+                    "marks": 1,
+                    "mark_scheme": ["Credit the stated cause."],
+                }
+            ],
+        },
         artifacts=lambda *_: (),
         stem=lambda *_: "fixture",
         improve=improve,
@@ -148,7 +159,9 @@ def test_adapter_passes_the_same_minimal_client_without_requiring_metadata(
     )
     assert packages[0]["provider"] == "ollama"
     assert packages[0]["model"] == "fixture-model"
-    assert client.prompts == []
+    assert len(client.prompts) == 1
+    assert "Explain the result." in client.prompts[0]
+    assert "Credit the stated cause." in client.prompts[0]
     assert published["assessment_package"] == tmp_path / "out/fixture-assessment.json"
     assert published["assessment_package"].read_text(encoding="utf-8") == "{}"
 

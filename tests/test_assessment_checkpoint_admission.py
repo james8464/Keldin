@@ -274,6 +274,24 @@ def test_existing_poison_is_evicted_then_retry_reauthors_only_refused_batch(
         assert store.load_item(key) == previous
 
 
+def test_duplicate_inside_one_batch_cannot_replay_its_rejected_draft(tmp_path):
+    paper, rule, topics = fixture()
+    first = SchemaClient("serial")
+    store = store_for(tmp_path / "job.json", paper, first)
+    with pytest.raises(RuntimeError, match="too similar"):
+        run(paper, rule, topics, first, store, batch_size=2)
+    assert store.load_item("0/0/0") is not None
+    assert store.load_item("0/0/1") is None
+    assert store.load_payload("item-stage-v1:0/0/1:authoring") is None
+
+    next_client = SchemaClient("serial", prompts={"0/0/1": ALTERNATIVE})
+    run(paper, rule, topics, next_client, store, batch_size=2)
+    assert next_client.calls == [
+        ("authoring", "0/0/1"),
+        ("batch_review", "0/0/1"),
+    ]
+
+
 @pytest.mark.parametrize("mode", ["serial", "local", "hosted"])
 @pytest.mark.parametrize("error_type", [RuntimeError, KeyboardInterrupt])
 def test_admitted_work_survives_later_failure_or_cancellation(

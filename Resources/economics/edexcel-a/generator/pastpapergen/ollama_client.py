@@ -35,6 +35,11 @@ from Backend.Core.review_workers import (
     map_hosted_jobs,
     map_reviews,
 )
+from Backend.Core.whole_paper_review import (
+    PaperFinding,
+    multipart_review_owner,
+    repair_evidence,
+)
 from pastpapergen.extended_scenarios import SCENARIOS
 from pastpapergen.models import (
     MultipleChoiceOption,
@@ -143,6 +148,8 @@ def generate_questions_with_ollama(
     syllabus: Syllabus,
     progress: Callable[[str], None] | None = None,
     checkpoint_store: AssessmentCheckpointStore | None = None,
+    *,
+    repair_feedback: str = "",
 ) -> PaperBlueprint:
     emit = progress or (lambda _message: None)
     total = len(blueprint.questions)
@@ -222,7 +229,7 @@ def generate_questions_with_ollama(
                 f"{question.number} ({topic.title})",
             )
         base_prompt = build_question_prompt(question, topic, blueprint.paper_id)
-        failure = ""
+        failure = repair_feedback
         for attempt in range(1, 4):
             retry_prompt = (
                 base_prompt
@@ -243,8 +250,14 @@ def generate_questions_with_ollama(
             question_text = _merge_question_text(
                 question, str(payload.get("question_text") or "")
             )
-            source_text = _merge_source_text(
-                str(payload.get("source_text") or ""), question.source_text, question
+            source_text = (
+                question.source_text
+                if repair_feedback
+                else _merge_source_text(
+                    str(payload.get("source_text") or ""),
+                    question.source_text,
+                    question,
+                )
             )
             source_reference = question.source_reference
             # Source binding, answer data and AO allocation are immutable
@@ -398,6 +411,41 @@ def generate_questions_with_ollama(
 
 
 # Run an independent demand-only gate over every rendered question item.
+def repair_edexcel_question(
+    original: PaperBlueprint,
+    assessment: PaperBlueprint,
+    syllabus: Syllabus,
+    _config: object,
+    client: JSONGenerationClient,
+    progress: Callable[[str], None] | None,
+    item_id: str,
+    findings: tuple[PaperFinding, ...],
+) -> PaperBlueprint:
+    match = re.fullmatch(r"questions\.(\d+)", multipart_review_owner(item_id))
+    if match is None or int(match[1]) >= len(original.questions):
+        raise ValueError(
+            f"whole-paper review could not locate the Edexcel question at {item_id}"
+        )
+    index = int(match[1])
+    question = original.questions[index]
+    if _uses_review_only_generation(question):
+        raise ValueError(
+            f"whole-paper review cannot rewrite the fixed Edexcel question at {item_id}"
+        )
+    selected = original.model_copy(update={"questions": [question]})
+    selected = generate_questions_with_ollama(
+        client,
+        selected,
+        syllabus,
+        progress=progress,
+        repair_feedback=repair_evidence(findings),
+    )
+    checked = review_blueprint_difficulty(client, selected, syllabus, progress)
+    questions = list(assessment.questions)
+    questions[index] = checked.questions[0]
+    return assessment.model_copy(update={"questions": questions})
+
+
 def review_blueprint_difficulty(
     client: JSONGenerationClient,
     blueprint: PaperBlueprint,

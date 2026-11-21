@@ -42,17 +42,30 @@ class FrenchGenerationBudget:
                 "La création du sujet a dépassé 30 minutes; aucun autre appel au modèle ne sera lancé."
             )
 
-    def generate_request(self, request: GenerationRequest) -> dict[str, object]:
-        if not isinstance(request, GenerationRequest):
-            raise TypeError("A typed French generation request is required.")
+    def require_capacity(self, *, requests: int, output_tokens: int) -> None:
+        """Check whether a complete batch fits without reserving or dispatching."""
+        if (
+            type(requests) is not int
+            or type(output_tokens) is not int
+            or min(requests, output_tokens) < 0
+        ):
+            raise ValueError("Budget forecasts require nonnegative integer totals.")
         self.check()
         if (
-            self._requests >= MAX_REQUESTS
-            or self._reserved + request.output_budget > MAX_RESERVED_OUTPUT_TOKENS
+            self._requests + requests > MAX_REQUESTS
+            or self._reserved + output_tokens > MAX_RESERVED_OUTPUT_TOKENS
         ):
             raise GenerationLimitError(
                 "La limite d'appels au modèle pour ce sujet est atteinte; création interrompue."
             )
+
+    def generate_request(self, request: GenerationRequest) -> dict[str, object]:
+        if (
+            not isinstance(request, GenerationRequest)
+            or request.operation != "french_nsi_authoring"
+        ):
+            raise TypeError("A typed French generation request is required.")
+        self.require_capacity(requests=1, output_tokens=request.output_budget)
         self._requests += 1
         self._reserved += request.output_budget
         result = request_json(self._client, request)

@@ -20,6 +20,7 @@ from Backend.Core.assessment_checkpoints import (
     identity_for_blueprint,
 )
 from Backend.Core.events import GenerationUpdate
+from Backend.Core.whole_paper_review import PaperFinding
 
 ROOT = Path(__file__).resolve().parents[1]
 SHARED = "Evaluate solutions to economic problems with reference to Extract C."
@@ -113,6 +114,43 @@ def run(client, full, subset, config, syllabus, store, *, progress=None):
     )
     validate_blueprint(candidate, config, syllabus)
     return candidate
+
+
+def test_whole_paper_repair_keeps_edexcel_extract_and_credit(monkeypatch):
+    full, subset, config, syllabus = fixture()
+    original = subset.questions[0]
+    index = full.questions.index(original)
+    item_id = f"{original.number}@questions.{index}"
+    findings = (
+        PaperFinding(
+            kind="credit_mismatch",
+            target_id=item_id,
+            peer_id=item_id,
+            target_quote=original.prompt[:90],
+            peer_quote="Evaluate the policy.",
+            reason="The command wording is ambiguous.",
+        ),
+    )
+    client = Client("serial", prompts={original.number: ALTERNATIVE})
+
+    def difficulty(_client, selected, _syllabus, _progress):
+        assert [question.number for question in selected.questions] == [original.number]
+        return selected
+
+    monkeypatch.setattr(ollama_client, "review_blueprint_difficulty", difficulty)
+    repair = getattr(ollama_client, "repair_edexcel_question", None)
+    assert callable(repair), "the Edexcel route needs a selective repair entry point"
+    result = repair(full, full, syllabus, config, client, None, item_id, findings)
+    changed = result.questions[index]
+    assert changed.prompt == ALTERNATIVE
+    assert changed.source_text == original.source_text
+    assert changed.source_instance == original.source_instance
+    assert changed.mark_scheme == original.mark_scheme
+    assert changed.graph_params == original.graph_params
+    assert result.questions[:index] == full.questions[:index]
+    assert result.questions[index + 1 :] == full.questions[index + 1 :]
+    assert client.calls == [("edexcel", original.number), ("review", original.number)]
+    validate_blueprint(result, config, syllabus)
 
 
 @pytest.mark.parametrize("mode", ["serial", "local", "hosted"])

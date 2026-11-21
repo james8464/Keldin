@@ -5,13 +5,13 @@
     "semantic_hash": ""
   },
   "Backend/Core/ai_assessment.py": {
-    "mtime": 1795281881.750448,
-    "ast_hash": "764cc0d2c7e8257886ca9c18ce84d4d6",
+    "mtime": 1795301177.380858,
+    "ast_hash": "b70b7de3d2165a03755ee540b37e5c8a",
     "semantic_hash": ""
   },
   "Backend/Core/assessment_checkpoints.py": {
-    "mtime": 1795284698.1240194,
-    "ast_hash": "2a498bdd0f672621bec21ba8c4a3f2d4",
+    "mtime": 1795293202.1672232,
+    "ast_hash": "0db03756cdd29f82653876d3584511fb",
     "semantic_hash": ""
   },
   "Backend/Core/assessment_contracts.py": {
@@ -25,13 +25,13 @@
     "semantic_hash": ""
   },
   "Backend/Core/assessment_package.py": {
-    "mtime": 1795279302.7370615,
-    "ast_hash": "eb92a012554baa46dab9dae0549a8a3a",
+    "mtime": 1795303313.226243,
+    "ast_hash": "de941da17c198aac488bc906b368db4b",
     "semantic_hash": ""
   },
   "Backend/Core/assessment_quality.py": {
-    "mtime": 1795279302.7373595,
-    "ast_hash": "38aeb6a432ffe5541a8534c39ff1d80d",
+    "mtime": 1795298732.8908434,
+    "ast_hash": "e58e76cf60e58a6b0c86a52c4df33086",
     "semantic_hash": ""
   },
   "Backend/Core/benchmark.py": {
@@ -140,8 +140,8 @@
     "semantic_hash": ""
   },
   "Backend/Core/exam_blueprints.py": {
-    "mtime": 1793206372.123452,
-    "ast_hash": "6035651e26c992d74cb6ea3d078f24bc",
+    "mtime": 1795282252.866689,
+    "ast_hash": "c48c75feac7a36ddaa1c8fee917811e2",
     "semantic_hash": ""
   },
   "Backend/Core/exam_cover.py": {
@@ -155,8 +155,8 @@
     "semantic_hash": ""
   },
   "Backend/Core/family_adapter.py": {
-    "mtime": 1794692667.1941762,
-    "ast_hash": "e8b66e370cefde73608bdf5dec5f04ef",
+    "mtime": 1795301177.3817701,
+    "ast_hash": "eafbdf00ad14779b3b20e97c97969558",
     "semantic_hash": ""
   },
   "Backend/Core/fonts/__init__.py": {
@@ -220,8 +220,8 @@
     "semantic_hash": ""
   },
   "Backend/Core/generation.py": {
-    "mtime": 1794692694.580785,
-    "ast_hash": "cdf46747e3b9c735a23149a09e166c28",
+    "mtime": 1795277484.5428138,
+    "ast_hash": "44180b49c62e774af6b2f72981e3dcfd",
     "semantic_hash": ""
   },
   "Backend/Core/generation_date.py": {
@@ -240,8 +240,8 @@
     "semantic_hash": ""
   },
   "Backend/Core/independent_solver.py": {
-    "mtime": 1793296581.9470067,
-    "ast_hash": "0b5beb29a95f1d411d55daa700af7422",
+    "mtime": 1795285276.8499541,
+    "ast_hash": "c511486349691206bdb2dde12ad4fc2b",
     "semantic_hash": ""
   },
   "Backend/Core/layout_conformance.py": {
@@ -375,8 +375,8 @@
     "semantic_hash": ""
   },
   "Backend/Core/reference_demand.py": {
-    "mtime": 1795279302.7451665,
-    "ast_hash": "42e598ef0d0365c7d8253ba98e69b7db",
+    "mtime": 1795286357.8566678,
+    "ast_hash": "778c187f47dd4ebff6ba44821dbafebf",
     "semantic_hash": ""
   },
   "Backend/Core/reference_evidence.py": {
@@ -445,8 +445,8 @@
     "semantic_hash": ""
   },
   "Backend/Core/subjects/economics_contracts.py": {
-    "mtime": 1794679646.037841,
-    "ast_hash": "7dd6fb05255f1b4b369cf181fd9c4d93",
+    "mtime": 1795302347.0481362,
+    "ast_hash": "d238e5eaadde08add5357f2c68a47997",
     "semantic_hash": ""
   },
   "Backend/Core/subjects/essay.py": {
@@ -465,8 +465,8 @@
     "semantic_hash": ""
   },
   "Backend/Core/subjects/selected_response.py": {
-    "mtime": 1793980688.0356262,
-    "ast_hash": "fbff6be73d07efee5c1b2ab331ed91a6",
+    "mtime": 1795301439.3077023,
+    "ast_hash": "53ca3091047e0754163563a8580f3a1d",
     "semantic_hash": ""
   },
   "Backend/Core/subjects/sql_contracts.py": {
@@ -495,13 +495,13 @@
     "semantic_hash": ""
   },
   "Resources/accounting/aqa/generator/aqaaccountgen/case_data.py": {
-    "mtime": 1794692667.1957848,
-    "ast_hash": "f1bde8bef8541104c3a418b7ed7777e6",
+    "mtime": 1795297788.873125,
+    "ast_hash": "97d859b09213f0521fbbe47ed69b5512",
     "semantic_hash": ""
   },
   "Resources/accounting/aqa/generator/aqaaccountgen/cli.py": {
-    "mtime": 1794011018.2007194,
-    "ast_hash": "0bedfc07fea3510bd8b001ff3e7fabbc",
+    "mtime": 1795287212.1790402,
+    "ast_hash": "54f76b7922fe75b4d1e78d9e0ea6c65f",
     "semantic_hash": ""
   },
   "Resources/accounting/aqa/generator/aqaaccountgen/configs.py": {
@@ -510,13 +510,13 @@
     "semantic_hash": ""
   },
   "Resources/accounting/aqa/generator/aqaaccountgen/generator.py": {
-    "mtime": 1795279302.7460182,
-    "ast_hash": "e868baf1f07e7fd57aaf237dfb8cb379",
+    "mtime": 1795286952.812373,
+    "ast_hash": "0ca2a78472a9a55930a9b222681e5423",
     "semantic_hash": ""
   },
   "Resources/accounting/aqa/generator/aqaaccountgen/render_pdf.py": {
-    "mtime": 1794705218.3232608,
-    "ast_hash": "25012bec23b206b73a52075ebb70d2ec",
+    "mtime": 1795297788.8736873,
+    "ast_hash": "87695da560c7f29cbbd3e498cccbba2e",
     "semantic_hash": ""
   },
   "Resources/accounting/aqa/generator/aqaaccountgen/syllabus.py": {
@@ -585,8 +585,8 @@
     "semantic_hash": ""
   },
   "Resources/business/aqa/generator/aqabizgen/financials.py": {
-    "mtime": 1793719419.4227002,
-    "ast_hash": "32253628815b0b8549955ac70a60d42b",
+    "mtime": 1795301819.8950834,
+    "ast_hash": "e3e4ce4c3ce14747b5858f8cebf043ae",
     "semantic_hash": ""
   },
   "Resources/business/aqa/generator/aqabizgen/generator.py": {
@@ -595,8 +595,8 @@
     "semantic_hash": ""
   },
   "Resources/business/aqa/generator/aqabizgen/render_pdf.py": {
-    "mtime": 1794705218.323337,
-    "ast_hash": "7e45998e914ddce63c8a775c1e8aeb50",
+    "mtime": 1795301988.438853,
+    "ast_hash": "a852d20a8f356a7ad83bab3505cd20d3",
     "semantic_hash": ""
   },
   "Resources/business/aqa/generator/aqabizgen/syllabus.py": {
@@ -640,8 +640,8 @@
     "semantic_hash": ""
   },
   "Resources/computer-science/aqa/generator/cspapergen/cli.py": {
-    "mtime": 1793963029.5586925,
-    "ast_hash": "f754d042e4d6ddb49cc57227fb667779",
+    "mtime": 1795277497.185645,
+    "ast_hash": "e04d2b34ecba00b5ed006ded8ce3c647",
     "semantic_hash": ""
   },
   "Resources/computer-science/aqa/generator/cspapergen/exam_dates.py": {
@@ -670,8 +670,8 @@
     "semantic_hash": ""
   },
   "Resources/computer-science/aqa/generator/cspapergen/ollama_client.py": {
-    "mtime": 1793666909.5985007,
-    "ast_hash": "8e487e0dc336ec78d50e7c72f66e39df",
+    "mtime": 1795277484.542952,
+    "ast_hash": "038c2a1a1e89ea9681902d58d01fdb84",
     "semantic_hash": ""
   },
   "Resources/computer-science/aqa/generator/cspapergen/paper1_assets.py": {
@@ -715,7 +715,7 @@
     "semantic_hash": ""
   },
   "Resources/computer-science/aqa/generator/tests/test_blueprint.py": {
-    "mtime": 1795282564.3961678,
+    "mtime": 1795287336.8253617,
     "ast_hash": "48990427fdc1ea74db917121e89c0993",
     "semantic_hash": ""
   },
@@ -945,8 +945,8 @@
     "semantic_hash": ""
   },
   "Resources/economics/edexcel-a/generator/pastpapergen/cli.py": {
-    "mtime": 1794692667.1988044,
-    "ast_hash": "d3fef20d3a7c90099faf8ef28ddc7705",
+    "mtime": 1795277484.54304,
+    "ast_hash": "66cd305cf17416bcc63ee4af23fa81df",
     "semantic_hash": ""
   },
   "Resources/economics/edexcel-a/generator/pastpapergen/credit_contracts.py": {
@@ -975,8 +975,8 @@
     "semantic_hash": ""
   },
   "Resources/economics/edexcel-a/generator/pastpapergen/ollama_client.py": {
-    "mtime": 1794692667.199786,
-    "ast_hash": "387b16b17c30b583098c706aa8ad468a",
+    "mtime": 1795277484.5431373,
+    "ast_hash": "7737f1d4f3c4bca3be0401d758fa9fd3",
     "semantic_hash": ""
   },
   "Resources/economics/edexcel-a/generator/pastpapergen/paper_configs.py": {
@@ -985,8 +985,8 @@
     "semantic_hash": ""
   },
   "Resources/economics/edexcel-a/generator/pastpapergen/render_pdf.py": {
-    "mtime": 1795279302.7474902,
-    "ast_hash": "8d077a6a0804b6c6b217c6cf21d74f56",
+    "mtime": 1795302347.0490668,
+    "ast_hash": "e8b88b03c18220fa4554a626284d3ab6",
     "semantic_hash": ""
   },
   "Resources/economics/edexcel-a/generator/pastpapergen/selection_contracts.py": {
@@ -1235,8 +1235,8 @@
     "semantic_hash": "9089fa356046b0e497da7729dfba8605"
   },
   "Resources/repository-inventory.json": {
-    "mtime": 1795279302.749908,
-    "ast_hash": "580b84e9aef563ea4a8ceb22df4fccb6",
+    "mtime": 1795303332.6952405,
+    "ast_hash": "e7a91d3aafadee091af5fc81650a320e",
     "semantic_hash": ""
   },
   "bridge.py": {
@@ -1330,8 +1330,8 @@
     "semantic_hash": ""
   },
   "tests/test_ai_assessment.py": {
-    "mtime": 1795281881.846797,
-    "ast_hash": "e70d80d72c4f66661da349ee368ef304",
+    "mtime": 1795287336.8496351,
+    "ast_hash": "fa49505acd2ea76cad6dbc1057ad0a28",
     "semantic_hash": ""
   },
   "tests/test_app_backend.py": {
@@ -1340,7 +1340,7 @@
     "semantic_hash": ""
   },
   "tests/test_assessment_checkpoints.py": {
-    "mtime": 1795284681.6383882,
+    "mtime": 1795287336.878839,
     "ast_hash": "0f6fe711efcbeaf3af6d5fe8d3e18fb3",
     "semantic_hash": ""
   },
@@ -1360,8 +1360,8 @@
     "semantic_hash": ""
   },
   "tests/test_assessment_source_projection.py": {
-    "mtime": 1795284507.2930284,
-    "ast_hash": "f1ffd4566977139a208d7e2ceebf4a28",
+    "mtime": 1795287336.8995278,
+    "ast_hash": "57996733db0a37e299834c8938bad25c",
     "semantic_hash": ""
   },
   "tests/test_calibration_store.py": {
@@ -3755,8 +3755,8 @@
     "semantic_hash": ""
   },
   "Backend/Core/subjects/accounting_selected_response.py": {
-    "mtime": 1794011018.2005455,
-    "ast_hash": "628a19cd9a7b9a3a922ad1726c0b72f0",
+    "mtime": 1795287212.1787755,
+    "ast_hash": "d6dfaac9863b2dac463a71a0be2ca4e7",
     "semantic_hash": ""
   },
   "Resources/accounting/aqa/generator/aqaaccountgen/marking_policy.py": {
@@ -3765,8 +3765,8 @@
     "semantic_hash": ""
   },
   "Resources/accounting/aqa/generator/aqaaccountgen/selected_response.py": {
-    "mtime": 1793212165.5559356,
-    "ast_hash": "b8ec42dbfc1ea1032493da555b6a0289",
+    "mtime": 1795286952.8115983,
+    "ast_hash": "a54cfc4ae7c8542ca6dfdb2c3459569d",
     "semantic_hash": ""
   },
   "tests/test_accounting_case_projection.py": {
@@ -3780,13 +3780,13 @@
     "semantic_hash": ""
   },
   "tests/test_accounting_private_credit.py": {
-    "mtime": 1794011018.2017274,
-    "ast_hash": "5e597eabf5d64f7b4c979b7f8b7c0319",
+    "mtime": 1795287196.1825795,
+    "ast_hash": "77a8e160af655a3eca4519aefca88292",
     "semantic_hash": ""
   },
   "tests/test_accounting_selected_response.py": {
-    "mtime": 1793772030.491323,
-    "ast_hash": "45283927a20928750ae8fe0d3b49cb22",
+    "mtime": 1795287196.1807685,
+    "ast_hash": "22e7329a99ed07b1ffc9530e3ddf9c56",
     "semantic_hash": ""
   },
   "tests/test_accounting_solver_completeness.py": {
@@ -3875,8 +3875,8 @@
     "semantic_hash": ""
   },
   "Resources/implementation-audit-coverage.json": {
-    "mtime": 1795284698.4797232,
-    "ast_hash": "878f40dd93f390fbee289baec2e660ce",
+    "mtime": 1795303332.5450718,
+    "ast_hash": "6bc9d616a165fdc0a2e7c257ecd0f68d",
     "semantic_hash": ""
   },
   "macOS/Keldin/Services/PDFDocumentAccess.swift": {
@@ -3990,13 +3990,13 @@
     "semantic_hash": ""
   },
   "Backend/Core/assessment_prompts.py": {
-    "mtime": 1795284507.0886939,
-    "ast_hash": "bdc6ae321fb716cb8edfbe79e6d4130a",
+    "mtime": 1795287336.8066766,
+    "ast_hash": "8d2b5b926c5cb79368369b1d919a5c2c",
     "semantic_hash": ""
   },
   "Backend/Core/generation_requests.py": {
-    "mtime": 1793314953.984088,
-    "ast_hash": "f2ca65edfbee01c105b177738a679339",
+    "mtime": 1795293202.1684635,
+    "ast_hash": "5116e391a8e038ad6c6d154fd881b3bd",
     "semantic_hash": ""
   },
   "Backend/Core/json_client.py": {
@@ -4005,8 +4005,8 @@
     "semantic_hash": ""
   },
   "Backend/Core/solver_prompts.py": {
-    "mtime": 1793296581.9475543,
-    "ast_hash": "8c2bca31859f6f9d2b054e640032e0c3",
+    "mtime": 1795285276.6730938,
+    "ast_hash": "5bc9b6031be326a54175541c586d5b44",
     "semantic_hash": ""
   },
   "Resources/economics/edexcel-a/generator/keldin_edexcel/__init__.py": {
@@ -4035,8 +4035,8 @@
     "semantic_hash": ""
   },
   "tests/fixtures/assessment_prompt_snapshots.json": {
-    "mtime": 1795279302.8736858,
-    "ast_hash": "8b0697f220eb0602fb582a4fed37146b",
+    "mtime": 1795287336.9224575,
+    "ast_hash": "c7a31ceee40aff1f50406a9286b770c4",
     "semantic_hash": ""
   },
   "tests/test_assessment_prompt_characterisation.py": {
@@ -4065,8 +4065,8 @@
     "semantic_hash": ""
   },
   "tests/test_json_client_contract.py": {
-    "mtime": 1794692667.2468002,
-    "ast_hash": "8cfb0a5b94425123568644d812852f7e",
+    "mtime": 1795277484.5436757,
+    "ast_hash": "a475aeb1be7e8ff676ccb9e06d6319d4",
     "semantic_hash": ""
   },
   "tests/test_remaining_calibration_pdf_deadlines.py": {
@@ -4465,8 +4465,8 @@
     "semantic_hash": ""
   },
   "tests/test_solver_choice_validity.py": {
-    "mtime": 1794717231.5410707,
-    "ast_hash": "131d3724ba9803d0d99c6a345dcf3763",
+    "mtime": 1795285276.8491955,
+    "ast_hash": "14b47c4cdc2b75bbcabf804051737548",
     "semantic_hash": ""
   },
   "docs/quality/backend-event-concurrency-2026-10-29.md": {
@@ -4610,13 +4610,13 @@
     "semantic_hash": ""
   },
   "Backend/Core/france/llm_pipeline.py": {
-    "mtime": 1795279302.7398462,
-    "ast_hash": "866b9304c7e2449b0fbe3f8635cd7aea",
+    "mtime": 1795277497.1839752,
+    "ast_hash": "c7ce7cc991428f42c4ac0e323b67ce67",
     "semantic_hash": ""
   },
   "Backend/Core/france/llm_runtime.py": {
-    "mtime": 1794727780.5579395,
-    "ast_hash": "be322ac4eafc2c2b9f7eeab51448adc0",
+    "mtime": 1795277484.5427501,
+    "ast_hash": "c26b4284513e9e488caf48fc97a73fc4",
     "semantic_hash": ""
   },
   "macOS/Keldin/Domain/FrenchDraftQualityReport.swift": {
@@ -4665,8 +4665,8 @@
     "semantic_hash": ""
   },
   "tests/test_french_llm_runtime.py": {
-    "mtime": 1794727780.5831513,
-    "ast_hash": "af196f00564df1b3828ab98b41d1c5ec",
+    "mtime": 1795277484.5434885,
+    "ast_hash": "3b6c7d4109e38a96a57e669328c5a26e",
     "semantic_hash": ""
   },
   "tests/test_french_model_capability.py": {
@@ -4760,8 +4760,8 @@
     "semantic_hash": ""
   },
   "Backend/Core/family_contracts.py": {
-    "mtime": 1793353481.63152,
-    "ast_hash": "57b665169b1b62e801fb9b5e39f966ff",
+    "mtime": 1795301605.4182088,
+    "ast_hash": "a5ad4a8ed06761000eb93745bdcd87f5",
     "semantic_hash": ""
   },
   "macOS/Tests/ModelDiscoveryOwnershipTests.swift": {
@@ -5125,8 +5125,8 @@
     "semantic_hash": ""
   },
   "Backend/Core/france/generation_budget.py": {
-    "mtime": 1793545928.3372662,
-    "ast_hash": "7f2362d5e30e83e0392b966560559b4d",
+    "mtime": 1795278732.695016,
+    "ast_hash": "cdf2caac225fc20b0a0231e313049f39",
     "semantic_hash": ""
   },
   "tests/test_french_generation_budget.py": {
@@ -5190,8 +5190,8 @@
     "semantic_hash": ""
   },
   "tests/test_uk_preview_presentation.py": {
-    "mtime": 1793932830.8624284,
-    "ast_hash": "a7396c8678c442858b31bc51c0cd5f3a",
+    "mtime": 1795277484.5437946,
+    "ast_hash": "6b2d25f4ca2f0008ae390870df5f7e32",
     "semantic_hash": ""
   },
   "docs/quality/provider-boundary-file-review-2026-11-02.md": {
@@ -5265,8 +5265,8 @@
     "semantic_hash": ""
   },
   "tests/test_assessment_checkpoint_admission.py": {
-    "mtime": 1794692667.2440176,
-    "ast_hash": "3f7c60957cdef5ac6eb12e3f21076edd",
+    "mtime": 1795293202.1709576,
+    "ast_hash": "55bb9198a20a70030d0388762a48ef68",
     "semantic_hash": ""
   },
   "tests/test_benchmark_duration.py": {
@@ -5300,13 +5300,13 @@
     "semantic_hash": ""
   },
   "tests/test_aqa_cs_checkpoint_admission.py": {
-    "mtime": 1793666909.7616365,
-    "ast_hash": "23f68bcde7bd66a9ac29a75f20da3fcb",
+    "mtime": 1795277523.198958,
+    "ast_hash": "562070521a1461f347ba83eda775b908",
     "semantic_hash": ""
   },
   "tests/test_edexcel_checkpoint_admission.py": {
-    "mtime": 1793666909.767302,
-    "ast_hash": "2057377af307f9feced6e415dc0de15d",
+    "mtime": 1795277484.5433192,
+    "ast_hash": "1e5c190628721d7d1f23366c64586b28",
     "semantic_hash": ""
   },
   "docs/quality/aqa-cs-checkpoint-admission-review-2026-11-02.md": {
@@ -5410,8 +5410,8 @@
     "semantic_hash": ""
   },
   "Resources/economics/edexcel-a/generator/pastpapergen/stimulus_diagrams.py": {
-    "mtime": 1793719419.4250085,
-    "ast_hash": "26665726d27217b342d633771598a353",
+    "mtime": 1795303313.2266595,
+    "ast_hash": "f26e231b332e1f92f412e48613572c7f",
     "semantic_hash": ""
   },
   "Resources/economics/edexcel-a/generator/tests/test_stimulus_diagrams.py": {
@@ -5660,8 +5660,8 @@
     "semantic_hash": ""
   },
   "tests/test_family_publication.py": {
-    "mtime": 1794692667.2450619,
-    "ast_hash": "f9b388fd8979432bcf70b7766411d485",
+    "mtime": 1795301183.840948,
+    "ast_hash": "61007841a3aff37c1a8b4f5cddf28845",
     "semantic_hash": ""
   },
   "tests/test_french_graph_clearance_policy.py": {
@@ -5775,8 +5775,8 @@
     "semantic_hash": ""
   },
   "tests/test_business_strategic_rate_domain.py": {
-    "mtime": 1793980688.0360353,
-    "ast_hash": "12b096aca42dc8cf0548a82130617412",
+    "mtime": 1795301953.1132202,
+    "ast_hash": "e69d5a3a27b22e1288f23e2ce6f5b567",
     "semantic_hash": ""
   },
   "tests/test_sql_count_alias.py": {
@@ -5825,8 +5825,8 @@
     "semantic_hash": ""
   },
   "tests/test_economics_source_binding.py": {
-    "mtime": 1793987666.1116478,
-    "ast_hash": "804a65b34aad0ef64be09c09c681ae78",
+    "mtime": 1795303313.2269313,
+    "ast_hash": "adc4f76ed26a6ee7dfecd5960cee2db1",
     "semantic_hash": ""
   },
   "docs/quality/economics-source-binding-review.md": {
@@ -6170,8 +6170,8 @@
     "semantic_hash": ""
   },
   "tests/test_french_postrename_cleanup.py": {
-    "mtime": 1794664644.9652712,
-    "ast_hash": "f79c6061c5bcf525d4edeb62e5654b94",
+    "mtime": 1795277484.5436015,
+    "ast_hash": "10a6e3962ac92c24587c9dfff19677be",
     "semantic_hash": ""
   },
   "tests/test_french_table_cell_integrity.py": {
@@ -6397,6 +6397,51 @@
   "macOS/Tests/BackendEnvironmentTests.swift": {
     "mtime": 1795279302.7912457,
     "ast_hash": "a0ccaf1d764dbe4fa32c352eb1f57c5a",
+    "semantic_hash": ""
+  },
+  "Backend/Core/whole_paper_review.py": {
+    "mtime": 1795302572.0896587,
+    "ast_hash": "d7ebb4be1540ee88ef0891c33abf425a",
+    "semantic_hash": ""
+  },
+  "tests/test_whole_paper_review.py": {
+    "mtime": 1795302572.2592146,
+    "ast_hash": "5c6dfea87e92b36adb14ee61b4885fc9",
+    "semantic_hash": ""
+  },
+  "Backend/Core/item_stage_checkpoints.py": {
+    "mtime": 1795301177.3798008,
+    "ast_hash": "0288471c6244846b18b2af83ad37a0bf",
+    "semantic_hash": ""
+  },
+  "tests/test_interrupted_item.py": {
+    "mtime": 1795293202.1714551,
+    "ast_hash": "51dab392b1bddf829bbf052bc3344e51",
+    "semantic_hash": ""
+  },
+  "tests/test_staged_review_policy.py": {
+    "mtime": 1795293202.1716614,
+    "ast_hash": "f2c3e90a2bccd4063bdd8cfd0891cb25",
+    "semantic_hash": ""
+  },
+  "tests/test_accounting_whole_paper_source.py": {
+    "mtime": 1795297788.8739154,
+    "ast_hash": "a42dade0a1606ade5d459524b7031200",
+    "semantic_hash": ""
+  },
+  "tests/test_choice_stem_leakage.py": {
+    "mtime": 1795298732.8920636,
+    "ast_hash": "4d19aa34a9fda81584557305b43ddb70",
+    "semantic_hash": ""
+  },
+  "Backend/Core/paper_review_contract.py": {
+    "mtime": 1795301605.4179327,
+    "ast_hash": "6ef6003e503486a87ac580adf2a8c47d",
+    "semantic_hash": ""
+  },
+  "Resources/business/aqa/generator/aqabizgen/source_figures.py": {
+    "mtime": 1795301988.4382932,
+    "ast_hash": "db24868974e27ff5b4bbe29e51c36584",
     "semantic_hash": ""
   }
 }

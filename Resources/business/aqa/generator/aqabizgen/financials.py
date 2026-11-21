@@ -110,6 +110,33 @@ class FinancialPosition:
     def operating_profit_at_twelve_percent(self) -> float:
         return self.capital_employed * 0.12
 
+    def printed_rows(self, title: str) -> list[list[str]]:
+        return [
+            [f"Extract from accounts of {title}, 2024", "", ""],
+            ["", "£m", "£m"],
+            ["Non-current assets", "", str(self.non_current_assets)],
+            ["", "", ""],
+            ["Inventories", str(self.inventories), ""],
+            ["Receivables", str(self.receivables), ""],
+            ["Cash", str(self.cash), ""],
+            ["", "", ""],
+            ["Payables", str(self.payables), ""],
+            ["Net current assets", "", str(self.net_current_assets)],
+            ["", "", ""],
+            ["Non-current liabilities", "", str(self.non_current_liabilities)],
+            ["Total equity", "", str(self.total_equity)],
+        ]
+
+
+def restructuring_printed_rows(chart_values: list[float]) -> list[list[str]]:
+    values = [round(value) for value in chart_values]
+    return [
+        ["Feature", "Before restructuring", "After restructuring"],
+        ["Number of staff", str(values[4] * 34), str(values[3] * 31)],
+        ["Average span of control", "5", "15"],
+        ["Levels of hierarchy", "6", "4"],
+    ]
+
 
 # Format an exam answer without meaningless trailing zeroes.
 def format_number(value: float) -> str:

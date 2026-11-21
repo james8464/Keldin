@@ -22,9 +22,13 @@ from pydantic import (
 )
 
 from Backend.Core.assessment_objectives import objective_policy_for
+from Backend.Core.candidate_identity import DifficultyCandidateProjection
 from Backend.Core.json_io import read_json
 from Backend.Core.model_review import validate_saved_difficulty_evidence
 from Backend.Core.paths import REPO_ROOT
+from Backend.Core.subjects.accounting_selected_response import (
+    verified_paper_one_choice_ceiling,
+)
 
 PROFILES_PATH = REPO_ROOT / "Resources" / "reference-demand-profiles.json"
 
@@ -442,6 +446,18 @@ def build_item_demand_target(
     # calculations whose tariff bundles presentation and transformation into
     # the same award point.
     maximum_steps = max(maximum_steps, len(operations))
+    if (
+        profile.family_id == "aqa/accounting"
+        and profile.paper_id == "1"
+        and response_mode == "selected-response"
+        and marks == 1
+    ):
+        # The one-mark tariff conditions the award, not the number of
+        # adjustments in a source-owned calculation. Keep the usual maximum
+        # for unbound stems and leave independent difficulty review in force.
+        ceiling = verified_paper_one_choice_ceiling(_accounting_choice_demand_item(raw))
+        if ceiling is not None:
+            maximum_steps = max(maximum_steps, ceiling)
     expected_minutes = float(raw.get("expected_minutes") or max(1.0, marks * 1.2))
     policy_fingerprint = objective_policy.fingerprint(objectives, command, kind)
     if objective_policy.computational:
@@ -596,6 +612,29 @@ def audit_form_demand(
             ),
         },
         "empirical_equivalence_claimed": False,
+    }
+
+
+def _accounting_choice_demand_item(raw: dict[str, Any]) -> dict[str, Any]:
+    if "authoring_context" in raw or "difficulty_candidate_projection" not in raw:
+        return raw
+    # Packages already carry the identity-bound source question. Read only
+    # its public input contract and verify it against the actual exported stem
+    # and options, not against a second copy of the visible question.
+    projection = DifficultyCandidateProjection.model_validate(
+        raw["difficulty_candidate_projection"], strict=True
+    )
+    part = projection.identity_content.get("part")
+    if projection.route != "shared" or not isinstance(part, dict):
+        return raw
+    context = part.get("authoring_context")
+    if not isinstance(context, dict) or "selected_response_contract" not in context:
+        return raw
+    return {
+        **raw,
+        "authoring_context": {
+            "selected_response_contract": context["selected_response_contract"]
+        },
     }
 
 

@@ -481,11 +481,8 @@
     {
       "path": "Backend/Core/exam_blueprints.py",
       "classification": "maintained-source",
-      "status": "reviewed",
-      "reason": "french_run23_review: EOF. Exact source identity verified at e4649b83; selective dependencies and broader runtime/qualification limits are documented separately.",
-      "source_sha256": "d72643a90414b365c63698822d3e426ab9000ae790ae7de93bd4fbd6831b76a9",
-      "review_evidence": "docs/quality/remaining-native-backend-boundaries-review-2026-11-02.md",
-      "review_evidence_sha256": "af676cdb6e47d3d6e61361f2722f7b605c0ef7b3db9afeefcfd5562776c7787d"
+      "status": "pending",
+      "reason": "No file-level semantic implementation review recorded in this ledger."
     },
     {
       "path": "Backend/Core/exam_cover.py",
@@ -514,11 +511,8 @@
     {
       "path": "Backend/Core/family_contracts.py",
       "classification": "maintained-source",
-      "status": "reviewed",
-      "reason": "Complete EOF static review recorded; dependencies and runtime/model/qualification limits remain explicit.",
-      "source_sha256": "f0cc255809c1976b1f4e00ddc4d2c57286fa60efe4b0ea522f69a68a57ea7f88",
-      "review_evidence": "docs/quality/model-download-and-packaging-input-review-2026-11-02.md",
-      "review_evidence_sha256": "9f13e6fbd83877c17dbad7659d266ce11619458437938f95242ecd585565908e"
+      "status": "pending",
+      "reason": "No file-level semantic implementation review recorded in this ledger."
     },
     {
       "path": "Backend/Core/fonts/README.md",
@@ -940,11 +934,8 @@
     {
       "path": "Backend/Core/france/generation_budget.py",
       "classification": "maintained-source",
-      "status": "reviewed",
-      "reason": "release_gap_audit: complete-file EOF; no remote cancellation latency or pedagogic certification.",
-      "source_sha256": "c6152fbed81540a64823ba66f8b3399eee60ab5a04d509300f3bbef751e9136d",
-      "review_evidence": "docs/quality/reference-readmission-and-runtime-audit-2026-11-03.md",
-      "review_evidence_sha256": "f15b829e2e5718086b47e04b7f6c8df0ae974dbda426290c80fd2728f036b5b9"
+      "status": "pending",
+      "reason": "No file-level semantic implementation review recorded in this ledger."
     },
     {
       "path": "Backend/Core/france/graph_layout.py",
@@ -1480,11 +1471,8 @@
     {
       "path": "Backend/Core/generation_requests.py",
       "classification": "maintained-source",
-      "status": "reviewed",
-      "reason": "Complete-file review and follow-up diff review within the documented scope; broader audit and release acceptance remain separate.",
-      "source_sha256": "33132f38e89c63b1cf4a97576fe81f9f67d15b209b38add6a44cc7efcaeb759f",
-      "review_evidence": "docs/quality/hosted-and-french-full-file-review-2026-10-30.md",
-      "review_evidence_sha256": "b7a3ff04f6a4a638cef56a16de250d8632a243968adb58aecc5b36d92fdd2755"
+      "status": "pending",
+      "reason": "No file-level semantic implementation review recorded in this ledger."
     },
     {
       "path": "Backend/Core/generator_entry_points.py",
@@ -1501,11 +1489,14 @@
     {
       "path": "Backend/Core/independent_solver.py",
       "classification": "maintained-source",
-      "status": "reviewed",
-      "reason": "release_gap_audit read all 1309 lines through EOF: answer-key projection, response/citation admission, deterministic recomputation, scheme reconciliation and cancellation. Dependencies/tests selective; no complete-paper or model reliability certification.",
-      "source_sha256": "2f426a9fd6bcfecdfb9c26d8e2957be313742b6a8964d516fc7779a778b9a5b3",
-      "review_evidence": "docs/quality/cached-mlx-preparation-and-solver-audit-2026-11-03.md",
-      "review_evidence_sha256": "c7542516acd3d96a737e3497a9b376ab68965c8c8b5d0d8183d71f74a1eaf465"
+      "status": "pending",
+      "reason": "No file-level semantic implementation review recorded in this ledger."
+    },
+    {
+      "path": "Backend/Core/item_stage_checkpoints.py",
+      "classification": "maintained-source",
+      "status": "pending",
+      "reason": "No file-level semantic implementation review recorded in this ledger."
     },
     {
       "path": "Backend/Core/json_client.py",
@@ -1706,6 +1697,12 @@
       "review_evidence_sha256": "78a70a2bbbc9f2c9da6406f6c6c4c9ec4d23392ff8260fae2e939b05a0a81eaf"
     },
     {
+      "path": "Backend/Core/paper_review_contract.py",
+      "classification": "maintained-source",
+      "status": "pending",
+      "reason": "No file-level semantic implementation review recorded in this ledger."
+    },
+    {
       "path": "Backend/Core/paths.py",
       "classification": "maintained-source",
       "status": "reviewed",
@@ -1849,11 +1846,8 @@
     {
       "path": "Backend/Core/solver_prompts.py",
       "classification": "maintained-source",
-      "status": "reviewed",
-      "reason": "Complete 120-line EOF review plus explicitly scoped independent-solver/answer-projection callers and selected tests. No concrete model-independent defect established in that boundary; blindness/output checks remain caller-owned. No full dependency EOF, solver capability or prompt quality proof.",
-      "source_sha256": "3a8cda0a0664fb4361ac91f94df63eae2a5f8418e9ee71eed4c437f938f63289",
-      "review_evidence": "docs/quality/overlay-market-geometry-review.md",
-      "review_evidence_sha256": "78a70a2bbbc9f2c9da6406f6c6c4c9ec4d23392ff8260fae2e939b05a0a81eaf"
+      "status": "pending",
+      "reason": "No file-level semantic implementation review recorded in this ledger."
     },
     {
       "path": "Backend/Core/subject_contracts.py",
@@ -1891,11 +1885,8 @@
     {
       "path": "Backend/Core/subjects/accounting_selected_response.py",
       "classification": "maintained-source",
-      "status": "reviewed",
-      "reason": "Recorded complete baseline plus complete independently reviewed repair delta and relevant call paths; not a fresh whole-file or whole-repository read. Targeted tests and source-only render limits remain explicit.",
-      "source_sha256": "5772fc11bbd28cd13683704b098d3005a62dd892fab02501d948a825920771be",
-      "review_evidence": "docs/quality/accounting-variance-public-contract-review.md",
-      "review_evidence_sha256": "21e54e294ba1b655d4d1505c198934e0e7f71ae6b10f2f66a269ddf29edb1c3c"
+      "status": "pending",
+      "reason": "No file-level semantic implementation review recorded in this ledger."
     },
     {
       "path": "Backend/Core/subjects/biology.py",
@@ -1969,11 +1960,8 @@
     {
       "path": "Backend/Core/subjects/selected_response.py",
       "classification": "maintained-source",
-      "status": "reviewed",
-      "reason": "Complete prior 974-line EOF and two-line domain-admission delta reviewed, now 976 lines. Owned unsupported-equal rate refusal repaired with 251 focused tests; not general semantic interpretation, full dependency audit or live paper qualification.",
-      "source_sha256": "cf84797e281307ec3e1d2a3dd2b7eee0b3fe18a8292075623cd943bcb141a231",
-      "review_evidence": "docs/quality/business-strategic-rate-domain-review.md",
-      "review_evidence_sha256": "d19823d9decaab60d8e422a4614dbc396a8c00ff566afa84f68e40b0c34e7c29"
+      "status": "pending",
+      "reason": "No file-level semantic implementation review recorded in this ledger."
     },
     {
       "path": "Backend/Core/subjects/sql_contracts.py",
@@ -2010,6 +1998,12 @@
       "source_sha256": "dfd011917c4e7b6e8afe8fb5290f5a141cfb859a33042ac9ca0f53fde8e7f5de",
       "review_evidence": "docs/quality/core-policy-boundaries-review-2026-10-29.md",
       "review_evidence_sha256": "c472b24feceb968224a9a24e3d19c1aa0187ed66cee254f050567baa498e57e7"
+    },
+    {
+      "path": "Backend/Core/whole_paper_review.py",
+      "classification": "maintained-source",
+      "status": "pending",
+      "reason": "No file-level semantic implementation review recorded in this ledger."
     },
     {
       "path": "Backend/__init__.py",
@@ -2050,11 +2044,8 @@
     {
       "path": "Resources/accounting/aqa/generator/aqaaccountgen/cli.py",
       "classification": "maintained-source",
-      "status": "reviewed",
-      "reason": "Recorded complete baseline plus complete independently reviewed repair delta and relevant call paths; not a fresh whole-file or whole-repository read. Targeted tests and source-only render limits remain explicit.",
-      "source_sha256": "2585708c9e3ffd04d375ca7dc32fd0b5fb94d69dd551cc7013b4ad8c6dc6d8c9",
-      "review_evidence": "docs/quality/accounting-variance-public-contract-review.md",
-      "review_evidence_sha256": "21e54e294ba1b655d4d1505c198934e0e7f71ae6b10f2f66a269ddf29edb1c3c"
+      "status": "pending",
+      "reason": "No file-level semantic implementation review recorded in this ledger."
     },
     {
       "path": "Resources/accounting/aqa/generator/aqaaccountgen/configs.py",
@@ -2101,11 +2092,8 @@
     {
       "path": "Resources/accounting/aqa/generator/aqaaccountgen/selected_response.py",
       "classification": "maintained-source",
-      "status": "reviewed",
-      "reason": "Complete 139-line EOF review of all four bounded source-owned choice branches, input/derive binding, supplied RNG and distractor separation. Scoped existing callers/tests inspected, not executed in this review. Does not close conceptual Q06 semantic uncertainty or certify live paper quality.",
-      "source_sha256": "906e718ec91c91275f9da9bebd132b5530c42c79ebde0e80de4e79584acfa5ad",
-      "review_evidence": "docs/quality/accounting-choice-builder-review.md",
-      "review_evidence_sha256": "485ad3175ad6e4fe6482bb918cdfc437b038825188b09e5f5f2e8bde74aedb6e"
+      "status": "pending",
+      "reason": "No file-level semantic implementation review recorded in this ledger."
     },
     {
       "path": "Resources/accounting/aqa/generator/aqaaccountgen/syllabus.py",
@@ -2203,11 +2191,8 @@
     {
       "path": "Resources/business/aqa/generator/aqabizgen/financials.py",
       "classification": "maintained-source",
-      "status": "reviewed",
-      "reason": "Complete-file implementation review recorded with scope and limitations in the linked evidence.",
-      "source_sha256": "d5acfd47bce25528c78ca9af80bb1e0fef969bee16f22ef2cac4cb57c38c0bc4",
-      "review_evidence": "docs/quality/business-rounding-and-benchmark-completion-2026-11-03.md",
-      "review_evidence_sha256": "99dbd2c83dbbdb74f6c6aa07666bb33cbcb458a391f02c32c92a6d7036d596da"
+      "status": "pending",
+      "reason": "No file-level semantic implementation review recorded in this ledger."
     },
     {
       "path": "Resources/business/aqa/generator/aqabizgen/generator.py",
@@ -2217,6 +2202,12 @@
     },
     {
       "path": "Resources/business/aqa/generator/aqabizgen/render_pdf.py",
+      "classification": "maintained-source",
+      "status": "pending",
+      "reason": "No file-level semantic implementation review recorded in this ledger."
+    },
+    {
+      "path": "Resources/business/aqa/generator/aqabizgen/source_figures.py",
       "classification": "maintained-source",
       "status": "pending",
       "reason": "No file-level semantic implementation review recorded in this ledger."
@@ -2302,11 +2293,8 @@
     {
       "path": "Resources/computer-science/aqa/generator/cspapergen/cli.py",
       "classification": "maintained-source",
-      "status": "reviewed",
-      "reason": "All 205 lines. Rule selection, family-adapter hooks, artifact order, Paper 1 supporting files, progress forwarding and command arguments were inspected. Runtime bootstrap, syllabus defaults and notes caching were read within the relevant boundaries. No new defect was established for the current caller contracts.",
-      "source_sha256": "08edd4d5b1c06f11354e3787a3a1b17e8e2b718053496ed37d75b5f6f6b44799",
-      "review_evidence": "docs/quality/implementation-audit-reconciliation-2026-11-10.md",
-      "review_evidence_sha256": "799d0c38f8fce9352aa3b7697bae3e7e9bd9ccf480cafc45c12e94e6d1582c10"
+      "status": "pending",
+      "reason": "No file-level semantic implementation review recorded in this ledger."
     },
     {
       "path": "Resources/computer-science/aqa/generator/cspapergen/exam_dates.py",
@@ -2353,11 +2341,8 @@
     {
       "path": "Resources/computer-science/aqa/generator/cspapergen/ollama_client.py",
       "classification": "maintained-source",
-      "status": "reviewed",
-      "reason": "Explicit completed EOF or documented full baseline plus entire delta review; source ownership, retry or required-check preservation and reviewer attribution are bounded in the evidence.",
-      "source_sha256": "3059a9d0300aafe44d80413c865b5643846037b6f10796d7d1702b6b70db5466",
-      "review_evidence": "docs/quality/aqa-cs-checkpoint-admission-review-2026-11-02.md",
-      "review_evidence_sha256": "bdf39c0bbe51920026a1499ccb06fcdc1c0e336596c8147b254e6d082080939a"
+      "status": "pending",
+      "reason": "No file-level semantic implementation review recorded in this ledger."
     },
     {
       "path": "Resources/computer-science/aqa/generator/cspapergen/paper1_assets.py",
@@ -2914,11 +2899,8 @@
     {
       "path": "Resources/economics/edexcel-a/generator/pastpapergen/stimulus_diagrams.py",
       "classification": "maintained-source",
-      "status": "reviewed",
-      "reason": "Complete 424-line EOF review of declared illustrative models, finite geometry, public labels and source projection; scoped independent review and owned diagram QA, not academic qualification.",
-      "source_sha256": "c4a1ceaed6fc15fc27642edad6f93b8ea8b46c558d26932e26ee78ed508fd809",
-      "review_evidence": "docs/quality/economics-stimulus-figures-review-2026-11-03.md",
-      "review_evidence_sha256": "1bb919e9187c1667d0da9f28c391dfecb686c71786a73d80b490b68763cc83fe"
+      "status": "pending",
+      "reason": "No file-level semantic implementation review recorded in this ledger."
     },
     {
       "path": "Resources/economics/edexcel-a/generator/pastpapergen/syllabus.py",
@@ -6676,11 +6658,8 @@
     {
       "path": "tests/test_accounting_private_credit.py",
       "classification": "test",
-      "status": "reviewed",
-      "reason": "Recorded complete baseline plus complete independently reviewed repair delta and relevant call paths; not a fresh whole-file or whole-repository read. Targeted tests and source-only render limits remain explicit.",
-      "source_sha256": "884164375a5bf267d758711fec9884fe63b46402591bedd4f7ee58f091015d9a",
-      "review_evidence": "docs/quality/accounting-variance-public-contract-review.md",
-      "review_evidence_sha256": "21e54e294ba1b655d4d1505c198934e0e7f71ae6b10f2f66a269ddf29edb1c3c"
+      "status": "pending",
+      "reason": "No file-level semantic implementation review recorded in this ledger."
     },
     {
       "path": "tests/test_accounting_scheme_pagination.py",
@@ -6691,11 +6670,8 @@
     {
       "path": "tests/test_accounting_selected_response.py",
       "classification": "test",
-      "status": "reviewed",
-      "reason": "Complete 295-line review, including bounded red reproduction before exponent expansion, preserved format controls and public-source arithmetic.",
-      "source_sha256": "26feb931e0ab0b9c9e58759ca49e90ec68f5d822f6933bf8dd3f8af363c10289",
-      "review_evidence": "docs/quality/accounting-choice-format-review.md",
-      "review_evidence_sha256": "ccd835ff55d50007eef196a126f2b8090e36e16bcb6950b0874adc18b820c402"
+      "status": "pending",
+      "reason": "No file-level semantic implementation review recorded in this ledger."
     },
     {
       "path": "tests/test_accounting_solver.py",
@@ -6717,6 +6693,12 @@
       "source_sha256": "66f8c12f8f0c7dec1ee4b4e6e578725e854514c112893f81c33e7bc05c56000c",
       "review_evidence": "docs/quality/accounting-variance-public-contract-review.md",
       "review_evidence_sha256": "21e54e294ba1b655d4d1505c198934e0e7f71ae6b10f2f66a269ddf29edb1c3c"
+    },
+    {
+      "path": "tests/test_accounting_whole_paper_source.py",
+      "classification": "test",
+      "status": "pending",
+      "reason": "No file-level semantic implementation review recorded in this ledger."
     },
     {
       "path": "tests/test_ai_assessment.py",
@@ -6757,11 +6739,8 @@
     {
       "path": "tests/test_aqa_cs_checkpoint_admission.py",
       "classification": "test",
-      "status": "reviewed",
-      "reason": "Explicit completed EOF or documented full baseline plus entire delta review; source ownership, retry or required-check preservation and reviewer attribution are bounded in the evidence.",
-      "source_sha256": "07ef680f865deb8cea345d63cd67205d921aefd1473b86d9449e4a4cf7af0613",
-      "review_evidence": "docs/quality/aqa-cs-checkpoint-admission-review-2026-11-02.md",
-      "review_evidence_sha256": "bdf39c0bbe51920026a1499ccb06fcdc1c0e336596c8147b254e6d082080939a"
+      "status": "pending",
+      "reason": "No file-level semantic implementation review recorded in this ledger."
     },
     {
       "path": "tests/test_aqa_cs_table_source_fidelity.py",
@@ -6880,11 +6859,8 @@
     {
       "path": "tests/test_business_strategic_rate_domain.py",
       "classification": "test",
-      "status": "reviewed",
-      "reason": "Complete 92-line EOF review of offline strategic-rate domain refusals, supported/case variants, malformed shape controls and input immutability. Genuine red/green evidence; no model, native or full-project qualification.",
-      "source_sha256": "e00e2e3cba20005560ef2588ff67db6b4fc6a92fe119dd4a31a29aadf1ed8181",
-      "review_evidence": "docs/quality/business-strategic-rate-domain-review.md",
-      "review_evidence_sha256": "d19823d9decaab60d8e422a4614dbc396a8c00ff566afa84f68e40b0c34e7c29"
+      "status": "pending",
+      "reason": "No file-level semantic implementation review recorded in this ledger."
     },
     {
       "path": "tests/test_calibration_helpers.py",
@@ -6924,6 +6900,12 @@
     },
     {
       "path": "tests/test_checkpoint_ownership.py",
+      "classification": "test",
+      "status": "pending",
+      "reason": "No file-level semantic implementation review recorded in this ledger."
+    },
+    {
+      "path": "tests/test_choice_stem_leakage.py",
       "classification": "test",
       "status": "pending",
       "reason": "No file-level semantic implementation review recorded in this ledger."
@@ -7162,11 +7144,8 @@
     {
       "path": "tests/test_economics_source_binding.py",
       "classification": "test",
-      "status": "reviewed",
-      "reason": "Complete 237-line new test file reviewed by author and independently. Valid v2 control, descriptor mutations, v1 replay and serialization, immutable inputs and unchanged canonical answers; no live quality qualification.",
-      "source_sha256": "7938f8847264c8c8f3f1cde103e326780d8ac733a52cedc17e4ece15b82b986d",
-      "review_evidence": "docs/quality/economics-source-binding-review.md",
-      "review_evidence_sha256": "0821e1420f8755120d25289cb89b0a08697ed45cc0e5b77f94c88d9e0da122db"
+      "status": "pending",
+      "reason": "No file-level semantic implementation review recorded in this ledger."
     },
     {
       "path": "tests/test_edexcel_branding_facade.py",
@@ -7177,11 +7156,8 @@
     {
       "path": "tests/test_edexcel_checkpoint_admission.py",
       "classification": "test",
-      "status": "reviewed",
-      "reason": "Explicit completed EOF or documented full baseline plus entire delta review; source ownership, retry or required-check preservation and reviewer attribution are bounded in the evidence.",
-      "source_sha256": "c4918e8e674fcd9a50109731e2e63889238997a706828736eb7b1e37ac41bbaf",
-      "review_evidence": "docs/quality/edexcel-checkpoint-admission-2026-11-02.md",
-      "review_evidence_sha256": "664ff5c0ff55e0963c0d4b70dce69d6dd66dce2eddb01b5cb6ec23ff116d00e4"
+      "status": "pending",
+      "reason": "No file-level semantic implementation review recorded in this ledger."
     },
     {
       "path": "tests/test_edexcel_console_runtime.py",
@@ -8348,6 +8324,12 @@
       "reason": "No file-level semantic implementation review recorded in this ledger."
     },
     {
+      "path": "tests/test_interrupted_item.py",
+      "classification": "test",
+      "status": "pending",
+      "reason": "No file-level semantic implementation review recorded in this ledger."
+    },
+    {
       "path": "tests/test_json_client_contract.py",
       "classification": "test",
       "status": "pending",
@@ -8909,6 +8891,12 @@
       "review_evidence_sha256": "d62cb65f57e5636fe7a9af60e78010bd55b12b2fe16f95757792ab1e7fead681"
     },
     {
+      "path": "tests/test_staged_review_policy.py",
+      "classification": "test",
+      "status": "pending",
+      "reason": "No file-level semantic implementation review recorded in this ledger."
+    },
+    {
       "path": "tests/test_static_type_contracts.py",
       "classification": "test",
       "status": "pending",
@@ -8983,11 +8971,14 @@
     {
       "path": "tests/test_uk_preview_presentation.py",
       "classification": "test",
-      "status": "reviewed",
-      "reason": "Complete-file semantic review at the recorded source and evidence hashes; dependencies and remaining release qualification are limited to the documented scope.",
-      "source_sha256": "d7a5efcd941992dfcf45389701e81d437dcdbaedcd94883d5c6c34fef5e08462",
-      "review_evidence": "docs/quality/preview-raster-order-review.md",
-      "review_evidence_sha256": "dd1d37a5e37e28f4f9a4b9d16cc3f31428f4300af14f0e3135c118e131e850b7"
+      "status": "pending",
+      "reason": "No file-level semantic implementation review recorded in this ledger."
+    },
+    {
+      "path": "tests/test_whole_paper_review.py",
+      "classification": "test",
+      "status": "pending",
+      "reason": "No file-level semantic implementation review recorded in this ledger."
     },
     {
       "path": "tools/__init__.py",

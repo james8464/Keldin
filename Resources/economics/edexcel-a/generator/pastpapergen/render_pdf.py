@@ -52,7 +52,12 @@ from Backend.Core.overlay.graphs import (
 )
 from Backend.Core.overlay.layouts import EDEXCEL_ECONOMICS as L
 from Backend.Core.preview_presentation import preview_copy, preview_font_size
-from Backend.Core.subjects.economics_contracts import EconomicsSource
+from Backend.Core.subjects.economics_contracts import (
+    EconomicsSource,
+    case_figure_title,
+    paper_three_extracts,
+    section_b_extract_indices,
+)
 from pastpapergen import stimulus_diagrams
 from pastpapergen.exam_dates import economics_exam_schedule
 from pastpapergen.models import GraphParams, PaperBlueprint, QuestionBlueprint, Syllabus
@@ -677,6 +682,9 @@ def _draw_paper_3_source_page(
     margin = 76
     y = min(y, ANSWER_FRAME_Y + ANSWER_FRAME_H - 42)
     case_title = questions[0].source_title if questions else "Economic context"
+    printed_extracts = paper_three_extracts(
+        section, [question.source_text for question in questions]
+    )
 
     if source_page == 0:
         pdf.setFont(FONT_BOLD, BODY_FONT_SIZE_PT)
@@ -725,7 +733,7 @@ def _draw_paper_3_source_page(
                     y - 25,
                     "Extract D",
                     "Recent changes in the case-study market",
-                    questions[0].source_text,
+                    printed_extracts["Extract D"],
                 )
             return
 
@@ -768,7 +776,7 @@ def _draw_paper_3_source_page(
             y - 185,
             "Extract D",
             "Recent changes in the case-study market",
-            questions[0].source_text,
+            printed_extracts["Extract D"],
         )
         return
 
@@ -779,9 +787,7 @@ def _draw_paper_3_source_page(
             y,
             "Extract A",
             "Prices, incentives and market adjustment",
-            " ".join(
-                dict.fromkeys([questions[0].source_text, questions[1].source_text])
-            ),
+            printed_extracts["Extract A"],
         )
         _draw_paper_3_extract(
             pdf,
@@ -789,31 +795,29 @@ def _draw_paper_3_source_page(
             y - 12,
             "Extract B",
             "Effects on firms, workers and consumers",
-            questions[2].source_text,
+            printed_extracts["Extract B"],
         )
         return
 
     if section == "A":
-        combined = f"{questions[3].source_text} {questions[4].source_text}"
         _draw_paper_3_extract(
             pdf,
             margin,
             y,
             "Extract C",
             "The wider economic debate",
-            combined,
+            printed_extracts["Extract C"],
         )
         return
 
     if source_page == 1:
-        combined = " ".join(dict.fromkeys(q.source_text for q in questions[1:4]))
         _draw_paper_3_extract(
             pdf,
             margin,
             y,
             "Extract E",
             "Growth, costs and policy constraints",
-            combined,
+            printed_extracts["Extract E"],
         )
         return
 
@@ -823,23 +827,22 @@ def _draw_paper_3_source_page(
         y,
         "Extract F",
         "Long-run opportunities and risks",
-        questions[4].source_text,
+        printed_extracts["Extract F"],
     )
 
 
 # Draw figures from source cells so the chart matches the printed data.
 def _draw_case_source_figure(pdf, x, y, number, source):
     pdf.setFont(FONT_BOLD, 10)
-    pdf.drawString(x, y, f"Figure {number}: illustrative case information")
+    pdf.drawString(x, y, case_figure_title(number))
     y -= 20
     if source.rows:
-        for row in source.rows:
-            labels = [cell.printed() for cell in row]
+        for label, value in source.printed_case_rows():
             pdf.setFont(FONT_REGULAR, 9)
             pdf.rect(x, y - 24, 430, 24, stroke=1, fill=0)
             pdf.line(x + 310, y, x + 310, y - 24)
-            pdf.drawString(x + 6, y - 16, labels[0])
-            pdf.drawString(x + 318, y - 16, labels[1])
+            pdf.drawString(x + 6, y - 16, label)
+            pdf.drawString(x + 318, y - 16, value)
             y -= 24
     else:
         pdf.setFont(FONT_REGULAR, 9)
@@ -1243,11 +1246,10 @@ def _section_b_extracts(section_b: list) -> list[tuple[str, str]]:
     if not section_b:
         return []
     texts = [question.source_text for question in section_b]
-    indices = [0, 1, 2, 4 if len(texts) > 4 else 3]
-    labels = ["Extract A", "Extract B", "Extract C", "Extract D"]
+    indices = section_b_extract_indices(len(texts))
     return [
-        (label, texts[min(index, len(texts) - 1)])
-        for label, index in zip(labels, indices, strict=True)
+        (f"Extract {chr(65 + letter)}", texts[index])
+        for letter, index in enumerate(indices)
     ]
 
 
@@ -2362,11 +2364,11 @@ def _draw_stimulus(
             y -= 15
             if source_instance.context:
                 y = _draw_inline_context(pdf, source_instance.context, 104, y) - 10
-            for name, cell in source_instance.givens.items():
+            for line in source_instance.printed_givens():
                 y = (
                     _draw_inline_context(
                         pdf,
-                        f"{name.replace('_', ' ').capitalize()}: {cell.printed()}.",
+                        line,
                         104,
                         y,
                     )
@@ -2378,9 +2380,7 @@ def _draw_stimulus(
                     104,
                     y,
                     kind,
-                    rows=[
-                        [cell.printed() for cell in row] for row in source_instance.rows
-                    ],
+                    rows=source_instance.printed_rows(),
                 )
             return _draw_instance_chart(pdf, 104, y, source_instance)
         if kind in _ECONOMICS_GRAPH_KINDS and source_instance.context:
@@ -2598,10 +2598,11 @@ def _draw_instance_chart(
         for first, second in pairwise(points):
             pdf.line(*first, *second)
     pdf.setFont(FONT_REGULAR, 7)
-    for i, (px, py) in enumerate(points):
+    for (px, py), (label, printed_value) in zip(
+        points, source.printed_points(), strict=True
+    ):
         pdf.circle(px, py, 1.5, stroke=1, fill=1)
-        pdf.drawCentredString(px, py + 5, format(source.values[i], "f"))
-        label = source.labels[i]
+        pdf.drawCentredString(px, py + 5, printed_value)
         # Full identifiers remain visible, split across two lines if necessary.
         pieces = label.rsplit(" ", 1)
         pdf.drawCentredString(px, bottom - 12, pieces[0])
@@ -2819,14 +2820,10 @@ def _pad_pdf_pages(pdf: canvas.Canvas, target_pages: int) -> None:
 
 
 def _extract_source_questions(section_questions: list) -> list:
-    if len(section_questions) >= 5:
-        return [
-            section_questions[0],
-            section_questions[1],
-            section_questions[3],
-            section_questions[4],
-        ]
-    return section_questions[:4]
+    return [
+        section_questions[index]
+        for index in section_b_extract_indices(len(section_questions))
+    ]
 
 
 def _draw_source_content_page(

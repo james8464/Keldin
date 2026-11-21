@@ -71,6 +71,11 @@ from Backend.Core.generation_diagnostics import (
 from Backend.Core.generation_requests import GenerationRequest, request_json
 from Backend.Core.json_client import JSONGenerationClient
 from Backend.Core.scoped_references import EvidenceGap, ReferenceIndex
+from Backend.Core.whole_paper_review import (
+    PaperFinding,
+    ReviewItem,
+    validate_finding_evidence,
+)
 
 VERSION = "fr-nsi-written-2027-v36-llm"
 PRINT_POLICY = V36_PRINT_POLICY
@@ -1733,8 +1738,67 @@ def _round_record(number, request_identity, authoring, captured, refusal):
     )
 
 
+def whole_paper_items(exercises: list[NSIExercise]) -> tuple[ReviewItem, ...]:
+    return tuple(
+        ReviewItem(
+            id=f"{exercise.id}/{question.id}",
+            prompt=question.prompt,
+            mark_scheme=question.answer
+            + "\n"
+            + json.dumps(
+                [credit.model_dump(mode="json") for credit in question.marking],
+                ensure_ascii=False,
+            ),
+            context=(
+                exercise.title,
+                exercise.context,
+                *(
+                    item.model_dump_json()
+                    for item in exercise.materials
+                    if item.id in question.material_ids
+                ),
+            ),
+            marks=question.points,
+        )
+        for exercise in exercises
+        for question in exercise.questions
+    )
+
+
+def _paper_review_refusal(baseline, exercises, identifier, findings):
+    if not findings or any(
+        item.target_id.partition("/")[0] != identifier for item in findings
+    ):
+        raise ValueError("Défaut de sujet sans exercice correspondant")
+    visible = {item.id: item for item in whole_paper_items(exercises)}
+    for finding in findings:
+        validate_finding_evidence(finding, visible)
+    return {
+        "kind": "whole-paper-review-v1",
+        "content_sha256": baseline["identity"]["content_sha256"],
+        "findings": [finding.model_dump(mode="json") for finding in findings],
+    }
+
+
 def _validate_rounds(package, exercises, plan, reviews, attempts, *, terminal=False):
     identity = package["identity"]
+    baseline = package.get("paper_review_baseline")
+    baseline_exercises = None
+    repaired = False
+    if "paper_review_baseline" in package and baseline is None:
+        raise ValueError("Historique initial du sujet absent")
+    if baseline is not None:
+        if (
+            terminal
+            or not isinstance(baseline, dict)
+            or "paper_review_baseline" in baseline
+            or baseline.get("curriculum_plan") != plan
+            or not isinstance(baseline.get("identity"), dict)
+            or {k: v for k, v in baseline["identity"].items() if k != "content_sha256"}
+            != {k: v for k, v in identity.items() if k != "content_sha256"}
+        ):
+            raise ValueError("Identité de la révision du sujet modifiée")
+        baseline_exercises = validate_package(baseline)
     schema_policy = _identity_authoring_schema_policy(identity)
     mark_plans = _identity_mark_plans(identity)
     histories = package.get("exercise_attempts")
@@ -1769,6 +1833,7 @@ def _validate_rounds(package, exercises, plan, reviews, attempts, *, terminal=Fa
         if len(history["rounds"]) != (2 if failed else accepted_round):
             raise ValueError("Historique des contrôles incohérent")
         refusal = None
+        repaired_exercise = False
         for number, record in enumerate(history["rounds"], 1):
             if (
                 not isinstance(record, dict)
@@ -1839,6 +1904,41 @@ def _validate_rounds(package, exercises, plan, reviews, attempts, *, terminal=Fa
                     raise ValueError("Refus de contrôle modifié") from error
                 refusal = error.details
             else:
+                paper_refusal = record["refusal"]
+                if (
+                    baseline_exercises is not None
+                    and number == 1
+                    and accepted_round == 2
+                    and isinstance(paper_refusal, dict)
+                    and paper_refusal.get("kind") == "whole-paper-review-v1"
+                ):
+                    historical = baseline["exercise_attempts"][index]
+                    readings = paper_refusal.get("findings")
+                    if (
+                        not isinstance(readings, list)
+                        or historical["accepted_round"] != 1
+                        or record
+                        != {
+                            **historical["rounds"][0],
+                            "outcome": "rejected",
+                            "refusal": paper_refusal,
+                        }
+                        or exercise.topics != baseline_exercises[index].topics
+                        or paper_refusal
+                        != _paper_review_refusal(
+                            baseline,
+                            baseline_exercises,
+                            identifier,
+                            tuple(
+                                PaperFinding.model_validate(item) for item in readings
+                            ),
+                        )
+                    ):
+                        raise ValueError("Refus du sujet ou domaine révisé modifié")
+                    repaired = True
+                    repaired_exercise = True
+                    refusal = paper_refusal
+                    continue
                 if (
                     number != history["accepted_round"]
                     or record["outcome"] != "accepted"
@@ -1850,7 +1950,20 @@ def _validate_rounds(package, exercises, plan, reviews, attempts, *, terminal=Fa
                 ):
                     raise ValueError("Dernier contrôle sans lien avec le résultat")
         if exercise is not None:
+            if (
+                baseline_exercises is not None
+                and not repaired_exercise
+                and (
+                    exercise != baseline_exercises[index]
+                    or history != baseline["exercise_attempts"][index]
+                    or reviews[index] != baseline["reviews"][index]
+                    or attempts[index] != baseline["authoring_attempts"][index]
+                )
+            ):
+                raise ValueError("Un exercice non signalé a changé pendant la révision")
             topics.update(exercise.topics)
+    if baseline is not None and not repaired:
+        raise ValueError("Le contrôle du sujet ne contient aucune révision")
 
 
 def _recovery_identity(
@@ -2056,6 +2169,8 @@ def generate(
     large_print: bool = False,
     record_round=None,
     authoring_schema_policy=AUTHORING_SCHEMA_POLICY,
+    repair_package=None,
+    repair_findings: tuple[PaperFinding, ...] = (),
 ) -> dict:
     if type(seed) is not int:
         raise ValueError("Graine entière requise")
@@ -2106,10 +2221,51 @@ def generate(
         if mark_plans
         else None
     )
+    baseline = repair_identifier = paper_refusal = None
+    previous_exercises = None
+    if repair_package is not None:
+        if not repair_findings or record_round is not None:
+            raise ValueError("Révision ciblée du sujet invalide")
+        previous_exercises = validate_package(repair_package)
+        baseline = repair_package.get("paper_review_baseline", repair_package)
+        expected = bound_identity or _recovery_identity(
+            provider,
+            model,
+            seed,
+            large_print,
+            authoring_schema_policy=authoring_schema_policy,
+            mark_plans=mark_plans,
+        )
+        if (
+            repair_package["curriculum_plan"] != plan
+            or {
+                k: v
+                for k, v in repair_package["identity"].items()
+                if k != "content_sha256"
+            }
+            != expected
+        ):
+            raise ValueError("La révision ne correspond pas au sujet original")
+        repair_identifier = repair_findings[0].target_id.partition("/")[0]
+        if repair_identifier not in {"1", "2", "3"}:
+            raise ValueError("Exercice à réviser inconnu")
+        paper_refusal = _paper_review_refusal(
+            baseline, validate_package(baseline), repair_identifier, repair_findings
+        )
+
     exercises, reviews, attempts, exercise_attempts = [], [], [], []
     topics: set[str] = set()
     for identifier in ("1", "2", "3"):
-        scope = plan[int(identifier) - 1]
+        index = int(identifier) - 1
+        scope = plan[index]
+        if repair_package is not None and identifier != repair_identifier:
+            exercise = previous_exercises[index]
+            exercises.append(exercise)
+            topics.update(exercise.topics)
+            reviews.append(repair_package["reviews"][index])
+            attempts.append(repair_package["authoring_attempts"][index])
+            exercise_attempts.append(repair_package["exercise_attempts"][index])
+            continue
         history = {"exercise_id": identifier, "accepted_round": None, "rounds": []}
         exercise_attempts.append(history)
         mark_plan = mark_plans[int(identifier) - 1] if mark_plans else None
@@ -2127,7 +2283,23 @@ def generate(
                 mark_plans=mark_plans,
             )
         refusal = None
-        for number in (1, 2):
+        rounds = (1, 2)
+        if repair_package is not None:
+            historical = repair_package["exercise_attempts"][index]
+            if historical["accepted_round"] != 1:
+                raise ValueError(
+                    f"Pas de nouvelle tentative disponible pour l’exercice {identifier}"
+                )
+            history["rounds"].append(
+                {
+                    **historical["rounds"][0],
+                    "outcome": "rejected",
+                    "refusal": paper_refusal,
+                }
+            )
+            refusal = paper_refusal
+            rounds = (2,)
+        for number in rounds:
             if progress:
                 progress(
                     f"Rédaction originale de l'exercice {identifier} par {model} "
@@ -2158,6 +2330,11 @@ def generate(
                     mark_plan=mark_plan,
                 )
                 _require_primary_topic(exercise, scope["primary_topic"])
+                if (
+                    repair_package is not None
+                    and exercise.topics != previous_exercises[index].topics
+                ):
+                    raise ValueError("Le domaine d’un exercice révisé a changé")
                 _reject_scoped_reference_copy(exercise, scope["references"])
                 if progress:
                     progress(
@@ -2193,6 +2370,8 @@ def generate(
                     mark_plans=mark_plans,
                 )
                 if number == 2:
+                    if repair_package is not None:
+                        raise
                     error.details = {
                         **error.details,
                         "review_recovery_policy": REVIEW_RECOVERY_POLICY,
@@ -2284,6 +2463,8 @@ def generate(
         "teacher_review": "not_run",
         "empirical_calibration": "not_run",
     }
+    if baseline is not None:
+        body["paper_review_baseline"] = baseline
     identity = {
         **(
             bound_identity

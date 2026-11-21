@@ -16,6 +16,7 @@ from Backend.Core.ai_assessment import (
     _generate_batch,
     _generate_item_transaction,
     _generation_prompt,
+    _independently_validate_candidate,
     _normalise_calculation_guidance,
     _normalise_command_word,
     _normalise_level_allocations,
@@ -42,6 +43,7 @@ from Backend.Core.exam_blueprints import (
     GeneratedQuestion,
     MarkSchemePoint,
 )
+from Backend.Core.generation_diagnostics import GenerationEvidenceError
 from Backend.Core.independent_solver import CanonicalSolution
 from Backend.Core.model_review import DifficultyReviewResult, ReviewResult
 from Backend.Core.providers import HostedLLMClient
@@ -827,6 +829,328 @@ def test_generated_question_must_preserve_visual_contract_terms() -> None:
             client=type("Client", (), {"provider": "test", "model": "test"})(),
             policy=GenerationPolicy(),
         )
+
+
+@pytest.fixture
+def app_owned_choice_case():
+    question = GeneratedQuestion(
+        rule_id="bookkeeping",
+        number="1",
+        marks=1,
+        kind="multiple_choice",
+        command_word="select",
+        topic_id="accounting",
+        prompt="Which book of prime entry records credit purchases of inventory?",
+        mark_scheme=["Purchases journal"],
+        choices=["Purchases journal", "Sales journal", "Cash book", "General journal"],
+        correct_choice=0,
+        assessment_objectives={"AO1": 1},
+        authoring_context={"app_owned_choice_credit": True},
+    )
+    task = _Task(
+        key=(0, 0, 0),
+        question=question,
+        option=GeneratedOption(
+            id="section-a", title="Accounting", questions=[question]
+        ),
+        topic=type("Topic", (), {"id": "accounting", "title": "Bookkeeping"})(),
+    )
+    raw = {
+        "prompt": "A shop receives an invoice for stock bought on account. Where is it first entered?",
+        "choices": [
+            "Cash book",
+            "Returns journal",
+            "Purchases journal",
+            "Sales journal",
+        ],
+        "correct_choice": 2,
+        "mark_scheme": [],
+    }
+    return task, raw
+
+
+@pytest.mark.parametrize(
+    ("override", "failure"),
+    [
+        ({}, None),
+        ({"correct_choice": True}, "valid answer"),
+        ({"correct_choice": 4}, "valid answer"),
+        ({"choices": ["A", "A", "B", "C"]}, "unique choices"),
+        (
+            {
+                "choices": [
+                    "A. Cash book",
+                    "(B) Returns journal",
+                    "Option C: Purchases journal",
+                    "D) Sales journal",
+                ]
+            },
+            None,
+        ),
+        (
+            {
+                "choices": [
+                    "A. Cash book",
+                    "C. Returns journal",
+                    "B. Purchases journal",
+                    "D. Sales journal",
+                ]
+            },
+            "app assigns option labels",
+        ),
+        (
+            {
+                "choices": [
+                    "A. Cash book",
+                    "B. Cash book",
+                    "C. Purchases journal",
+                    "D. Sales journal",
+                ]
+            },
+            "unique choices",
+        ),
+        (
+            {
+                "choices": [
+                    "Cash book",
+                    "Option C: Returns journal",
+                    "Purchases journal",
+                    "Sales journal",
+                ]
+            },
+            "app assigns option labels",
+        ),
+        ({"mark_scheme": [{"text": "App must not trust this."}]}, "empty mark scheme"),
+    ],
+)
+def test_blueprint_owns_single_choice_marks_but_not_the_proposed_key(
+    app_owned_choice_case, override, failure
+) -> None:
+    task, raw = app_owned_choice_case
+    raw.update(override)
+    if failure is not None:
+        with pytest.raises(ValueError, match=failure):
+            _candidate_question(
+                task,
+                raw,
+                client=object(),
+                policy=GenerationPolicy(),
+            )
+        return
+    candidate = _candidate_question(
+        task,
+        raw,
+        client=type("Client", (), {"provider": "test", "model": "test"})(),
+        policy=GenerationPolicy(),
+    )
+    assert candidate.correct_choice == 2
+    assert candidate.choices == [
+        "Cash book",
+        "Returns journal",
+        "Purchases journal",
+        "Sales journal",
+    ]
+    assert candidate.mark_scheme == ["Purchases journal"]
+    assert candidate.structured_mark_scheme == [
+        MarkSchemePoint(
+            text="Purchases journal",
+            marks=1,
+            credit_type="answer",
+            assessment_objective="AO1",
+        )
+    ]
+    assert task.question.correct_choice == 0
+
+
+def test_app_owned_credit_writer_and_repair_use_the_same_empty_schema(
+    app_owned_choice_case,
+) -> None:
+    task, raw = app_owned_choice_case
+    writing_attempts = []
+
+    class Client:
+        provider = "test"
+        model = "fixture"
+
+        def generate_request(self, request):
+            if request.operation == "authoring":
+                item_schema = request.schema["properties"]["questions"]["items"]
+                assert item_schema["properties"]["mark_scheme"]["maxItems"] == 0
+                data, _ = json.JSONDecoder().raw_decode(
+                    request.prompt.split("\nBLUEPRINT_DATA=", 1)[1]
+                )
+                assert data[0]["mark_scheme_locked"] is True
+                assert data[0]["minimum_awarded_entries"] == 0
+                assert data[0]["required_awarded_entries"] == []
+                writing_attempts.append("\nREPAIR_DATA=" in request.prompt)
+                return {"questions": [{"id": task.id, **raw}]}
+            if request.operation == "solver":
+                return complete_solver_response(
+                    {
+                        "answer": "Purchases journal",
+                        "steps": ["These are inventory purchases on credit."],
+                        "mark_points": ["Purchases journal"],
+                        "has_single_valid_choice": True,
+                    }
+                )
+            assert request.operation == "batch_review"
+            approved = len(writing_attempts) == 2
+            review = ReviewResult(
+                approved=approved,
+                ambiguity_issues=[] if approved else ["Clarify the purchase context."],
+            )
+            return {"reviews": [{"id": task.id, **review.model_dump()}]}
+
+    result = _generate_item_transaction(
+        task,
+        client=Client(),
+        subject="Accounting",
+        seed=1,
+        policy=GenerationPolicy(attempts=2),
+        progress=None,
+        accepted_prompts=[],
+    )
+    assert writing_attempts == [False, True]
+    assert result.correct_choice == 2
+    assert result.structured_mark_scheme[0].marks == 1
+
+
+def test_saved_app_owned_credit_must_match_the_exact_derived_row(
+    app_owned_choice_case,
+) -> None:
+    task, raw = app_owned_choice_case
+    candidate = _candidate_question(
+        task, raw, client=object(), policy=GenerationPolicy()
+    )
+    _validate_checkpoint_item(task, candidate)
+    changed = candidate.model_copy(
+        update={
+            "structured_mark_scheme": [
+                *candidate.structured_mark_scheme,
+                MarkSchemePoint(
+                    text="Retain separate guidance.", marks=0, credit_type="guidance"
+                ),
+            ]
+        }
+    )
+    with pytest.raises(ValueError, match="app-owned choice credit"):
+        _validate_checkpoint_item(task, changed)
+
+
+def test_saved_app_owned_choice_cannot_reintroduce_a_conflicting_label(
+    app_owned_choice_case,
+) -> None:
+    task, raw = app_owned_choice_case
+    candidate = _candidate_question(
+        task, raw, client=object(), policy=GenerationPolicy()
+    )
+    changed = candidate.model_copy(
+        update={"choices": ["(C) Cash book", *candidate.choices[1:]]}
+    )
+    with pytest.raises(ValueError, match="app assigns option labels"):
+        _validate_checkpoint_item(task, changed)
+
+
+@pytest.mark.parametrize("remaining_options", [[], ["B", "C", "   "]])
+def test_saved_choices_require_four_nonempty_options(
+    app_owned_choice_case, remaining_options
+) -> None:
+    task, raw = app_owned_choice_case
+    candidate = _candidate_question(
+        task, raw, client=object(), policy=GenerationPolicy()
+    )
+    options = [candidate.choices[2], *remaining_options]
+    changed = candidate.model_copy(update={"choices": options, "correct_choice": 0})
+    with pytest.raises(ValueError, match="four nonempty unique choices"):
+        _validate_checkpoint_item(task, changed)
+
+
+@pytest.mark.parametrize("second_failure", ["invalid draft", "wrong key"])
+def test_retry_does_not_pair_a_previous_review_with_a_new_failure(
+    app_owned_choice_case, second_failure
+) -> None:
+    task, raw = app_owned_choice_case
+    authoring = []
+
+    class Client:
+        def generate_request(self, request):
+            if request.operation == "authoring":
+                authoring.append(request.prompt)
+                if len(authoring) == 2:
+                    assert "\nREPAIR_DATA=" in request.prompt
+                    assert "Clarify the purchase context." in request.prompt
+                    if second_failure == "invalid draft":
+                        return {"questions": [{"id": task.id, **raw, "choices": []}]}
+                    return {"questions": [{"id": task.id, **raw, "correct_choice": 0}]}
+                if len(authoring) == 3:
+                    assert "\nREPAIR_DATA=" not in request.prompt
+                    assert "Clarify the purchase context." not in request.prompt
+                    rejection = (
+                        "four unique choices"
+                        if second_failure == "invalid draft"
+                        else "independent answer disagrees"
+                    )
+                    assert rejection in request.prompt
+                return {"questions": [{"id": task.id, **raw}]}
+            if request.operation == "solver":
+                return complete_solver_response(
+                    {
+                        "answer": "Purchases journal",
+                        "steps": ["These are inventory purchases on credit."],
+                        "mark_points": ["Purchases journal"],
+                        "has_single_valid_choice": True,
+                    }
+                )
+            assert request.operation == "batch_review"
+            approved = len(authoring) == 3
+            review = ReviewResult(
+                approved=approved,
+                ambiguity_issues=[] if approved else ["Clarify the purchase context."],
+            )
+            return {"reviews": [{"id": task.id, **review.model_dump()}]}
+
+    candidate = _generate_item_transaction(
+        task,
+        client=Client(),
+        subject="Accounting",
+        seed=1,
+        policy=GenerationPolicy(attempts=3),
+        progress=None,
+        accepted_prompts=[],
+    )
+    assert len(authoring) == 3
+    assert candidate.correct_choice == 2
+
+
+def test_app_owned_credit_does_not_make_a_wrong_model_key_pass_solving(
+    app_owned_choice_case,
+) -> None:
+    task, raw = app_owned_choice_case
+    raw["correct_choice"] = 0
+    candidate = _candidate_question(
+        task, raw, client=object(), policy=GenerationPolicy()
+    )
+    assert candidate.mark_scheme == ["Cash book"]
+
+    class IndependentClient:
+        def generate_request(self, request):
+            assert request.operation == "solver"
+            data = json.loads(request.prompt.split("\n", 1)[1])
+            assert "correct_choice" not in data["item"]
+            assert "mark_scheme" not in data["item"]
+            return complete_solver_response(
+                {
+                    "answer": "Purchases journal",
+                    "steps": [
+                        "An invoice for credit inventory purchases is recorded in the purchases journal."
+                    ],
+                    "mark_points": ["Purchases journal"],
+                    "has_single_valid_choice": True,
+                }
+            )
+
+    with pytest.raises(GenerationEvidenceError, match="independent solution"):
+        _independently_validate_candidate(task, candidate, client=IndependentClient())
 
 
 def test_candidate_question_accepts_unordered_contract_values() -> None:

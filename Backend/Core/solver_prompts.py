@@ -56,6 +56,13 @@ def build_solver_prompt(
             "required answer/mark_points placeholder; this response is rejected, "
             "not treated as a solution. Explain the defect in steps."
         )
+        if solver_item.get("marks") == 1:
+            response_instructions += (
+                " For a one-mark choice, alternatives must be empty. A paraphrase "
+                "of the selected option is not another creditworthy response. If "
+                "another printed option is also valid, report false and explain why "
+                "in steps, not in alternatives."
+            )
     correction = ""
     if correction_findings:
         if not sql_contract_present:

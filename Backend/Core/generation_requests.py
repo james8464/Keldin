@@ -5,6 +5,8 @@ from __future__ import annotations
 import json
 import math
 import re
+from collections.abc import Callable
+from contextvars import ContextVar
 from dataclasses import dataclass, field
 from typing import Any
 
@@ -297,7 +299,25 @@ def make_request(
     )
 
 
+ResponseReplay = Callable[
+    [GenerationRequest, Callable[[], dict[str, object]]], dict[str, object]
+]
+response_replay: ContextVar[ResponseReplay | None] = ContextVar(
+    "generation_response_replay", default=None
+)
+
+
 def request_json(
+    client: JSONGenerationClient, request: GenerationRequest
+) -> dict[str, object]:
+    def generate() -> dict[str, object]:
+        return _dispatch_json(client, request)
+
+    replay = response_replay.get()
+    return generate() if replay is None else replay(request, generate)
+
+
+def _dispatch_json(
     client: JSONGenerationClient, request: GenerationRequest
 ) -> dict[str, object]:
     # A dynamic Mock attribute is not an opt-in to the structured interface.

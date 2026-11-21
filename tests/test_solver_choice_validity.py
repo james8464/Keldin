@@ -100,6 +100,20 @@ def test_true_signal_cannot_bypass_wrong_key_or_mark_point_checks():
         ).solve(candidate, [])
 
 
+@pytest.mark.parametrize("alternate", ["Another wording", "£40"])
+def test_one_mark_choice_rejects_alternatives_even_without_schema_enforcement(
+    alternate,
+):
+    client = TypedClient(
+        response(has_single_valid_choice=True, alternatives=[alternate])
+    )
+    with pytest.raises(ValueError, match="alternatives must be empty"):
+        IndependentSolver(client).solve(item(), [])
+    schema = client.requests[0].schema
+    assert schema["properties"]["alternatives"]["maxItems"] == 0
+    assert "alternatives must be empty" in client.requests[0].prompt
+
+
 def test_legacy_generate_json_only_response_remains_compatible_but_false_rejects():
     class LegacyClient:
         def __init__(self, result):

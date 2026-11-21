@@ -25,7 +25,15 @@ from reportlab.platypus import (
     TableStyle,
 )
 
-from aqabizgen.financials import FinancialPosition
+from aqabizgen.financials import FinancialPosition, restructuring_printed_rows
+from aqabizgen.source_figures import (
+    BreakEvenFigure,
+    chart_values,
+    grouped_chart_title,
+    market_chart_values,
+    printed_points,
+    source_table_rows,
+)
 from Backend.Core.business_scheme_content import (
     business_scheme_generation_series,
     uses_business_scheme_policy,
@@ -58,7 +66,10 @@ from Backend.Core.mark_scheme_front_matter import aqa_front_matter_pages
 from Backend.Core.preview_presentation import preview_paragraph
 from Backend.Core.reportlab_theme import AQAAnswerLines as AnswerLines
 from Backend.Core.reportlab_theme import themed_table_class
-from Backend.Core.subjects.selected_response import SelectedResponseContract
+from Backend.Core.subjects.selected_response import (
+    SelectedResponseContract,
+    business_selected_response_printed_table,
+)
 
 AQA_A4 = (595.32, 841.92)
 PAGE_WIDTH, PAGE_HEIGHT = AQA_A4
@@ -878,27 +889,8 @@ def _choice_prompts(section) -> list[Flowable]:
 
 def _financial_position_extract(option: GeneratedOption) -> Table:
     financials = FinancialPosition.from_chart_values(option.chart_values)
-    rows = [
-        [f"Extract from accounts of {option.title}, 2024", "", ""],
-        ["", "£m", "£m"],
-        ["Non-current assets", "", f"{financials.non_current_assets}"],
-        ["", "", ""],
-        ["Inventories", f"{financials.inventories}", ""],
-        ["Receivables", f"{financials.receivables}", ""],
-        ["Cash", f"{financials.cash}", ""],
-        ["", "", ""],
-        ["Payables", f"{financials.payables}", ""],
-        [
-            "Net current assets",
-            "",
-            f"{financials.net_current_assets}",
-        ],
-        ["", "", ""],
-        ["Non-current liabilities", "", f"{financials.non_current_liabilities}"],
-        ["Total equity", "", f"{financials.total_equity}"],
-    ]
     table = Table(
-        rows,
+        financials.printed_rows(option.title),
         colWidths=[50 * mm, 21 * mm, 21 * mm],
         rowHeights=[9 * mm, *([8 * mm] * 12)],
         style=TableStyle(
@@ -918,15 +910,8 @@ def _financial_position_extract(option: GeneratedOption) -> Table:
 
 
 def _restructuring_table(option: GeneratedOption) -> Table:
-    values = [round(value) for value in option.chart_values]
-    rows = [
-        ["Feature", "Before restructuring", "After restructuring"],
-        ["Number of staff", str(values[4] * 34), str(values[3] * 31)],
-        ["Average span of control", "5", "15"],
-        ["Levels of hierarchy", "6", "4"],
-    ]
     table = Table(
-        rows,
+        restructuring_printed_rows(option.chart_values),
         colWidths=[72 * mm, 40 * mm, 40 * mm],
         rowHeights=[10 * mm] * 4,
         style=TableStyle(
@@ -953,68 +938,19 @@ def _mcq_context(question: GeneratedQuestion) -> list[Flowable]:
     contract = SelectedResponseContract.model_validate(raw_contract)
     if number == 6:
         return [_break_even_diagram(contract), Spacer(1, 3 * mm)]
-    if number == 7:
-        values = contract.inputs
-        return [
-            _compact_data_table(
-                [
-                    ["Financial data", "£m"],
-                    ["Sales revenue", str(values["revenue"])],
-                    ["Cost of sales", str(values["cost_of_sales"])],
-                    ["Operating expenses", str(values["operating_expenses"])],
-                    ["Taxation", str(values["taxation"])],
-                ],
-                [72 * mm, 28 * mm],
-            ),
-            Spacer(1, 3 * mm),
-        ]
-    if number == 10:
-        return [
-            _compact_data_table(
-                [
-                    ["Factory", "Output", "Employees"],
-                    *[
-                        [row.label, str(row.output), str(row.employees)]
-                        for row in contract.rows
-                    ],
-                ],
-                [48 * mm, 35 * mm, 35 * mm],
-            ),
-            Spacer(1, 3 * mm),
-        ]
-    if number == 12:
-        return [
-            _compact_data_table(
-                [
-                    ["Evidence", "Observed rate of change"],
-                    [
-                        "External environment",
-                        str(contract.inputs["external_change"]).title(),
-                    ],
-                    [
-                        "Business strategy",
-                        str(contract.inputs["strategic_change"]).title(),
-                    ],
-                ],
-                [70 * mm, 58 * mm],
-            ),
-            Spacer(1, 3 * mm),
-        ]
-    if number == 13:
-        return [
-            _compact_data_table(
-                [
-                    ["Measure of performance", "Target", "Actual"],
-                    *[
-                        [row.label, f"{row.target}%", f"{row.actual}%"]
-                        for row in contract.rows
-                    ],
-                ],
-                [70 * mm, 30 * mm, 30 * mm],
-            ),
-            Spacer(1, 3 * mm),
-        ]
-    return []
+    rows = business_selected_response_printed_table(number, contract)
+    if not rows:
+        return []
+    column_widths = {
+        7: (72, 28),
+        10: (48, 35, 35),
+        12: (70, 58),
+        13: (70, 30, 30),
+    }
+    return [
+        _compact_data_table(rows, [width * mm for width in column_widths[number]]),
+        Spacer(1, 3 * mm),
+    ]
 
 
 def _compact_data_table(rows: list[list[str]], widths: list[float]) -> Table:
@@ -1037,30 +973,17 @@ def _compact_data_table(rows: list[list[str]], widths: list[float]) -> Table:
 def _break_even_diagram(contract: SelectedResponseContract) -> Drawing:
     drawing = Drawing(155 * mm, 62 * mm)
     x0, y0, width, height = 75, 25, 330, 120
-    values = {key: float(value) for key, value in contract.inputs.items()}
-    before_break_even = values["fixed_cost_before"] / (
-        values["price_before"] - values["variable_cost_before"]
-    )
-    after_break_even = values["fixed_cost_after"] / (
-        values["price_after"] - values["variable_cost_after"]
-    )
-    maximum_output = max(before_break_even, after_break_even) * 1.35
-    maximum_value = max(
-        values["price_before"] * maximum_output,
-        values["price_after"] * maximum_output,
-        values["fixed_cost_before"] + values["variable_cost_before"] * maximum_output,
-        values["fixed_cost_after"] + values["variable_cost_after"] * maximum_output,
-    )
+    figure = BreakEvenFigure.from_contract(contract)
 
     def point(output: float, amount: float) -> tuple[float, float]:
         return (
-            x0 + width * output / maximum_output,
-            y0 + height * amount / maximum_value,
+            x0 + width * output / figure.maximum_output,
+            y0 + height * amount / figure.maximum_value,
         )
 
     def add_line(start_amount: float, rate: float, label: str) -> None:
         start = point(0, start_amount)
-        end = point(maximum_output, start_amount + rate * maximum_output)
+        end = point(figure.maximum_output, start_amount + rate * figure.maximum_output)
         drawing.add(Line(*start, *end, strokeColor=INK))
         drawing.add(String(end[0] + 3, end[1] - 2, label, fontName=FONT, fontSize=7))
 
@@ -1078,30 +1001,11 @@ def _break_even_diagram(contract: SelectedResponseContract) -> Drawing:
     drawing.add(String(x0 - 50, y0 + height - 4, "Costs /", fontName=FONT, fontSize=8))
     drawing.add(String(x0 - 50, y0 + height - 14, "revenue", fontName=FONT, fontSize=8))
     drawing.add(String(x0 + width - 30, y0 - 18, "Output", fontName=FONT, fontSize=8))
-    add_line(0, values["price_before"], "TR1")
-    add_line(values["fixed_cost_before"], values["variable_cost_before"], "TC1")
-    add_line(0, values["price_after"], "TR2")
-    add_line(values["fixed_cost_after"], values["variable_cost_after"], "TC2")
-    before_xy = point(before_break_even, values["price_before"] * before_break_even)
-    after_xy = point(after_break_even, values["price_after"] * after_break_even)
-    drawing.add(
-        String(
-            before_xy[0] + 4,
-            before_xy[1] + 4,
-            "M",
-            fontName=FONT_BOLD,
-            fontSize=8,
-        )
-    )
-    drawing.add(
-        String(
-            after_xy[0] + 4,
-            after_xy[1] + 4,
-            "N",
-            fontName=FONT_BOLD,
-            fontSize=8,
-        )
-    )
+    for label, start, rate in figure.lines:
+        add_line(start, rate, label)
+    for label, output, amount in figure.intersections:
+        x, y = point(output, amount)
+        drawing.add(String(x + 4, y + 4, label, fontName=FONT_BOLD, fontSize=8))
     return drawing
 
 
@@ -1207,18 +1111,7 @@ def _scheme_block(question: GeneratedQuestion) -> list[Flowable]:
 
 
 def _source_table(option: GeneratedOption, index: int) -> Table:
-    values = _source_values(option, index)
-    rows = [
-        ["Measure", "2023", "2024", "2025"],
-        [
-            "Performance index",
-            f"{values[2]:.1f}",
-            f"{values[3]:.1f}",
-            f"{values[4]:.1f}",
-        ],
-        ["Employee engagement", f"{54 + index}%", f"{57 + index}%", f"{59 + index}%"],
-        ["Capacity utilisation", f"{68 + index}%", f"{72 + index}%", f"{70 + index}%"],
-    ]
+    rows = source_table_rows(option, index)
     table = Table(rows, colWidths=[60 * mm, 32 * mm, 32 * mm, 32 * mm])
     table.setStyle(
         TableStyle(
@@ -1252,7 +1145,7 @@ def _chart(option: GeneratedOption, offset: int = 0) -> Drawing:
     drawing.add(String(30, 116, option.chart_title, fontName=FONT_BOLD, fontSize=9))
     drawing.add(Line(x0, y0, x0, y0 + height))
     drawing.add(Line(x0, y0, x0 + width, y0))
-    values = _source_values(option, offset) if offset else list(option.chart_values)
+    values = chart_values(option, offset)
     low, high = min(values), max(values)
     span = max(1.0, high - low)
     points = [
@@ -1262,14 +1155,11 @@ def _chart(option: GeneratedOption, offset: int = 0) -> Drawing:
     font_size = 7
     clearance = font_size / 2
     _, descent = getAscentDescent(FONT, font_size)
-    for index, (value, (x, y)) in enumerate(zip(values, points, strict=True)):
+    for index, ((label, text), (x, y)) in enumerate(
+        zip(printed_points(option, values), points, strict=True)
+    ):
         drawing.add(Rect(x - 2, y - 2, 4, 4, fillColor=INK))
-        drawing.add(
-            String(
-                x - 8, y0 - 13, option.chart_labels[index], fontName=FONT, fontSize=7
-            )
-        )
-        text = f"{value:.1f}"
+        drawing.add(String(x - 8, y0 - 13, label, fontName=FONT, fontSize=7))
         label_width = stringWidth(text, FONT, font_size)
         if index == 0:
             label_x, anchor = x + clearance, "start"
@@ -1310,15 +1200,15 @@ def _paper_two_grouped_bar_chart(option: GeneratedOption) -> Drawing:
 
     drawing = Drawing(165 * mm, 64 * mm)
     x0, y0, width, height = 38, 34, 402, 118
-    market = [round(value * 5.4, 1) for value in option.chart_values]
-    business = list(option.chart_values)
+    market = market_chart_values(option)
+    business = chart_values(option)
     maximum = max(market) * 1.08
 
     drawing.add(
         String(
             38,
             170,
-            f"Market value and {option.title} sales (index values)",
+            grouped_chart_title(option.title),
             fontName=FONT_BOLD,
             fontSize=9,
         )
@@ -1342,8 +1232,8 @@ def _paper_two_grouped_bar_chart(option: GeneratedOption) -> Drawing:
 
     group_width = width / len(market)
     bar_width = 13
-    for index, (market_value, business_value) in enumerate(
-        zip(market, business, strict=True)
+    for index, (market_value, business_value, (label, text)) in enumerate(
+        zip(market, business, printed_points(option, business), strict=True)
     ):
         centre = x0 + group_width * (index + 0.5)
         market_height = height * market_value / maximum
@@ -1375,7 +1265,7 @@ def _paper_two_grouped_bar_chart(option: GeneratedOption) -> Drawing:
             String(
                 centre + bar_width / 2 + 4,
                 y0 + business_height + 5,
-                f"{business_value:.1f}",
+                text,
                 fontName=FONT,
                 fontSize=6.5,
                 textAnchor="middle",
@@ -1385,7 +1275,7 @@ def _paper_two_grouped_bar_chart(option: GeneratedOption) -> Drawing:
             String(
                 centre - 11,
                 y0 - 14,
-                option.chart_labels[index],
+                label,
                 fontName=FONT,
                 fontSize=7,
             )
@@ -1413,11 +1303,6 @@ def _paper_two_grouped_bar_chart(option: GeneratedOption) -> Drawing:
         String(399, legend_y, "Business sales index", fontName=FONT, fontSize=6.5)
     )
     return drawing
-
-
-def _source_values(option: GeneratedOption, index: int) -> list[float]:
-    multiplier = 1 + (index - 1) * 0.03
-    return [round(value * multiplier, 1) for value in option.chart_values]
 
 
 def _cover_profile(paper: GeneratedPaper) -> CoverProfile:

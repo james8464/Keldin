@@ -22,9 +22,43 @@ from Backend.Core.assessment_checkpoints import (
 from Backend.Core.computer_science_authoring import reviewed_question_metadata
 from Backend.Core.events import GenerationUpdate
 from Backend.Core.model_review import ReviewResult
+from Backend.Core.whole_paper_review import PaperFinding
 
 COMMON = "Explain the technical and legal considerations relevant to the organisation."
 STEM = "An organisation is planning changes to its services."
+
+
+def test_whole_paper_repair_rechecks_only_the_flagged_aqa_question(monkeypatch):
+    _, paper, syllabus = fixture()
+    original = paper.questions[0]
+    replacement = original.model_copy(update={"stem": f"New scenario. {original.stem}"})
+    item_id = "2@questions.0.parts.0"
+    findings = (
+        PaperFinding(
+            kind="credit_mismatch",
+            target_id=item_id,
+            peer_id=item_id,
+            target_quote="Explain this method.",
+            peer_quote="Use the supplied evidence.",
+            reason="The credit requires a detail the question does not ask for.",
+        ),
+    )
+
+    def improve(_client, selected, _syllabus, **options):
+        assert selected.questions == [original]
+        assert findings[0].peer_quote in options["repair_feedback"]
+        return selected.model_copy(update={"questions": [replacement]})
+
+    def review(_client, selected, _syllabus, _progress):
+        assert selected.questions == [replacement]
+        return selected
+
+    monkeypatch.setattr(subject, "improve_questions_with_ollama", improve)
+    monkeypatch.setattr(subject, "review_blueprint_difficulty", review)
+    repaired = subject.repair_aqa_cs_question(
+        paper, paper, syllabus, "2", object(), None, item_id, findings
+    )
+    assert repaired.questions == [replacement, paper.questions[1]]
 
 
 def fixture(numbers=(4, 5)):

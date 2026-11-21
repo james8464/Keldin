@@ -23,6 +23,29 @@ NUMBER_PATTERN = re.compile(
 WORD_PATTERN = re.compile(r"[a-z0-9]+(?:'[a-z]+)?")
 
 
+def validate_keyed_choice_not_disclosed(
+    prompt: str, choices: Sequence[str], key: object, *, item_id: str
+) -> None:
+    """Reject a uniquely disclosed full answer, not short terms or shared claims."""
+    if type(key) is not int or not 0 <= key < len(choices):
+        return  # The caller's choice-structure gate owns invalid keys.
+
+    def normalise(text: str) -> str:
+        return " ".join(unicodedata.normalize("NFKC", text).casefold().split())
+
+    options = [normalise(choice).rstrip(".?!") for choice in choices]
+    if len(re.findall(r"\w+", options[key])) < 6:
+        return
+    visible = normalise(prompt)
+    disclosed = [
+        index
+        for index, option in enumerate(options)
+        if option and re.search(rf"(?<!\w){re.escape(option)}(?!\w)", visible)
+    ]
+    if disclosed == [key]:
+        raise ValueError(f"question {item_id} prompt repeats its correct choice")
+
+
 # Return a stable comparison form without conflating visible output text.
 def normalise_item_text(value: str, *, abstract_numbers: bool = True) -> str:
 

@@ -137,6 +137,12 @@ def test_adapter_scopes_supporting_artifacts_and_restores_outer_mode(
         assert ("LAYOUT PREVIEW" in preview_copy("original")) == dry_run
         raise RuntimeError("support renderer failed")
 
+    class OfflineReview:
+        def generate_json(self, prompt):
+            assert not dry_run
+            assert "Explain the result." in prompt
+            return {"findings": []}
+
     adapter = FamilyAdapter(
         id="test",
         subject_label="test",
@@ -146,7 +152,16 @@ def test_adapter_scopes_supporting_artifacts_and_restores_outer_mode(
         prompt_version="test",
         load_syllabus=lambda _: SimpleNamespace(topics=[], topic_ids=set()),
         load_rule=lambda _: None,
-        build=lambda *_: {},
+        build=lambda *_: {
+            "questions": [
+                {
+                    "number": "1",
+                    "prompt": "Explain the result.",
+                    "marks": 1,
+                    "mark_scheme": ["Credit the stated cause."],
+                },
+            ]
+        },
         artifacts=lambda *_: (),
         stem=lambda *_: "test",
         supporting_artifacts=fail_support,
@@ -164,7 +179,7 @@ def test_adapter_scopes_supporting_artifacts_and_restores_outer_mode(
                 output_dir=tmp_path,
                 seed=123,
                 dry_run=dry_run,
-                client=object(),
+                client=OfflineReview(),
             )
         assert ("LAYOUT PREVIEW" in preview_copy("original")) == (not dry_run)
     assert preview_copy("original") == "original"
