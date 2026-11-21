@@ -1,7 +1,6 @@
 import random
 import re
 import threading
-import time
 
 import pytest
 from cspapergen.generator import (
@@ -489,15 +488,26 @@ def test_hosted_question_generation_runs_independent_prompts_concurrently():
         def __init__(self) -> None:
             self.active = 0
             self.maximum_active = 0
+            self.started = 0
             self.lock = threading.Lock()
+            self.first_wave = threading.Barrier(4, timeout=10)
 
         def generate_json(self, _prompt: str) -> dict[str, object]:
             with self.lock:
                 self.active += 1
+                self.started += 1
                 self.maximum_active = max(self.maximum_active, self.active)
-            time.sleep(0.01)
-            with self.lock:
-                self.active -= 1
+                first_wave = self.started <= self.first_wave.parties
+            try:
+                if first_wave:
+                    self.first_wave.wait()
+            except threading.BrokenBarrierError as error:
+                raise AssertionError(
+                    "Four hosted requests did not start together"
+                ) from error
+            finally:
+                with self.lock:
+                    self.active -= 1
             return {}
 
     syllabus = load_syllabus()
