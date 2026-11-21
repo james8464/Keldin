@@ -2152,6 +2152,7 @@ final class RunIsolationTests: XCTestCase {
     func testBackgroundOllamaModelListFailureDoesNotBlockDocuments() async {
         let backend = DeferredRefreshBackend(defersModels: true)
         let application = application(backend: backend)
+        application.modelCoordinator.receiveModels([application.selectedModel])
         application.refreshOllama(background: true)
         await fulfillment(of: [backend.statusStarted], timeout: 2)
         backend.resumeNext(.success([.ollamaStatus(installed: true, running: true, command: "ollama", message: "Available")]))
@@ -2165,6 +2166,45 @@ final class RunIsolationTests: XCTestCase {
         XCTAssertFalse(application.ollamaState.running)
         XCTAssertEqual(application.ollamaState.message, "Ollama is installed but not responding.")
         XCTAssertTrue(application.availableModels.isEmpty)
+        XCTAssertFalse(application.hasLoadedOllamaModels)
+    }
+
+    @MainActor
+    func testBackgroundOllamaRefreshWaitsForModelListBeforeEnablingGeneration() async throws {
+        let backend = DeferredRefreshBackend(defersModels: true)
+        let application = application(backend: backend)
+        application.selectBoard(try XCTUnwrap(ExamCatalog.readyBoards.first { $0.usesAI && $0.supports(.ollama) }))
+        application.dryRun = false
+        application.aiProvider = .ollama
+        let model = application.selectedModel
+        application.modelCoordinator.receiveModels([model])
+        application.refreshOllama(background: true)
+        await fulfillment(of: [backend.statusStarted], timeout: 2)
+        backend.resumeNext(.success([.ollamaStatus(installed: true, running: true, command: "ollama", message: "Available")]))
+        await fulfillment(of: [backend.modelsStarted], timeout: 2)
+
+        XCTAssertFalse(application.canGenerate)
+        application.dryRun = true
+        XCTAssertTrue(application.canGenerate)
+        application.dryRun = false
+
+        backend.resumeNext(.success([.models([model], message: nil)]))
+        await waitForRefreshCompletion(application)
+        XCTAssertTrue(application.canGenerate)
+    }
+
+    @MainActor
+    func testIncompatibleBackgroundOllamaHelperDoesNotBlockDocuments() async {
+        let backend = DeferredRefreshBackend()
+        let application = application(backend: backend)
+        application.refreshOllama(background: true)
+        await fulfillment(of: [backend.statusStarted], timeout: 2)
+        backend.resumeNext(.success([.hello(protocolVersion: 1, backendVersion: "old", capabilities: [])]))
+        await waitForRefreshCompletion(application)
+
+        XCTAssertFalse(application.hasCommandBlockingPresentation)
+        XCTAssertTrue(application.errorMessage.isEmpty)
+        XCTAssertEqual(application.ollamaState, OllamaState())
     }
 
     @MainActor

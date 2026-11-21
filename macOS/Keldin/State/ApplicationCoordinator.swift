@@ -43,6 +43,7 @@ final class ApplicationCoordinator: ObservableObject {
     @Published var progressEntries: [ProgressEntry] = []
     @Published var generatedFiles: [GeneratedFile] = []
     @Published var isRefreshingOllama = false
+    private var isBackgroundOllamaRefresh = false
     @Published private(set) var isImportingPreviousData = false
     private(set) var startupImportTask: Task<Void, Never>?
     @Published var appleIntelligenceAvailability = AppleIntelligenceAvailability.unchecked
@@ -233,6 +234,7 @@ final class ApplicationCoordinator: ObservableObject {
         }
         switch aiProvider {
         case .ollama:
+            if isBackgroundOllamaRefresh { return "Checking Ollama…" }
             if ollamaState.message == "Not checked" { return "Check Ollama before generating." }
             if !ollamaState.installed { return "Ollama is not installed." }
             if !ollamaState.running { return "Ollama is not running." }
@@ -502,12 +504,16 @@ final class ApplicationCoordinator: ObservableObject {
 
     func refreshOllama(presentation: SettingsActionPresentation? = nil, background: Bool = false) {
         guard !isRunning, !benchmarkCoordinator.isRunning, !isRefreshingOllama, !isImportingPreviousData else { return }
+        isBackgroundOllamaRefresh = background
         isRefreshingOllama = true
         status = "Checking Ollama"
         let revision = ollamaRefreshRevision
         let endpoint = ollamaURL
         Task {
-            defer { isRefreshingOllama = false }
+            defer {
+                isBackgroundOllamaRefresh = false
+                isRefreshingOllama = false
+            }
             guard ollamaRefreshRevision == revision else { return }
             do {
                 let statusEvents = try await backend.collect(arguments: ["ollama-status", "--ollama-url", endpoint])
@@ -535,19 +541,24 @@ final class ApplicationCoordinator: ObservableObject {
         }
     }
 
+    private static let backendProtocolVersion = 2
+
     private func isOllamaRefreshError(_ event: BackendEvent) -> Bool {
-        if case .error = event { return true }
-        return false
+        switch event {
+        case .error: true
+        case let .hello(version, _, _): version != Self.backendProtocolVersion
+        default: false
+        }
     }
 
     private func recordBackgroundOllamaFailure() {
-        let message = ollamaState.installed
-            ? "Ollama is installed but not responding."
-            : "Check Ollama before generating."
-        ollamaState = OllamaState(installed: ollamaState.installed, running: false, command: ollamaState.command, message: message)
+        var state = ollamaState
+        state.running = false
+        if state.installed { state.message = "Ollama is installed but not responding." }
+        ollamaState = state
         availableModels = []
         hasLoadedOllamaModels = false
-        status = message
+        status = state.message == "Not checked" ? "Check Ollama before generating." : state.message
     }
 
     func importPreviousAppData(presentation: SettingsActionPresentation? = nil) {
@@ -1841,7 +1852,7 @@ final class ApplicationCoordinator: ObservableObject {
         }
         switch event {
         case let .hello(protocolVersion, _, _):
-            if protocolVersion != 2 {
+            if protocolVersion != Self.backendProtocolVersion {
                 setError("The generation service uses an unsupported protocol version.", presentation: activeRun?.errorPresentation ?? errorPresentation)
             }
         case let .progress(stage, message, progress):

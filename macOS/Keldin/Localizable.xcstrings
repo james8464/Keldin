@@ -1161,6 +1161,16 @@
         }
       }
     },
+    "Checking Ollama…" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vérification d’Ollama…"
+          }
+        }
+      }
+    },
     "Check the provider" : {
       "localizations" : {
         "fr" : {
