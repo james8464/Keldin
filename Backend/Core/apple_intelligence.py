@@ -109,19 +109,23 @@ def complete_prompt(prompt: str, schema: dict[str, Any]) -> str:
 
 
 _WRITTEN_AUTHORING_MODE = "guided_written_authoring"
+_CHOICE_AUTHORING_MODE = "guided_choice_authoring"
 _WRITTEN_FIXED_FIELDS = ("choices", "correct_choice")
 _OBJECTIVE = "assessment_objective"
 
 
-def _written_authoring_schema(schema: dict[str, Any]) -> dict[str, Any] | None:
-    """Represent a single written item without asking the model to emit nulls."""
+def _singleton_authoring_schema(
+    schema: dict[str, Any], *, multiple_choice: bool
+) -> dict[str, Any] | None:
+    """Project one known item onto guidance, preserving the original validator."""
 
     def object_at(*path: str) -> dict[str, Any]:
         node = schema
         for key in path:
-            node = node.get(key)
-            if not isinstance(node, dict):
+            child = node.get(key)
+            if not isinstance(child, dict):
                 return {}
+            node = child
         return node
 
     path = ("properties", "questions")
@@ -129,6 +133,21 @@ def _written_authoring_schema(schema: dict[str, Any]) -> dict[str, Any] | None:
     item = object_at(*path, "items")
     mark = object_at(*path, "items", "properties", "mark_scheme", "items")
     objective = {"type": "string", "enum": ["AO1", "AO2", "AO3", "AO4"]}
+    choice_label = {"type": "string", "maxLength": 240}
+    choices: dict[str, Any] = {
+        "type": "array",
+        "items": choice_label,
+        "minItems": 4 if multiple_choice else 0,
+        "maxItems": 4 if multiple_choice else 0,
+    }
+    if multiple_choice:
+        choices["uniqueItems"] = True
+        choice_label["minLength"] = 1
+    correct_choice = (
+        {"type": "integer", "minimum": 0, "maximum": 3}
+        if multiple_choice
+        else {"type": "null"}
+    )
     if (
         questions.get("minItems") != 1
         or questions.get("maxItems") != 1
@@ -140,14 +159,8 @@ def _written_authoring_schema(schema: dict[str, Any]) -> dict[str, Any] | None:
         or not isinstance(mark.get("required"), list)
         or any(field not in item["required"] for field in _WRITTEN_FIXED_FIELDS)
         or _OBJECTIVE not in mark["required"]
-        or object_at(*path, "items", "properties", "choices")
-        != {
-            "type": "array",
-            "items": {"type": "string", "maxLength": 240},
-            "minItems": 0,
-            "maxItems": 0,
-        }
-        or object_at(*path, "items", "properties", "correct_choice") != {"type": "null"}
+        or object_at(*path, "items", "properties", "choices") != choices
+        or object_at(*path, "items", "properties", "correct_choice") != correct_choice
         or object_at(
             *path,
             "items",
@@ -163,9 +176,14 @@ def _written_authoring_schema(schema: dict[str, Any]) -> dict[str, Any] | None:
 
     projected = deepcopy(schema)
     question = projected["properties"]["questions"]["items"]
-    for field in _WRITTEN_FIXED_FIELDS:
-        del question["properties"][field]
-        question["required"].remove(field)
+    if multiple_choice:
+        # These two constraints are checked by the full schema after inference.
+        del question["properties"]["choices"]["uniqueItems"]
+        del question["properties"]["choices"]["items"]["minLength"]
+    else:
+        for field in _WRITTEN_FIXED_FIELDS:
+            del question["properties"][field]
+            question["required"].remove(field)
     mark = question["properties"]["mark_scheme"]["items"]
     mark["properties"][_OBJECTIVE] = objective
     mark["required"].remove(_OBJECTIVE)
@@ -260,10 +278,13 @@ def solver_schema_mode(operation: str, schema: dict[str, Any]) -> str:
         return False
 
     if operation == "authoring":
-        projected = _written_authoring_schema(schema)
-        if projected is not None and supported(projected):
-            return _WRITTEN_AUTHORING_MODE
-        nodes = 0
+        for mode in (_WRITTEN_AUTHORING_MODE, _CHOICE_AUTHORING_MODE):
+            projected = _singleton_authoring_schema(
+                schema, multiple_choice=mode == _CHOICE_AUTHORING_MODE
+            )
+            if projected is not None and supported(projected):
+                return mode
+            nodes = 0
 
     return (
         "guided_with_postvalidation"
@@ -392,10 +413,13 @@ def generate(
 ) -> tuple[dict[str, Any], dict[str, object]]:
     Draft202012Validator.check_schema(schema)
     projected = None
-    if schema_mode == _WRITTEN_AUTHORING_MODE:
-        projected = _written_authoring_schema(schema)
+    written_authoring = schema_mode == _WRITTEN_AUTHORING_MODE
+    if written_authoring or schema_mode == _CHOICE_AUTHORING_MODE:
+        projected = _singleton_authoring_schema(
+            schema, multiple_choice=not written_authoring
+        )
         if projected is None:
-            raise ValueError("Unsupported Apple Intelligence written authoring schema")
+            raise ValueError("Unsupported Apple Intelligence authoring schema")
         schema_mode = "guided_with_postvalidation"
     if schema_mode not in {"structured_text", "guided_with_postvalidation"}:
         raise ValueError("Unsupported Apple Intelligence generation mode")
@@ -407,8 +431,9 @@ def generate(
     if projected is not None:
         if complete_prompt(prompt, schema) == prompt:
             prompt = prompt.rpartition("\nOUTPUT_SCHEMA=")[0]
+        if written_authoring:
+            instructions += " For this written question, omit choices and correct_choice; the app supplies both."
         instructions += (
-            " For this written question, omit choices and correct_choice; the app supplies both."
             " Omit assessment_objective instead of returning null. Keep explicit objectives where required."
             " These output rules take precedence over earlier field lists."
         )
@@ -470,7 +495,8 @@ def generate(
         if projected is not None:
             Draft202012Validator(projected).validate(candidate)
             (question,) = candidate["questions"]
-            question.update(choices=[], correct_choice=None)
+            if written_authoring:
+                question.update(choices=[], correct_choice=None)
             for point in question["mark_scheme"]:
                 point.setdefault(_OBJECTIVE, None)
         Draft202012Validator(schema).validate(candidate)

@@ -643,6 +643,77 @@ def test_written_authoring_guides_without_model_owned_choice_fields(
             )
 
 
+@pytest.mark.parametrize(
+    ("choices", "key", "valid"),
+    [
+        (["A", "B", "C", "D"], 2, True),
+        (["A", "B", "C"], 2, False),
+        (["A", "B", "C", "C"], 2, False),
+        (["A", "B", "", "D"], 2, False),
+        (["A", "B", "C", "D"], 4, False),
+    ],
+)
+def test_single_choice_authoring_guides_but_preserves_the_original_contract(
+    monkeypatch, choices, key, valid
+):
+    request = make_request(
+        "Write an owned multiple-choice question.",
+        OutputContract(
+            "authoring",
+            identifiers=("1/1/1",),
+            authoring_shapes=(("1/1/1", "multiple_choice"),),
+        ),
+    )
+    calls = []
+
+    def guided(payload):
+        calls.append(payload)
+        assert payload["schema_mode"] == "guided_with_postvalidation"
+        item = payload["schema"]["properties"]["questions"]["items"]["properties"]
+        assert item["choices"] == {
+            "type": "array",
+            "items": {"type": "string", "maxLength": 240},
+            "minItems": 4,
+            "maxItems": 4,
+        }
+        assert item["correct_choice"] == {"type": "integer", "minimum": 0, "maximum": 3}
+        assert (
+            json.loads(payload["prompt"].rsplit("\nOUTPUT_SCHEMA=", 1)[1])
+            == payload["schema"]
+        )
+        return {
+            **reply(payload),
+            "generation_mode": payload["schema_mode"],
+            "output": {
+                "questions": [
+                    {
+                        "id": "1/1/1",
+                        "prompt": "Select an owned fixture answer.",
+                        "choices": choices,
+                        "correct_choice": key,
+                        "mark_scheme": [
+                            {"text": "C.", "marks": 1, "credit_type": "answer"}
+                        ],
+                    }
+                ]
+            },
+        }
+
+    monkeypatch.setattr(service, "roundtrip", guided)
+    client = HostedLLMClient(provider=service.PROVIDER, model=service.MODEL, api_key="")
+    if valid:
+        (result,) = client.generate_request(request)["questions"]
+        assert result["choices"] == choices
+        assert result["correct_choice"] == key
+        assert result["mark_scheme"][0]["assessment_objective"] is None
+    else:
+        with pytest.raises(
+            service.GenerationEvidenceError, match="invalid structured output"
+        ):
+            client.generate_request(request)
+    assert len(calls) == 1
+
+
 @pytest.mark.parametrize("optional_field", ["questions", "mark_scheme"])
 def test_written_guidance_requires_fields_needed_for_restoration(optional_field):
     request = make_request(
