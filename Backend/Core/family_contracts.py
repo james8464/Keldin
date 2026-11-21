@@ -8,6 +8,7 @@ from pathlib import Path
 
 from Backend.Core.assessment_checkpoints import AssessmentCheckpointStore
 from Backend.Core.json_client import JSONGenerationClient
+from Backend.Core.whole_paper_review import PaperFinding
 
 ProgressCallback = Callable[[str], None]
 
@@ -79,3 +80,19 @@ class FamilyAdapter[Syllabus, Rule, Assessment, Context]:
         | None
     ) = None
     output_order: tuple[str, ...] = ()
+    repair_whole_paper_item: (
+        Callable[
+            [
+                Assessment,
+                Assessment,
+                Syllabus,
+                Rule,
+                JSONGenerationClient,
+                ProgressCallback | None,
+                str,
+                tuple[PaperFinding, ...],
+            ],
+            Assessment,
+        ]
+        | None
+    ) = None

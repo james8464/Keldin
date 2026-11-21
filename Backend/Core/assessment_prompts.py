@@ -14,6 +14,7 @@ from Backend.Core.exam_blueprints import (
     GeneratedOption,
     GeneratedQuestion,
     MarkSchemePoint,
+    authoring_mark_scheme_locked,
 )
 from Backend.Core.independent_solver import CanonicalSolution
 from Backend.Core.model_review import ReviewResult
@@ -92,18 +93,13 @@ def generation_prompt(
             "command_word": task.question.command_word,
             "marks": task.question.marks,
             "assessment_objectives": task.question.assessment_objectives,
-            "mark_scheme_locked": task.question.authoring_context.get(
-                "preserve_mark_scheme"
-            )
-            is True,
+            "mark_scheme_locked": scheme_locked,
             "minimum_substantive_mark_scheme_points": (
-                0
-                if task.question.authoring_context.get("preserve_mark_scheme") is True
-                else max(1, min(6, (task.question.marks + 2) // 3))
+                0 if scheme_locked else max(1, min(6, (task.question.marks + 2) // 3))
             ),
             "minimum_awarded_entries": (
                 0
-                if task.question.authoring_context.get("preserve_mark_scheme") is True
+                if scheme_locked
                 else (
                     1
                     if task.question.kind == "multiple_choice"
@@ -116,7 +112,7 @@ def generation_prompt(
             ),
             "required_awarded_entries": (
                 []
-                if task.question.authoring_context.get("preserve_mark_scheme") is True
+                if scheme_locked
                 else required_awarded_entries(task.question, subject=subject)
             ),
             "intended_demand": task.question.intended_demand,
@@ -166,6 +162,7 @@ def generation_prompt(
             ),
         }
         for task in tasks
+        for scheme_locked in (authoring_mark_scheme_locked(task.question),)
     ]
     retry = (
         f"\nThe previous attempt failed validation: {previous_failure}\n"

@@ -124,6 +124,33 @@ class GeneratedQuestion(BaseModel):
     source_dependency: SourceDependency | None = None
 
 
+def app_owns_choice_credit(question: GeneratedQuestion) -> bool:
+    context = question.authoring_context
+    if context.get("app_owned_choice_credit") is not True:
+        return False
+    objectives = question.assessment_objectives
+    return (
+        question.kind == "multiple_choice"
+        and question.marks == 1
+        and question.scheme_mode == "points"
+        and len(objectives) == 1
+        and next(iter(objectives)) in {"AO1", "AO2", "AO3", "AO4"}
+        and next(iter(objectives.values())) == 1
+        and not (
+            context.get("preserve_mark_scheme")
+            or "selected_response_contract" in context
+            or context.get("required_mark_scheme_terms")
+            or context.get("forbidden_mark_scheme_terms")
+        )
+    )
+
+
+def authoring_mark_scheme_locked(question: GeneratedQuestion) -> bool:
+    return question.authoring_context.get(
+        "preserve_mark_scheme"
+    ) is True or app_owns_choice_credit(question)
+
+
 class GeneratedOption(BaseModel):
     id: str
     title: str

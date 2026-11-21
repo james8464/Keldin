@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+from dataclasses import replace
+from functools import partial
 from pathlib import Path
 
 from aqaaccountgen.configs import load_rule
@@ -38,12 +40,17 @@ ADAPTER = FamilyAdapter(
     backend_subject="accounting_aqa",
     load_message="Loading AQA Accounting specification map",
     build_message="Building AQA 7127 paper blueprint",
-    prompt_version="ai-assessment-v15-accounting-variance-contract",
+    prompt_version="ai-assessment-v17-accounting-prime-entry",
     load_syllabus=load_syllabus,
     load_rule=load_rule,
-    build=lambda rule, syllabus, seed: build_paper(rule, syllabus, seed),
+    build=build_paper,
     artifacts=_artifacts,
     stem=lambda _rule, paper: f"aqa-accounting-paper-{paper}",
+)
+_LIVE_ADAPTER = replace(
+    ADAPTER,
+    build=partial(build_paper, live_choice_credit=True),
+    prompt_version="ai-assessment-v19-accounting-ratio-terminology",
 )
 
 
@@ -61,7 +68,7 @@ def generate_package(
     checkpoint_path: Path | None = None,
 ) -> dict[str, Path]:
     return run_family_adapter(
-        ADAPTER,
+        ADAPTER if dry_run else _LIVE_ADAPTER,
         paper=paper,
         syllabus_path=syllabus_path,
         output_dir=output_dir,

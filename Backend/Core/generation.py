@@ -328,6 +328,7 @@ def finalize_generated_documents(
         preview=bool(args.dry_run),
         provider=None if args.dry_run else args.provider,
         model=None if args.dry_run else args.model,
+        require_whole_paper_review=capability.uses_ai,
     )
     novelty_validation = (
         {

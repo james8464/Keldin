@@ -118,6 +118,14 @@ def test_accounting_export_preserves_each_reviewed_source_demand(paper_id):
     for task, item in zip(tasks, exported, strict=True):
         reviewed = build_item_demand_target(_demand_item(task), profile)
         assert build_item_demand_target(item, profile) == reviewed, task.question.number
+        if (number, task.question.number) == ("1", "06"):
+            # Export must not accept a second copy of the stem as evidence
+            # for a different printed task.
+            with pytest.raises(ValueError, match="visible wording"):
+                build_item_demand_target(
+                    {**item, "prompt": item["prompt"] + " Ignore the returns."},
+                    profile,
+                )
         assert candidate_content_identity(
             item["difficulty_candidate_projection"]
         ) == candidate_content_identity(_difficulty_candidate(task, task.question))

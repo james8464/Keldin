@@ -22,7 +22,11 @@ from aqaaccountgen.marking_policy import (
     finalise_marking_policy,
 )
 from aqaaccountgen.numbering import question_number
-from aqaaccountgen.selected_response import build_accounting_choice
+from aqaaccountgen.selected_response import (
+    build_accounting_choice,
+    build_liquidity_choice,
+    build_prime_entry_choice,
+)
 from aqaaccountgen.syllabus import Syllabus, Topic
 from Backend.Core.accounting_levels import accounting_level_policy
 from Backend.Core.exam_blueprints import (
@@ -295,7 +299,11 @@ RULE_TOPIC_IDS = {
 
 
 def build_paper(
-    rule: PaperRule, syllabus: Syllabus, seed: int | None = None
+    rule: PaperRule,
+    syllabus: Syllabus,
+    seed: int | None = None,
+    *,
+    live_choice_credit: bool = False,
 ) -> GeneratedPaper:
     validate_rule(rule, syllabus.topic_ids)
     run_seed = seed if seed is not None else secrets.randbits(64)
@@ -322,7 +330,14 @@ def build_paper(
             number = _number(rule.id, section_rule.id, index)
             if question_rule.kind == "multiple_choice":
                 question = _mcq(
-                    rule.id, question_rule, number, index, topic, rng, seed=run_seed
+                    rule.id,
+                    question_rule,
+                    number,
+                    index,
+                    topic,
+                    rng,
+                    seed=run_seed,
+                    live_choice_credit=live_choice_credit,
                 )
             else:
                 question = _written(
@@ -486,12 +501,24 @@ def _mcq(
     rng: random.Random,
     *,
     seed: int,
+    live_choice_credit: bool,
 ) -> GeneratedQuestion:
-    if paper_id == "paper_1" and index in {5, 6, 7, 8}:
+    prime_entry = live_choice_credit and index == 0
+    liquidity = live_choice_credit and index == 3
+    if paper_id == "paper_1" and (prime_entry or liquidity or index in {5, 6, 7, 8}):
         _consume_previous_paper_one_choice_draws(index, rng)
-        scenario = build_accounting_choice(
-            index, random.Random(f"accounting-selected-response-v1:{seed}:{index}")
-        )
+        if prime_entry:
+            scenario = build_prime_entry_choice(
+                random.Random(f"accounting-prime-entry-v1:{seed}")
+            )
+        elif liquidity:
+            scenario = build_liquidity_choice(
+                random.Random(f"accounting-liquidity-v1:{seed}")
+            )
+        else:
+            scenario = build_accounting_choice(
+                index, random.Random(f"accounting-selected-response-v1:{seed}:{index}")
+            )
         return GeneratedQuestion(
             rule_id=rule.id,
             number=number,
@@ -593,7 +620,7 @@ def _mcq(
             "source_data": public_contract["inputs"],
         }
         if public_contract is not None
-        else {},
+        else ({"app_owned_choice_credit": True} if live_choice_credit else {}),
     )
 
 

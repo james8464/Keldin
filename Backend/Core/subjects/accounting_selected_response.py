@@ -19,6 +19,8 @@ AccountingOperation = Literal[
     "cash_budget_balance",
     "contribution_per_unit",
     "material_variance_classification",
+    "prime_entry_book",
+    "liquidity_ratio_definition",
 ]
 AccountingUnit = Literal["GBP", "entry_pair", "classification"]
 _DECIMAL = re.compile(r"[0-9]{1,12}(?:\.[0-9]{1,4})?\Z")
@@ -53,6 +55,8 @@ class AccountingChoiceWorking:
     numeric_results: dict[str, float]
     journal_choices: tuple[str, ...] = ()
     classification_choices: tuple[str, ...] = ()
+    paper_one_prompt: str | None = None
+    maximum_reasoning_stages: int = 2
 
 
 def pounds(value: Decimal) -> str:
@@ -111,6 +115,15 @@ def _carriage(contract: AccountingSelectedResponseContract) -> AccountingChoiceW
             "cost_of_sales": float(cost_of_sales),
             "gross_profit": float(profit),
         },
+        paper_one_prompt=(
+            f"A sole trader reports revenue of {pounds(v['revenue'])}, opening inventory of "
+            f"{pounds(v['opening_inventory'])}, purchases of {pounds(v['purchases'])}, purchase returns of "
+            f"{pounds(v['purchase_returns'])} and closing inventory of {pounds(v['closing_inventory'])}. Carriage "
+            f"inwards is {pounds(v['carriage_inwards'])} and carriage outwards is {pounds(v['carriage_outwards'])}. "
+            "What is gross profit?"
+        ),
+        # Net purchases, cost of sales, then gross profit.
+        maximum_reasoning_stages=3,
     )
 
 
@@ -152,6 +165,15 @@ def _sale_or_return(
             "adjusted_inventory": float(inventory),
             "gross_profit": float(profit),
         },
+        paper_one_prompt=(
+            f"Revenue of {pounds(v['revenue'])} includes goods sent on sale or return for "
+            f"{pounds(selling)} at a mark-up of {v['markup_percent_on_cost']}% on cost. The customer had "
+            "not accepted them at the year end. Opening inventory is "
+            f"{pounds(v['opening_inventory'])}, purchases are {pounds(v['purchases'])} and closing inventory "
+            f"of {pounds(v['closing_inventory_excluding_return'])} excludes these goods. What is the corrected gross profit?"
+        ),
+        # Recover cost, correct revenue and inventory, then recompute profit.
+        maximum_reasoning_stages=4,
     )
 
 
@@ -175,6 +197,11 @@ def _credit_sale(
             f"Debit cash {value}; credit trade receivables {value}",
             f"Debit trade receivables {value}; credit sales {value}",
             f"Debit sales {value}; credit trade receivables {value}",
+        ),
+        paper_one_prompt=(
+            f"A credit sale of {value} was recorded as a debit to cash and "
+            "a credit to sales. Which journal entry corrects the error without "
+            "recording the sale twice?"
         ),
     )
 
@@ -211,6 +238,14 @@ def _share_premium(
             "share_capital": float(shares * nominal),
             "net_share_premium": float(premium),
         },
+        paper_one_prompt=(
+            f"A company issues {shares:,.0f} ordinary shares with nominal value "
+            f"{v['nominal_value_pence']}p for {v['issue_price_pence']}p each. Issue costs of {pounds(v['issue_costs'])} are "
+            "deducted from share premium. What is the net increase in the share "
+            "premium account?"
+        ),
+        # Convert units, calculate gross premium, then deduct issue costs.
+        maximum_reasoning_stages=3,
     )
 
 
@@ -275,6 +310,102 @@ def material_variance_prompt(raw: dict[str, Any]) -> str:
     )
 
 
+_PRIME_ENTRY_CASES = {
+    "credit_purchase": (
+        "A retailer receives an invoice for goods bought on credit for resale.",
+        "Purchases journal",
+    ),
+    "credit_sale": (
+        "A retailer sends a customer an invoice for goods sold on credit.",
+        "Sales journal",
+    ),
+    "return_to_supplier": (
+        "A retailer returns goods bought on credit and receives a credit note from its supplier.",
+        "Purchases returns journal",
+    ),
+    "return_from_customer": (
+        "A retailer accepts a return of goods sold on credit and sends the customer a credit note.",
+        "Sales returns journal",
+    ),
+}
+PRIME_ENTRY_TRANSACTIONS = tuple(_PRIME_ENTRY_CASES)
+
+
+def _prime_entry_case(
+    contract: AccountingSelectedResponseContract,
+) -> tuple[str, str]:
+    if contract.operation != "prime_entry_book" or set(contract.inputs) != {
+        "transaction"
+    }:
+        raise ValueError("Prime entry requires exactly one public transaction")
+    case = _PRIME_ENTRY_CASES.get(contract.inputs["transaction"])
+    if case is None:
+        raise ValueError("Unknown public prime-entry transaction")
+    return case
+
+
+def prime_entry_prompt(raw: dict[str, Any]) -> str:
+    contract = AccountingSelectedResponseContract.model_validate(raw)
+    event, _ = _prime_entry_case(contract)
+    return f"{event} Which book of prime entry should the retailer use?"
+
+
+def _prime_entry(
+    contract: AccountingSelectedResponseContract,
+) -> AccountingChoiceWorking:
+    event, answer = _prime_entry_case(contract)
+    return AccountingChoiceWorking(
+        answer,
+        (
+            event,
+            f"Classify the transaction before posting to ledger accounts: {answer}.",
+        ),
+        {},
+        classification_choices=tuple(book for _, book in _PRIME_ENTRY_CASES.values()),
+    )
+
+
+LIQUIDITY_INVENTORY_TREATMENTS = ("include", "exclude")
+_LIQUIDITY_RATIO_CHOICES = (
+    "Current ratio",
+    "Liquid capital ratio (acid test ratio)",
+    "Gross profit margin",
+    "Capital gearing",
+)
+
+
+def _liquidity_ratio(
+    contract: AccountingSelectedResponseContract,
+) -> AccountingChoiceWorking:
+    if set(contract.inputs) != {"inventory_treatment"}:
+        raise ValueError("Liquidity definition requires only the inventory treatment")
+    treatment = contract.inputs["inventory_treatment"]
+    if treatment not in LIQUIDITY_INVENTORY_TREATMENTS:
+        raise ValueError("Unsupported liquidity inventory treatment")
+    include = treatment == "include"
+    answer = _LIQUIDITY_RATIO_CHOICES[0 if include else 1]
+    if include:
+        prompt = (
+            "A supplier wants to compare a customer's total current assets with "
+            "its current liabilities. Which ratio should the supplier use?"
+        )
+    else:
+        prompt = (
+            "A lender wants a measure of short-term liquidity that ignores "
+            "inventory. Which ratio should the lender use?"
+        )
+    return AccountingChoiceWorking(
+        answer,
+        (
+            "The current ratio uses all current assets; the liquid capital ratio removes inventory.",
+            f"The requested inventory treatment therefore indicates the {answer.casefold()}.",
+        ),
+        {},
+        classification_choices=_LIQUIDITY_RATIO_CHOICES,
+        paper_one_prompt=prompt,
+    )
+
+
 def _material_variance(
     contract: AccountingSelectedResponseContract,
 ) -> AccountingChoiceWorking:
@@ -317,6 +448,8 @@ _OPERATIONS: dict[
     "cash_budget_balance": ("GBP", _cash_budget),
     "contribution_per_unit": ("GBP", _unit_contribution),
     "material_variance_classification": ("classification", _material_variance),
+    "prime_entry_book": ("classification", _prime_entry),
+    "liquidity_ratio_definition": ("classification", _liquidity_ratio),
 }
 
 
@@ -342,7 +475,7 @@ def derive_accounting_choice(raw: dict[str, Any]) -> AccountingChoiceWorking:
     return operation(contract)
 
 
-def solve_accounting_selected_response(item: dict[str, Any]) -> dict[str, Any]:
+def _checked_accounting_working(item: dict[str, Any]) -> AccountingChoiceWorking:
     context = item.get("authoring_context")
     if not isinstance(context, dict):
         raise ValueError("Accounting choice requires public authoring context")
@@ -355,13 +488,21 @@ def solve_accounting_selected_response(item: dict[str, Any]) -> dict[str, Any]:
     subject = item.get("subject") or context.get("objective_subject")
     if subject is not None and (
         not isinstance(subject, str)
-        or subject not in {"accounting", "accounting_aqa", "Accounting"}
+        or subject
+        not in {"accounting", "accounting_aqa", "Accounting", "aqa/accounting"}
     ):
         raise ValueError(
             "Accounting selected-response contract belongs to another subject"
         )
     raw = context.get("selected_response_contract")
     working = derive_accounting_choice(raw)
+    if (
+        working.paper_one_prompt is not None
+        and item.get("prompt") != working.paper_one_prompt
+    ):
+        raise ValueError(
+            "Accounting choice visible wording differs from its public facts"
+        )
     if (
         isinstance(raw, dict)
         and raw.get("operation") == "material_variance_classification"
@@ -370,6 +511,10 @@ def solve_accounting_selected_response(item: dict[str, Any]) -> dict[str, Any]:
         raise ValueError(
             "Material variance visible wording differs from its public facts"
         )
+    if raw["operation"] == "prime_entry_book" and item.get(
+        "prompt"
+    ) != prime_entry_prompt(raw):
+        raise ValueError("Prime-entry visible wording differs from its public facts")
     choices = item.get("choices")
     if (
         not isinstance(choices, list)
@@ -388,7 +533,7 @@ def solve_accounting_selected_response(item: dict[str, Any]) -> dict[str, Any]:
     elif working.classification_choices:
         if set(choices) != set(working.classification_choices):
             raise ValueError(
-                "Accounting variance choices differ from the public classification domain"
+                "Accounting choices differ from the public classification domain"
             )
     # The distractors only need a format check. Parsing them as decimals could
     # expand a short exponent into a very large string during currency formatting.
@@ -396,6 +541,23 @@ def solve_accounting_selected_response(item: dict[str, Any]) -> dict[str, Any]:
         raise ValueError("Accounting numeric choice has an unsupported currency format")
     if choices.count(working.answer) != 1:
         raise ValueError("Accounting choice must contain exactly one derived answer")
+    return working
+
+
+def verified_paper_one_choice_ceiling(item: dict[str, Any]) -> int | None:
+    context = item.get("authoring_context")
+    if not isinstance(context, dict) or "selected_response_contract" not in context:
+        return None
+    working = _checked_accounting_working(item)
+    return (
+        working.maximum_reasoning_stages
+        if working.paper_one_prompt is not None
+        else None
+    )
+
+
+def solve_accounting_selected_response(item: dict[str, Any]) -> dict[str, Any]:
+    working = _checked_accounting_working(item)
     return {
         "answer": working.answer,
         "steps": list(working.steps),

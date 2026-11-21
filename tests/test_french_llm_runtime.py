@@ -106,7 +106,16 @@ def publication(tmp_path, monkeypatch):
         api_key="",
     )
     events = []
-    monkeypatch.setattr(llm_runtime, "HostedLLMClient", lambda **kwargs: Client())
+
+    class PublicationClient(Client):
+        def generate_request(self, request):
+            if "findings" in request.schema["properties"]:
+                return {"findings": []}
+            return super().generate_request(request)
+
+    monkeypatch.setattr(
+        llm_runtime, "HostedLLMClient", lambda **kwargs: PublicationClient()
+    )
     monkeypatch.setattr(llm_runtime, "_model_snapshot", lambda args: "a" * 64)
     monkeypatch.setattr(
         "Backend.Core.ollama_admission.require_local_ollama_capacity",
@@ -118,6 +127,95 @@ def publication(tmp_path, monkeypatch):
         lambda kind, **fields: events.append({"type": kind, **fields}),
     )
     return llm_runtime, args, events
+
+
+def test_french_whole_paper_rejection_prevents_publishing(publication, monkeypatch):
+    subject, args, events = publication
+    from tests.test_french_llm_pipeline import Client
+
+    class RefusingReview(Client):
+        def generate_request(self, request):
+            if "findings" in request.schema["properties"]:
+                return {
+                    "findings": [
+                        {
+                            "kind": "answer_leakage",
+                            "target_id": "missing",
+                            "peer_id": "also-missing",
+                            "target_quote": "Example visible clue",
+                            "peer_quote": "Example answer",
+                            "reason": "The stated clue provides the answer.",
+                        }
+                    ]
+                }
+            return super().generate_request(request)
+
+    monkeypatch.setattr(subject, "HostedLLMClient", lambda **_: RefusingReview())
+    assert subject.handle_generate_llm_assessment(args) == 1, events
+    assert not any(event["type"] == "file" for event in events)
+    assert not list(args.output.glob("nsi-2027-v36-*"))
+
+
+def test_french_whole_paper_repair_keeps_other_exercises(publication, monkeypatch):
+    from tests.test_french_llm_pipeline import Client
+
+    subject, args, events = publication
+
+    class RepairClient(Client):
+        review_count = 0
+
+        def generate_request(self, request):
+            if "findings" in request.schema["properties"]:
+                self.review_count += 1
+                if self.review_count == 2:
+                    assert "Nouvelle variante" in request.prompt
+                    return {"findings": []}
+                first = json.loads(request.prompt.rsplit("\n", 1)[-1])[0]
+                return {
+                    "findings": [
+                        {
+                            "kind": "credit_mismatch",
+                            "target_id": first["id"],
+                            "peer_id": first["id"],
+                            "target_quote": first["prompt"],
+                            "peer_quote": first["mark_scheme"].splitlines()[0],
+                            "reason": "Le barème demande une autre justification.",
+                        }
+                    ]
+                }
+            response = super().generate_request(request)
+            if request.prompt.startswith("NOUVELLE_RÉDACTION:"):
+                assert response["id"] == "1"
+                response["questions"][0]["prompt"] += " Nouvelle variante."
+            return response
+
+    client = RepairClient()
+    monkeypatch.setattr(subject, "HostedLLMClient", lambda **_: client)
+    assert subject.handle_generate_llm_assessment(args) == 0, events
+    path = next(
+        Path(event["path"])
+        for event in events
+        if event.get("role") == "assessment_package"
+    )
+    package = json.loads(path.read_text())
+    subject.llm_pipeline.validate_package(package)
+    assert client.review_count == 2
+    assert [history["accepted_round"] for history in package["exercise_attempts"]] == [
+        2,
+        1,
+        1,
+    ]
+    assert package["exercises"][1:] == package["paper_review_baseline"]["exercises"][1:]
+    # Recomputing the outer digest does not make an invented finding replayable.
+    refusal = package["exercise_attempts"][0]["rounds"][0]["refusal"]
+    refusal["findings"][0]["target_quote"] = (
+        "Cette citation ne figure pas dans le sujet."
+    )
+    package["identity"]["content_sha256"] = subject.llm_pipeline._digest(
+        {key: value for key, value in package.items() if key != "identity"}
+    )
+    with pytest.raises(ValueError, match="source evidence"):
+        subject.llm_pipeline.validate_package(package)
 
 
 def test_local_memory_refusal_has_a_distinct_terminal_code(publication, monkeypatch):
@@ -402,9 +500,13 @@ def test_real_pdf_publication_keeps_model_identity_and_private_evidence(
         == subject.llm_pipeline.PRINTED_SQL_KEYS_AUTHORING_POLICY
     )
     assert manifest["warnings"]
-    assert manifest["generation_limits"]["started_requests"] == 9
-    assert manifest["generation_limits"]["completed_requests"] == 9
+    assert manifest["generation_limits"]["started_requests"] == 10
+    assert manifest["generation_limits"]["completed_requests"] == 10
     assert manifest["generation_limits"]["max_requests"] == 24
+    assert manifest["whole_paper_review"] == {
+        "status": "passed",
+        "content_sha256": manifest["identity"]["content_sha256"],
+    }
     assert not list(args.output.glob(".nsi-llm-*"))
     assert events[-1]["type"] == "done"
     recovery = list((args.output / ".keldin-recovery").glob("*.json"))
@@ -517,6 +619,8 @@ def test_hosted_charge_notice_precedes_first_generation_request(
 
         def generate_request(self, request):
             assert any("24" in message and "frais" in message for message in notices)
+            if "findings" in request.schema["properties"]:
+                return {"findings": []}
             return super().generate_request(request)
 
     monkeypatch.setattr(subject, "HostedLLMClient", lambda **kwargs: HostedFixture())

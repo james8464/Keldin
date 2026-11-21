@@ -16,6 +16,7 @@ from Backend.Core.assessment_objectives import objective_policy_for
 from Backend.Core.assessment_quality import (
     assert_distinct_items,
     item_fingerprint,
+    validate_keyed_choice_not_disclosed,
 )
 from Backend.Core.candidate_identity import (
     difficulty_candidate_projection,
@@ -50,6 +51,14 @@ from Backend.Core.subjects.sql_contracts import (
     render_sql_schema,
     sql_source_intent_sha256,
 )
+from Backend.Core.whole_paper_review import (
+    WHOLE_PAPER_REVIEW_V1,
+    ReviewedPaper,
+    ReviewItem,
+)
+
+_CANONICAL_WHOLE_PAPER_REVIEW = "whole-paper-review-v2"
+_ACCOUNTING_PAPER_ONE_REVIEW = "accounting-paper-one-printed-source-review-v1"
 
 
 # The package cannot be upgraded safely by this application version.
@@ -129,6 +138,7 @@ def write_assessment_package(
     preview: bool,
     provider: str | None,
     model: str | None,
+    whole_paper_review: ReviewedPaper | None = None,
 ) -> Path:
 
     payload = _serialise(paper)
@@ -140,6 +150,7 @@ def write_assessment_package(
         paper_number=paper_number,
     )
     if not preview:
+        _validate_published_choice_stems(items)
         assert_distinct_items(items)
     form_id = _form_id(
         subject=subject,
@@ -166,6 +177,14 @@ def write_assessment_package(
         "items": items,
         "blueprint": payload,
     }
+    if whole_paper_review is not None:
+        if preview or whole_paper_review.items != whole_paper_review_items(
+            paper, subject=subject, paper_number=paper_number
+        ):
+            raise ValueError("Whole-paper review evidence does not match the export")
+        document["whole_paper_review"] = whole_paper_review.receipt(
+            policy=_whole_paper_review_policy(subject, paper_number)
+        )
     if reference_demand is not None:
         document["reference_demand"] = reference_demand
     if objective_policy_for(subject).computational:
@@ -186,6 +205,7 @@ def validate_assessment_package(
     preview: bool,
     provider: str | None,
     model: str | None,
+    require_whole_paper_review: bool = False,
 ) -> dict[str, Any]:
     document = load_assessment_package(path)
     validate_aqa_cs_reviews(document.get("blueprint", {}), required=not preview)
@@ -222,6 +242,42 @@ def validate_assessment_package(
     )
     if items != expected_items:
         raise ValueError("assessment package exported items differ from the blueprint")
+    review_receipt = document.get("whole_paper_review")
+    if "whole_paper_review" in document:
+        current_policy = _whole_paper_review_policy(subject, paper_number)
+        review_policy = (
+            review_receipt.get("policy") if isinstance(review_receipt, dict) else None
+        )
+        if (
+            preview
+            or source_scope_version != 1
+            or not isinstance(review_receipt, dict)
+            or not isinstance(review_policy, str)
+            or review_policy not in (WHOLE_PAPER_REVIEW_V1, current_policy)
+            or (require_whole_paper_review and review_policy != current_policy)
+            or type(review_receipt.get("reviewed_items")) is not int
+            or not isinstance(review_receipt.get("repaired_ids"), list)
+            or not all(
+                isinstance(item_id, str) for item_id in review_receipt["repaired_ids"]
+            )
+            or review_receipt
+            != ReviewedPaper(
+                whole_paper_review_items(
+                    document["blueprint"],
+                    subject=subject,
+                    paper_number=paper_number,
+                    policy=review_policy,
+                ),
+                tuple(review_receipt["repaired_ids"]),
+            ).receipt(policy=review_policy)
+        ):
+            raise ValueError(
+                "Whole-paper review evidence does not match the assessment"
+            )
+    elif require_whole_paper_review and not preview:
+        raise ValueError("Required whole-paper review evidence is absent")
+    if require_whole_paper_review and not preview:
+        _validate_published_choice_stems(items)
     mark_scheme_reports = []
     if objective_policy_for(subject).computational:
         audit = audit_computer_science_blueprint(document.get("blueprint", {}))
@@ -302,6 +358,7 @@ def validate_assessment_package(
             ),
         },
         "cross_paper_quality": cross_paper_quality,
+        "whole_paper_review": review_receipt,
         "reference_demand": reference_demand,
         "path_evidence": reference_demand.get("path_evidence")
         if reference_demand
@@ -461,6 +518,166 @@ def _reference_demand_audit(
             "Reviewed generated-item source support plus structure/correctness/source-content identity/item review; not whole-topic or learner calibration."
         )
     return report
+
+
+def _validate_published_choice_stems(items: list[dict[str, Any]]) -> None:
+    for item in items:
+        validate_keyed_choice_not_disclosed(
+            item["prompt"], item["choices"], item["correct_choice"], item_id=item["id"]
+        )
+
+
+def _whole_paper_review_policy(subject: str, paper_number: str) -> str:
+    if (subject, paper_number) == ("accounting_aqa", "1"):
+        return _ACCOUNTING_PAPER_ONE_REVIEW
+    return _CANONICAL_WHOLE_PAPER_REVIEW
+
+
+def _accounting_paper_one_review_context(
+    blueprint: dict[str, Any], item_path: str, raw: dict[str, Any]
+) -> tuple[str, ...]:
+    # Resolve each owned question to the same typed source used by its
+    # candidate render route. No arbitrary authoring metadata is public.
+    identity = (raw.get("number"), raw.get("rule_id"))
+    if item_path.startswith("sections.0.options.0.questions."):
+        from aqaaccountgen.case_data import NonCurrentAssetCase, SalesLedgerCase
+
+        if identity == ("12", "statement_extract"):
+            model = NonCurrentAssetCase
+        elif identity in (
+            ("13.1", "ledger_calculation"),
+            ("13.2", "accounting_concept"),
+        ):
+            model = SalesLedgerCase
+        else:
+            return ()
+        option = blueprint["sections"][0]["options"][0]
+    elif item_path.startswith("sections.1.options.0.questions."):
+        from aqaaccountgen.case_data import IncomeStatementCase, PartnershipCase
+
+        option = blueprint["sections"][1]["options"][0]
+        if identity in (("14.1", "company_statement"), ("14.2", "company_adjustment")):
+            model = IncomeStatementCase
+        elif identity in (
+            ("15.1", "partnership_1"),
+            ("15.2", "partnership_2"),
+            ("15.3", "partnership_3"),
+        ):
+            partnership = PartnershipCase.from_chart_values(option["chart_values"])
+            retirement = partnership.candidate_retirement_paragraphs()
+            if identity == ("15.1", "partnership_1"):
+                return retirement
+            return (*retirement, *partnership.candidate_appropriation_paragraphs())
+        else:
+            return ()
+    elif item_path.startswith("sections.2.options.0.questions.") and identity in (
+        ("16", "decision_1"),
+        ("17", "decision_2"),
+    ):
+        from aqaaccountgen.case_data import AccountingSystemCase, ShareholderCase
+
+        source = (raw.get("authoring_context") or {}).get("candidate_source")
+        if not isinstance(source, dict):
+            raise ValueError("Accounting decision question requires its printed source")
+        case = (
+            AccountingSystemCase.from_candidate_source(source)
+            if identity == ("16", "decision_1")
+            else ShareholderCase.from_candidate_source(source)
+        )
+        return case.review_context(source)
+    else:
+        return ()
+    return model.from_chart_values(
+        option["title"], option["chart_values"]
+    ).candidate_context()
+
+
+def whole_paper_review_items(
+    paper: Any, *, subject: str, paper_number: str, policy: str | None = None
+) -> tuple[ReviewItem, ...]:
+    """Use the same marked items and source scope as the export package."""
+    blueprint = _serialise(paper)
+    current_policy = _whole_paper_review_policy(subject, paper_number)
+    policy = current_policy if policy is None else policy
+    if policy not in (WHOLE_PAPER_REVIEW_V1, current_policy):
+        raise AssessmentPackageCompatibilityError(
+            "Unsupported whole-paper review policy"
+        )
+    result = []
+    for item in _extract_items(blueprint, subject=subject, paper_number=paper_number):
+        raw: Any = blueprint
+        item_path = item["id"].rsplit("@", 1)[1]
+        for component in item_path.split("."):
+            if component:
+                raw = raw[int(component)] if isinstance(raw, list) else raw[component]
+        options = tuple(
+            f"{entry['label']}. {entry['text']}" for entry in item["options"]
+        ) or tuple(
+            f"{chr(65 + index)}. {choice}"
+            for index, choice in enumerate(item["choices"])
+        )
+        answers = _whole_paper_answer_evidence(
+            item, canonical=policy != WHOLE_PAPER_REVIEW_V1
+        )
+        key = item["correct_choice"]
+        if type(key) is int and 0 <= key < len(options):
+            answers.append(f"Correct option: {options[key]}")
+        elif raw.get("correct_option"):
+            label = raw["correct_option"]
+            keyed = next(
+                (text for text in options if text.startswith(f"{label}. ")), None
+            )
+            if keyed is None:
+                raise ValueError(
+                    f"whole-paper review could not resolve the key at {item['id']}"
+                )
+            answers.append(f"Correct option: {keyed}")
+        context = tuple(item["context"])
+        if policy == _ACCOUNTING_PAPER_ONE_REVIEW:
+            context += _accounting_paper_one_review_context(blueprint, item_path, raw)
+        result.append(
+            ReviewItem(
+                id=item["id"],
+                prompt=item["prompt"],
+                mark_scheme="\n".join(answers),
+                context=context,
+                options=options,
+                marks=item["marks"],
+            )
+        )
+    return tuple(result)
+
+
+def _whole_paper_answer_evidence(item: dict[str, Any], *, canonical: bool) -> list[str]:
+    points = item["structured_mark_scheme"]
+    # Keep plain copies whose JSON encoding would obscure a verbatim citation.
+    literal_points = {
+        text
+        for point in points
+        if isinstance(text := point.get("text"), str)
+        and json.dumps(text, ensure_ascii=False)[1:-1] == text
+    }
+    answers = [text for text in item["mark_scheme"] if text not in literal_points]
+    if points:
+        compact = [
+            {
+                field: value
+                for field, value in point.items()
+                if value not in (None, "", [], {})
+            }
+            for point in points
+        ]
+        # Package JSON is saved with sorted keys. Hash the same reviewer text
+        # before and after storage, regardless of the input mapping order.
+        answers.append(
+            json.dumps(
+                compact,
+                ensure_ascii=False,
+                sort_keys=canonical,
+                separators=(",", ":"),
+            )
+        )
+    return answers
 
 
 def _serialise(value: Any) -> dict[str, Any]:

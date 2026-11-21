@@ -28,6 +28,7 @@ from cspapergen.notes import DEFAULT_NOTES_SOURCE, cache_notes
 from cspapergen.ollama_client import (
     OllamaClient,
     improve_questions_with_ollama,
+    repair_aqa_cs_question,
     review_blueprint_difficulty,
 )
 from cspapergen.paper1_assets import write_paper1_supporting_files
@@ -111,6 +112,7 @@ ADAPTER = FamilyAdapter(
         blueprint, syllabus
     ),
     improve=_improve,
+    repair_whole_paper_item=repair_aqa_cs_question,
     calibrate_difficulty=lambda blueprint, syllabus, _paper, client, progress: (
         review_blueprint_difficulty(client, blueprint, syllabus, progress)
     ),

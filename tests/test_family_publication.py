@@ -4,6 +4,7 @@ from concurrent.futures import ThreadPoolExecutor
 from dataclasses import replace
 from pathlib import Path
 from threading import Event
+from types import SimpleNamespace
 
 import pymupdf as fitz
 import pytest
@@ -75,6 +76,154 @@ def old_files(output):
 
 def visible_files(output):
     return {p.name: p.read_bytes() for p in output.iterdir() if p.is_file()}
+
+
+def test_unverified_final_review_stops_before_artifact_creation(tmp_path, monkeypatch):
+    blueprint = {
+        "questions": [
+            {
+                "number": "1",
+                "prompt": "Explain the result.",
+                "marks": 1,
+                "mark_scheme": ["A correct explanation."],
+            },
+        ],
+    }
+    calls = []
+
+    def artifacts(*_):
+        calls.append("artifacts")
+        raise AssertionError("Rendering must not happen until review passes")
+
+    class RefusingReview:
+        def generate_json(self, prompt):
+            assert "Explain the result." in prompt
+            return {
+                "findings": [
+                    {
+                        "kind": "credit_mismatch",
+                        "target_id": "unknown",
+                        "peer_id": "unknown",
+                        "target_quote": "Explain the result.",
+                        "peer_quote": "A correct explanation.",
+                        "reason": "Weak evidence.",
+                    }
+                ]
+            }
+
+    adapter = replace(
+        owned_adapter(),
+        build=lambda *_: blueprint,
+        load_syllabus=lambda _: SimpleNamespace(topics=(), topic_ids=()),
+        artifacts=artifacts,
+    )
+    monkeypatch.setattr(family_adapter, "profile_for", lambda *_: None)
+    monkeypatch.setattr(
+        family_adapter, "generate_unique_paper", lambda *_a, **_kw: blueprint
+    )
+    with pytest.raises(ValueError, match="source evidence"):
+        family_adapter.run_family_adapter(
+            adapter,
+            paper="1",
+            syllabus_path=tmp_path / "unused",
+            output_dir=tmp_path,
+            seed=1,
+            dry_run=False,
+            client=RefusingReview(),
+        )
+    assert not calls
+    assert not list(tmp_path.iterdir())
+
+
+@pytest.mark.parametrize("changes_peer", [False, True])
+def test_family_renders_only_the_reviewed_repair(tmp_path, monkeypatch, changes_peer):
+    original = {
+        "questions": [
+            {
+                "number": "1",
+                "prompt": "Explain the result.",
+                "marks": 1,
+                "mark_scheme": ["Credit a specific cause."],
+            },
+            {
+                "number": "2",
+                "prompt": "What caused the delay?",
+                "marks": 1,
+                "mark_scheme": ["Credit a blocked road."],
+            },
+        ]
+    }
+    repaired = {
+        "questions": [
+            {**original["questions"][0], "prompt": "State one cause of the result."},
+            original["questions"][1],
+        ]
+    }
+    seen = []
+
+    class Reviewer:
+        def generate_json(self, prompt):
+            seen.append(prompt)
+            if len(seen) == 1:
+                return {
+                    "findings": [
+                        {
+                            "kind": "credit_mismatch",
+                            "target_id": "1@questions.0",
+                            "peer_id": "1@questions.0",
+                            "target_quote": "Explain the result.",
+                            "peer_quote": "Credit a specific cause.",
+                            "reason": "The scheme credits a statement.",
+                        }
+                    ]
+                }
+            assert "State one cause of the result." in prompt
+            return {"findings": []}
+
+    def repair(_original, _current, **kwargs):
+        assert kwargs["item_id"] == "1@questions.0"
+        if changes_peer:
+            return {
+                "questions": [
+                    repaired["questions"][0],
+                    {**repaired["questions"][1], "prompt": "Unexpected new question."},
+                ]
+            }
+        return repaired
+
+    def artifacts(assessment, *_):
+        assert assessment == repaired
+        raise RuntimeError("renderer received the reviewed candidate")
+
+    adapter = replace(
+        owned_adapter(),
+        build=lambda *_: original,
+        load_syllabus=lambda _: SimpleNamespace(topics=(), topic_ids=()),
+        artifacts=artifacts,
+    )
+    monkeypatch.setattr(family_adapter, "profile_for", lambda *_: None)
+    monkeypatch.setattr(
+        family_adapter, "generate_unique_paper", lambda *_a, **_kw: original
+    )
+    monkeypatch.setattr(
+        family_adapter, "regenerate_generic_paper_item", repair, raising=False
+    )
+    expected_error, message = (
+        (ValueError, "changed an unrelated item")
+        if changes_peer
+        else (RuntimeError, "received the reviewed candidate")
+    )
+    with pytest.raises(expected_error, match=message):
+        family_adapter.run_family_adapter(
+            adapter,
+            paper="1",
+            syllabus_path=tmp_path / "unused",
+            output_dir=tmp_path,
+            seed=1,
+            dry_run=False,
+            client=Reviewer(),
+        )
+    assert len(seen) == (1 if changes_peer else 2)
 
 
 @pytest.mark.parametrize("failure_type", [RuntimeError, InterruptedError])

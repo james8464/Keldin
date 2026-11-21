@@ -1,8 +1,22 @@
 from __future__ import annotations
 
+import json
 from dataclasses import dataclass, replace
 from decimal import ROUND_HALF_UP, Decimal
 from typing import ClassVar, NamedTuple
+
+
+def _published_paragraphs(source: dict[str, object], field: str) -> tuple[str, ...]:
+    value = source.get(field)
+    if isinstance(value, str) and value.strip():
+        return (value,)
+    if (
+        isinstance(value, list)
+        and value
+        and all(isinstance(line, str) and line.strip() for line in value)
+    ):
+        return tuple(value)
+    raise ValueError(f"Accounting candidate source requires {field}")
 
 
 class _InterestPeriod(NamedTuple):
@@ -132,6 +146,24 @@ class AccountingSystemCase:
                 "One family member opposes changing familiar procedures.",
             ],
         }
+
+    def review_context(self, source: dict[str, object]) -> tuple[str, ...]:
+        return (
+            f"{self.business} is owned by a "
+            + _published_paragraphs(source, "business_form")[0]
+            + ".",
+            *_published_paragraphs(source, "recordkeeping"),
+            *_published_paragraphs(source, "current_system"),
+            f"Annual accountant fee: £{self.annual_accountant_fee:,}.",
+            f"Estimated profit lost last year: £{self.estimated_lost_profit:,}.",
+            f"Annual bookkeeper cost: £{self.annual_bookkeeper_salary:,}.",
+            *_published_paragraphs(source, "bookkeeper_option"),
+            f"Annual software cost: £{self.annual_software_cost:,}.",
+            f"Initial staff training cost: £{self.initial_training_cost:,}.",
+            *_published_paragraphs(source, "software_option"),
+            *_published_paragraphs(source, "implementation_evidence"),
+            *_published_paragraphs(source, "decision"),
+        )
 
     def authoring_context(self) -> dict[str, object]:
         source = self.candidate_source()
@@ -477,6 +509,31 @@ class ShareholderCase:
             ],
         }
 
+    def review_context(self, source: dict[str, object]) -> tuple[str, ...]:
+        # Build the table fields from the same typed case as the renderer.
+        # Do not send extra authoring fields or precomputed ratios.
+        published = self.candidate_source()
+        return (
+            *_published_paragraphs(source, "investment_context"),
+            f"Nominal share value: {self.nominal_share_value_pence}p.",
+            f"Ordinary shares at the start of the year: {self.opening_ordinary_shares:,}.",
+            f"Shares issued in a 1 for 5 bonus issue: {self.bonus_shares_issued:,}.",
+            *(
+                f"{heading}: "
+                + json.dumps(published[key], ensure_ascii=False, sort_keys=True)
+                for key, heading in (
+                    ("market_data", "Market data, pence per share"),
+                    (
+                        "statement_of_changes_in_equity",
+                        "Statement of changes in equity, £000",
+                    ),
+                    ("comparator", "Comparable company, pence per share or £000"),
+                )
+            ),
+            f"Long-term borrowings: {self.long_term_borrowings_thousands:,} (£000).",
+            *_published_paragraphs(source, "qualitative_evidence"),
+        )
+
     def authoring_context(self) -> dict[str, object]:
         return {
             "preserve_mark_scheme": True,
@@ -544,6 +601,57 @@ class IncomeStatementCase:
     supplier_invoice: int
     new_debenture: int
     earlier_debenture: int
+
+    def candidate_figures(self) -> tuple[tuple[str, int], ...]:
+        return (
+            ("Administration expenses", self.administration_expenses),
+            ("Cost of sales", self.cost_of_sales),
+            ("Marketing expenses", self.marketing_expenses),
+            ("Revenue", self.revenue),
+            ("Warehouse expenses", self.warehouse_expenses),
+        )
+
+    def candidate_adjustments(self) -> tuple[str, ...]:
+        return (
+            (
+                f"Closing inventory includes damaged items which cost £{self.damaged_inventory_cost:,}. "
+                f"They can be sold for £{self.damaged_inventory_sale_proceeds:,} after repairs "
+                f"costing £{self.damaged_inventory_repair_cost:,}. "
+                "The closing inventory figure has not been adjusted for this information."
+            ),
+            (
+                f"Warehouse expenses include a roof repair costing £{self.roof_repair:,}. "
+                f"The insurer has agreed to pay £{self.insurance_claim:,} of the claim. No entry "
+                "has been made for the insurance proceeds."
+            ),
+            (
+                f"A credit customer owing £{self.trade_receivable:,} was declared bankrupt before "
+                "the year end. The company expects to receive 10p for every £1 due. "
+                "Irrecoverable debts are charged to administration expenses."
+            ),
+            (
+                f"After the year end, an invoice for £{self.supplier_invoice:,} was received "
+                "for marketing services supplied during this accounting year. It was dated "
+                "before the reporting date but has not been entered in the accounting records."
+            ),
+        )
+
+    def candidate_additional_information(self) -> tuple[str, ...]:
+        return (
+            *self.debenture_terms(),
+            (
+                f"The current-year taxation charge is £{self.current_tax_charge:,}. "
+                "No entry has yet been made for this charge."
+            ),
+            "Round each monetary adjustment to the nearest whole pound.",
+        )
+
+    def candidate_context(self) -> tuple[str, ...]:
+        return (
+            *(f"{label}: £{value:,}." for label, value in self.candidate_figures()),
+            *self.candidate_adjustments(),
+            *self.candidate_additional_information(),
+        )
 
     def debenture_terms(self) -> tuple[str, str]:
         new = self.NEW_DEBENTURE_TERMS
@@ -1005,6 +1113,72 @@ class PartnershipCase:
             ),
         ]
 
+    DRAWINGS_INSTRUCTION: ClassVar[str] = (
+        "Use the opening capital balances for the first period and the "
+        "closing balances from 15.1 for the second period. Time-apportion "
+        "profit, salary and interest on capital."
+    )
+
+    def candidate_retirement_paragraphs(self) -> tuple[str, ...]:
+        capital = self.opening_capital
+        old_ratio = self.old_profit_sharing_ratio
+        new_ratio = self.new_profit_sharing_ratio
+        target = self.target_capital
+        return (
+            "Alex, Morgan and Riley have been in partnership for several years. Riley "
+            "retired on 31 August. The partners keep separate capital and current "
+            "accounts. Prepare the capital accounts up to the date of retirement. "
+            "There were no other changes to capital before that date.",
+            f"Their capital balances on 1 January were Alex £{capital['Alex']:,}, "
+            f"Morgan £{capital['Morgan']:,} and Riley £{capital['Riley']:,}. Profits and "
+            f"losses had been shared {old_ratio['Alex']}:{old_ratio['Morgan']}:"
+            f"{old_ratio['Riley']}.",
+            f"On retirement, goodwill was valued at £{self.goodwill:,}. Goodwill was "
+            "credited to all three partners in the old ratio and then written off "
+            f"against Alex and Morgan in their new {new_ratio['Alex']}:"
+            f"{new_ratio['Morgan']} ratio. It was not to remain in the books.",
+            f"After the goodwill adjustments, Alex and Morgan withdrew enough cash to "
+            f"leave target capital balances of £{target['Alex']:,} and "
+            f"£{target['Morgan']:,}, respectively. Riley's balance was settled separately.",
+        )
+
+    def candidate_drawings_intro(self) -> str:
+        old_ratio = self.old_profit_sharing_ratio
+        new_ratio = self.new_profit_sharing_ratio
+        return (
+            f"Profit for the year was £{self.profit_for_year:,} and accrued "
+            f"evenly. The partnership agreement gives Morgan an annual salary "
+            f"of £{self.partner_salary_per_year:,} and allows interest on capital "
+            f"at {self.capital_interest_rate_percent}% per year. Remaining profit "
+            f"is shared {old_ratio['Alex']}:{old_ratio['Morgan']}:{old_ratio['Riley']} "
+            f"to 31 August and {new_ratio['Alex']}:{new_ratio['Morgan']} from 1 September."
+        )
+
+    def candidate_drawings_rows(self) -> tuple[tuple[str, str, str, str], ...]:
+        first = self.first_period_drawings_interest or {}
+        second = self.second_period_drawings_interest or {}
+        return (
+            (
+                "1 Jan–31 Aug",
+                f"{first['Alex']:,}",
+                f"{first['Morgan']:,}",
+                f"{first['Riley']:,}",
+            ),
+            ("1 Sep–31 Dec", f"{second['Alex']:,}", f"{second['Morgan']:,}", "—"),
+        )
+
+    def candidate_appropriation_paragraphs(self) -> tuple[str, ...]:
+        return (
+            self.candidate_drawings_intro(),
+            "Interest on drawings (in pounds):",
+            *(
+                f"{period}: Alex £{alex}, Morgan £{morgan}, Riley "
+                + (f"£{riley}." if riley != "—" else "not applicable.")
+                for period, alex, morgan, riley in self.candidate_drawings_rows()
+            ),
+            self.DRAWINGS_INSTRUCTION,
+        )
+
     def agreement_candidate_source(self) -> dict[str, object]:
         """Use the same published partnership inputs as the preceding tasks."""
         return {
@@ -1122,6 +1296,44 @@ class NonCurrentAssetCase:
     motor_disposal_accumulated_depreciation: int
     plant_rate_percent: int = 10
     motor_rate_percent: int = 20
+
+    def candidate_opening_balances(self) -> tuple[tuple[str, int], ...]:
+        return (
+            ("Plant and machinery — cost", self.plant_cost_opening),
+            (
+                "Less: accumulated depreciation",
+                self.plant_accumulated_depreciation_opening,
+            ),
+            ("Motor vehicles — cost", self.motor_cost_opening),
+            (
+                "Less: accumulated depreciation",
+                self.motor_accumulated_depreciation_opening,
+            ),
+        )
+
+    def candidate_information(self) -> tuple[str, ...]:
+        return (
+            f"1. A machine costing £{self.plant_purchase:,} was purchased on the first day of the year.",
+            "2. A motor vehicle was sold on the first day of the year. Its cost was "
+            f"£{self.motor_disposal_cost:,} and its accumulated depreciation was "
+            f"£{self.motor_disposal_accumulated_depreciation:,}.",
+            "3. Plant and machinery is depreciated at "
+            f"{self.plant_rate_percent}% a year using the straight-line method.",
+            "4. Motor vehicles are depreciated at "
+            f"{self.motor_rate_percent}% a year using the reducing-balance method.",
+            "5. A full year's depreciation is charged on purchases and no depreciation "
+            "is charged on disposals.",
+        )
+
+    def candidate_context(self) -> tuple[str, ...]:
+        return (
+            "Non-current asset figures at the start of the year, in pounds:",
+            *(
+                f"{label}: £{value:,}."
+                for label, value in self.candidate_opening_balances()
+            ),
+            *self.candidate_information(),
+        )
 
     @classmethod
     def from_chart_values(
@@ -1290,6 +1502,10 @@ class NonCurrentAssetCase:
 # consistent.
 @dataclass(frozen=True)
 class SalesLedgerCase:
+    SALES_JOURNAL: ClassVar[str] = "Sales journal"
+    RETURNS_JOURNAL: ClassVar[str] = "Sales returns journal"
+    JOURNAL_HEADER: ClassVar[tuple[str, str, str]] = ("Date", "Detail", "£")
+
     business: str
     opening_receivables: int
     credit_sales: int
@@ -1328,6 +1544,28 @@ class SalesLedgerCase:
     @property
     def net_sales(self) -> int:
         return self.credit_sales - self.sales_returns
+
+    def sales_journal_row(self) -> tuple[str, str, str]:
+        return "Year end", "Total for year", f"{self.credit_sales:,}"
+
+    def returns_journal_row(self) -> tuple[str, str, str]:
+        return "Year end", "Total for year", f"{self.sales_returns:,}"
+
+    def balance_information(self) -> str:
+        return (
+            f"Trade receivables at the start of the year were "
+            f"£{self.opening_receivables:,}. During the year "
+            f"{self.business} received £{self.cash_received:,} from credit "
+            "customers after allowing cash discount of "
+            f"£{self.discount_allowed:,}."
+        )
+
+    def candidate_context(self) -> tuple[str, ...]:
+        return (
+            f"{self.SALES_JOURNAL}, year-end total: £{self.sales_journal_row()[2]}.",
+            f"{self.RETURNS_JOURNAL}, year-end total: £{self.returns_journal_row()[2]}.",
+            self.balance_information(),
+        )
 
     def ledger_mark_scheme_points(self) -> list[str]:
         total = self.opening_receivables + self.credit_sales

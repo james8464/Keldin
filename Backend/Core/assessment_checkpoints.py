@@ -8,7 +8,7 @@ import hashlib
 import json
 import os
 import tempfile
-from collections.abc import Iterator, Mapping
+from collections.abc import Iterable, Iterator, Mapping
 from contextlib import contextmanager, suppress
 from copy import deepcopy
 from pathlib import Path
@@ -248,12 +248,20 @@ class AssessmentCheckpointStore:
             self._write_document(document)
 
     def discard_item(self, key: str) -> None:
+        self.discard_payloads((key,))
+
+    def discard_payloads(self, keys: Iterable[str]) -> None:
         with self._transaction():
             document = self._read_document()
             items = document["items"]
             if not isinstance(items, dict):
                 raise CheckpointCorrupt("checkpoint item storage is invalid")
-            if items.pop(key, None) is not None:
+            removed = False
+            for key in keys:
+                if key in items:
+                    del items[key]
+                    removed = True
+            if removed:
                 self._write_document(document)
 
     def clear(self) -> None:

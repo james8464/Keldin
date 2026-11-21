@@ -280,6 +280,10 @@ class IndependentSolver:
                 raise ValueError(
                     f"{item_id} returned an invalid solver response envelope"
                 )
+            if is_model_choice and raw_item.get("marks") == 1 and envelope.alternatives:
+                raise ValueError(
+                    f"{item_id} one-mark choice alternatives must be empty"
+                )
             result = envelope.model_dump()
 
         numeric_results: dict[str, float] = (

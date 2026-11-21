@@ -10,12 +10,16 @@ from Backend.Core.ai_assessment import (
     ASSESSMENT_REVIEW_VERSION,
     GenerationPolicy,
     generate_unique_paper,
+    regenerate_generic_paper_item,
 )
 from Backend.Core.assessment_checkpoints import (
     AssessmentCheckpointStore,
     identity_for_blueprint,
 )
-from Backend.Core.assessment_package import write_assessment_package
+from Backend.Core.assessment_package import (
+    whole_paper_review_items,
+    write_assessment_package,
+)
 from Backend.Core.document_publication import publish_document_set
 from Backend.Core.family_contracts import ArtifactSpec as ArtifactSpec
 from Backend.Core.family_contracts import BuildResult as BuildResult
@@ -28,6 +32,12 @@ from Backend.Core.preview_presentation import preview_presentation, validate_pre
 from Backend.Core.providers import HostedLLMClient
 from Backend.Core.reference_demand import profile_for
 from Backend.Core.render_transaction import render_pdf_atomically
+from Backend.Core.whole_paper_review import (
+    PaperFinding,
+    ReviewItem,
+    multipart_review_owner,
+    review_and_repair_paper,
+)
 
 
 class _OutputNames:
@@ -85,9 +95,15 @@ def run_family_adapter[Syllabus, Rule, Assessment, Context](
         assessment, context = built.assessment, built.context
     else:
         assessment, context = built, None
+    original = assessment
 
     # Preview uses the seeded blueprint and makes no authoring requests.
     question_client = client
+    demand_profile = None
+    generation_policy = GenerationPolicy(
+        require_independent_solution=True,
+        require_difficulty_review=True,
+    )
     if dry_run:
         emit(adapter.preview_message)
     else:
@@ -148,16 +164,91 @@ def run_family_adapter[Syllabus, Rule, Assessment, Context](
                 subject=adapter.subject_label,
                 progress=progress,
                 checkpoint_store=checkpoint_store,
-                policy=GenerationPolicy(
-                    require_independent_solution=True,
-                    require_difficulty_review=True,
-                ),
+                policy=generation_policy,
                 demand_profile=demand_profile,
             )
 
     if adapter.validate is not None:
         emit(adapter.validation_message)
         adapter.validate(assessment, rule, syllabus)
+
+    reviewed = None
+    if not dry_run and question_client is not None:
+        emit("Reviewing the assembled question paper and mark scheme")
+
+        def project(value: Assessment) -> tuple[ReviewItem, ...]:
+            return whole_paper_review_items(
+                value, subject=adapter.backend_subject, paper_number=paper
+            )
+
+        repair_route = adapter.repair_whole_paper_item
+        owner = multipart_review_owner if repair_route is not None else None
+
+        def repair(
+            item: ReviewItem, findings: tuple[PaperFinding, ...]
+        ) -> tuple[ReviewItem, ...]:
+            nonlocal assessment
+            prior = project(assessment)
+            if repair_route is not None:
+                assessment = repair_route(
+                    original,
+                    assessment,
+                    syllabus,
+                    rule,
+                    question_client,
+                    progress,
+                    item.id,
+                    findings,
+                )
+            elif adapter.improve is not None:
+                raise ValueError(
+                    f"whole-paper review found an unresolved issue at {item.id}"
+                )
+            else:
+                assessment = regenerate_generic_paper_item(
+                    original,
+                    assessment,
+                    item_id=item.id,
+                    findings=findings,
+                    rule=rule,
+                    syllabus_topics=syllabus.topics,
+                    syllabus_topic_ids=syllabus.topic_ids,
+                    client=question_client,
+                    subject=adapter.subject_label,
+                    policy=generation_policy,
+                    demand_profile=demand_profile,
+                    progress=progress,
+                    stage_store=checkpoint_store,
+                )
+            after = project(assessment)
+            owned_ids = {
+                view.id
+                for view in prior
+                if (
+                    owner(view.id) == owner(item.id)
+                    if owner is not None
+                    else view.id == item.id
+                )
+            }
+            if tuple(view for view in after if view.id not in owned_ids) != tuple(
+                view for view in prior if view.id not in owned_ids
+            ):
+                raise ValueError("whole-paper repair changed an unrelated item")
+            return tuple(view for view in after if view.id in owned_ids)
+
+        reviewed = review_and_repair_paper(
+            project(assessment),
+            question_client,
+            repair=repair,
+            owner=owner,
+            window_checkpoint=checkpoint_store,
+        )
+        if project(assessment) != reviewed.items:
+            raise ValueError(
+                "whole-paper review does not match the rendered assessment"
+            )
+        if reviewed.repaired_ids and adapter.validate is not None:
+            adapter.validate(assessment, rule, syllabus)
 
     assessment_name = f"{adapter.stem(rule, paper)}-assessment.json"
     artifacts = tuple(adapter.artifacts(assessment, context, syllabus, paper))
@@ -233,6 +324,7 @@ def run_family_adapter[Syllabus, Rule, Assessment, Context](
                 getattr(question_client, "provider", "ollama") if not dry_run else None
             ),
             model=getattr(question_client, "model", model) if not dry_run else None,
+            whole_paper_review=reviewed,
         )
         paths["assessment_package"] = assessment_path
         _check_staged_files(paths, staging_dir)

@@ -8,10 +8,13 @@ from decimal import Decimal
 from typing import Any
 
 from Backend.Core.subjects.accounting_selected_response import (
+    LIQUIDITY_INVENTORY_TREATMENTS,
+    PRIME_ENTRY_TRANSACTIONS,
     AccountingOperation,
     accounting_selected_response_contract,
     derive_accounting_choice,
     pounds,
+    prime_entry_prompt,
 )
 
 
@@ -21,6 +24,33 @@ class AccountingChoiceScenario:
     choices: list[str]
     correct_choice: int
     public_contract: dict[str, Any]
+
+
+def build_prime_entry_choice(rng: random.Random) -> AccountingChoiceScenario:
+    contract = accounting_selected_response_contract(
+        "prime_entry_book", {"transaction": rng.choice(PRIME_ENTRY_TRANSACTIONS)}
+    )
+    working = derive_accounting_choice(contract)
+    choices = list(working.classification_choices)
+    rng.shuffle(choices)
+    return AccountingChoiceScenario(
+        prime_entry_prompt(contract), choices, choices.index(working.answer), contract
+    )
+
+
+def build_liquidity_choice(rng: random.Random) -> AccountingChoiceScenario:
+    contract = accounting_selected_response_contract(
+        "liquidity_ratio_definition",
+        {"inventory_treatment": rng.choice(LIQUIDITY_INVENTORY_TREATMENTS)},
+    )
+    working = derive_accounting_choice(contract)
+    if working.paper_one_prompt is None:
+        raise ValueError("Accounting liquidity choice lacks its public wording")
+    choices = list(working.classification_choices)
+    rng.shuffle(choices)
+    return AccountingChoiceScenario(
+        working.paper_one_prompt, choices, choices.index(working.answer), contract
+    )
 
 
 def build_accounting_choice(index: int, rng: random.Random) -> AccountingChoiceScenario:
@@ -42,13 +72,6 @@ def build_accounting_choice(index: int, rng: random.Random) -> AccountingChoiceS
             "carriage_outwards": str(outward),
             "closing_inventory": str(closing),
         }
-        prompt = (
-            f"A sole trader reports revenue of {pounds(revenue)}, opening inventory of "
-            f"{pounds(opening)}, purchases of {pounds(purchases)}, purchase returns of "
-            f"{pounds(returns)} and closing inventory of {pounds(closing)}. Carriage "
-            f"inwards is {pounds(inward)} and carriage outwards is {pounds(outward)}. "
-            "What is gross profit?"
-        )
         profit = revenue - (opening + purchases - returns + inward - closing)
         distractors = [
             pounds(profit + inward),
@@ -72,13 +95,6 @@ def build_accounting_choice(index: int, rng: random.Random) -> AccountingChoiceS
             "sale_or_return_selling_price": str(selling),
             "markup_percent_on_cost": str(markup),
         }
-        prompt = (
-            f"Revenue of {pounds(revenue)} includes goods sent on sale or return for "
-            f"{pounds(selling)} at a mark-up of {markup}% on cost. The customer had "
-            "not accepted them at the year end. Opening inventory is "
-            f"{pounds(opening)}, purchases are {pounds(purchases)} and closing inventory "
-            f"of {pounds(closing)} excludes these goods. What is the corrected gross profit?"
-        )
         unadjusted = revenue - (opening + purchases - closing)
         distractors = [
             pounds(unadjusted),
@@ -89,11 +105,6 @@ def build_accounting_choice(index: int, rng: random.Random) -> AccountingChoiceS
         operation = "credit_sale_correction"
         amount = Decimal(rng.randrange(15, 50) * 500)
         inputs = {"credit_sale": str(amount)}
-        prompt = (
-            f"A credit sale of {pounds(amount)} was recorded as a debit to cash and "
-            "a credit to sales. Which journal entry corrects the error without "
-            "recording the sale twice?"
-        )
         distractors = []
     elif index == 8:
         operation = "net_share_premium"
@@ -107,12 +118,6 @@ def build_accounting_choice(index: int, rng: random.Random) -> AccountingChoiceS
             "issue_price_pence": str(issue),
             "issue_costs": str(costs),
         }
-        prompt = (
-            f"A company issues {shares:,.0f} ordinary shares with nominal value "
-            f"{nominal}p for {issue}p each. Issue costs of {pounds(costs)} are "
-            "deducted from share premium. What is the net increase in the share "
-            "premium account?"
-        )
         gross_premium = shares * (issue - nominal) / 100
         distractors = [
             pounds(gross_premium),
@@ -126,6 +131,8 @@ def build_accounting_choice(index: int, rng: random.Random) -> AccountingChoiceS
 
     contract = accounting_selected_response_contract(operation, inputs)
     working = derive_accounting_choice(contract)
+    if working.paper_one_prompt is None:
+        raise ValueError("Accounting Paper 1 choice lacks its public wording")
     choices = (
         list(working.journal_choices)
         if working.journal_choices
@@ -135,5 +142,5 @@ def build_accounting_choice(index: int, rng: random.Random) -> AccountingChoiceS
         raise ValueError("Accounting choice construction produced ambiguous options")
     rng.shuffle(choices)
     return AccountingChoiceScenario(
-        prompt, choices, choices.index(working.answer), contract
+        working.paper_one_prompt, choices, choices.index(working.answer), contract
     )

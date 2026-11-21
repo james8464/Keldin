@@ -9,10 +9,53 @@ from Backend.Core.ai_assessment import (
     _candidate_question,
     _independently_validate_candidate,
 )
+from Backend.Core.assessment_prompts import demand_item
 from Backend.Core.independent_solver import IndependentSolver, reconcile_solution
+from Backend.Core.reference_demand import build_item_demand_target, profile_for
 from Backend.Core.subjects import accounting_selected_response
 from Backend.Core.subjects.selected_response import solve_selected_response
 from tests.test_shared_numeric_integrity import accounting_tasks
+
+
+@pytest.mark.parametrize(
+    ("transaction", "answer"),
+    [
+        ("credit_purchase", "Purchases journal"),
+        ("credit_sale", "Sales journal"),
+        ("return_to_supplier", "Purchases returns journal"),
+        ("return_from_customer", "Sales returns journal"),
+    ],
+)
+def test_prime_entry_choice_binds_the_printed_transaction_to_the_derived_key(
+    transaction, answer
+):
+    contract = accounting_selected_response.accounting_selected_response_contract(
+        "prime_entry_book", {"transaction": transaction}
+    )
+    prompt = accounting_selected_response.prime_entry_prompt(contract)
+    item = {
+        "kind": "multiple_choice",
+        "marks": 1,
+        "prompt": prompt,
+        "choices": [
+            "Sales journal",
+            "Purchases returns journal",
+            "Sales returns journal",
+            "Purchases journal",
+        ],
+        "authoring_context": {"selected_response_contract": contract},
+    }
+    assert solve_selected_response(item)["answer"] == answer
+    assert len(solve_selected_response(item)["steps"]) >= 2
+    with pytest.raises(ValueError, match="visible wording"):
+        solve_selected_response(
+            item | {"prompt": "Where is the cash receipt recorded?"}
+        )
+    with pytest.raises(ValueError, match="classification domain"):
+        solve_selected_response(item | {"choices": [*item["choices"][:3], "Cash book"]})
+    invalid = contract | {"inputs": {"transaction": transaction, "amount": "18"}}
+    with pytest.raises(ValueError):
+        accounting_selected_response.derive_accounting_choice(invalid)
 
 
 @pytest.mark.parametrize("number", ["06", "07", "08", "09"])
@@ -39,6 +82,47 @@ def test_four_paper_one_choices_have_source_owned_multi_step_contracts(number):
     canonical = IndependentSolver().solve(public_item, [])
     assert canonical.solution_source == "deterministic-candidate-inputs"
     assert canonical.answer == solved["answer"]
+
+
+@pytest.mark.parametrize(
+    ("treatment", "answer"),
+    [
+        ("include", "Current ratio"),
+        ("exclude", "Liquid capital ratio (acid test ratio)"),
+    ],
+)
+def test_liquidity_ratio_is_independently_selected_from_the_printed_definition(
+    treatment, answer
+):
+    public_contract = (
+        accounting_selected_response.accounting_selected_response_contract(
+            "liquidity_ratio_definition", {"inventory_treatment": treatment}
+        )
+    )
+    working = accounting_selected_response.derive_accounting_choice(public_contract)
+    item = {
+        "kind": "multiple_choice",
+        "marks": 1,
+        "prompt": working.paper_one_prompt,
+        "choices": [
+            "Capital gearing",
+            "Liquid capital ratio (acid test ratio)",
+            "Gross profit margin",
+            "Current ratio",
+        ],
+        "authoring_context": {"selected_response_contract": public_contract},
+    }
+    assert IndependentSolver().solve(item, []).answer == answer
+    with pytest.raises(ValueError, match="visible wording"):
+        solve_selected_response(item | {"prompt": "How profitable is the business?"})
+    with pytest.raises(ValueError, match="classification domain"):
+        solve_selected_response(
+            item | {"choices": [*item["choices"][:3], "Interest cover"]}
+        )
+    with pytest.raises(ValueError, match="inventory treatment"):
+        accounting_selected_response.derive_accounting_choice(
+            public_contract | {"inputs": {"inventory_treatment": "sometimes"}}
+        )
 
 
 @pytest.mark.parametrize("number", ["06", "07", "08", "09"])
@@ -124,21 +208,66 @@ PUBLIC_CASES = [
 
 def item_for(case):
     operation, unit, inputs, choices, _ = case
+    contract = {
+        "version": "accounting-selected-response-v1",
+        "subject": "accounting",
+        "operation": operation,
+        "inputs": dict(inputs),
+        "unit": unit,
+    }
     return {
         "kind": "multiple_choice",
         "marks": 1,
         "subject": "accounting_aqa",
         "choices": list(choices),
-        "authoring_context": {
-            "selected_response_contract": {
-                "version": "accounting-selected-response-v1",
-                "subject": "accounting",
-                "operation": operation,
-                "inputs": dict(inputs),
-                "unit": unit,
-            }
-        },
+        "prompt": accounting_selected_response.derive_accounting_choice(
+            contract
+        ).paper_one_prompt,
+        "authoring_context": {"selected_response_contract": contract},
     }
+
+
+@pytest.mark.parametrize(
+    ("paper", "number", "maximum"),
+    [
+        ("1", "02", 2),
+        ("1", "06", 3),
+        ("1", "07", 4),
+        ("1", "08", 2),
+        ("1", "09", 3),
+        ("2", "04", 2),
+        ("2", "05", 2),
+        ("2", "06", 2),
+    ],
+)
+def test_source_owned_choices_keep_tight_demand_bounds(paper, number, maximum):
+    task = next(
+        task
+        for task in accounting_tasks(f"paper_{paper}", 26080100)
+        if task.question.number == number
+    )
+    target = build_item_demand_target(
+        demand_item(task), profile_for("aqa/accounting", paper)
+    )
+    assert target.demand_band == "low"
+    assert target.minimum_reasoning_steps == 1
+    assert target.maximum_reasoning_steps == maximum
+    assert target.response_mode == "selected-response"
+
+
+def test_changed_printed_case_cannot_reuse_the_scoped_demand_budget():
+    task = next(
+        task
+        for task in accounting_tasks("paper_1", 26080100)
+        if task.question.number == "06"
+    )
+    raw = demand_item(task)
+    assert "£230,000" in raw["prompt"]
+    raw["prompt"] = raw["prompt"].replace("£230,000", "£220,000")
+    with pytest.raises(ValueError, match="visible wording"):
+        build_item_demand_target(raw, profile_for("aqa/accounting", "1"))
+    with pytest.raises(ValueError, match="visible wording"):
+        solve_selected_response(raw)
 
 
 @pytest.mark.parametrize("case", PUBLIC_CASES)

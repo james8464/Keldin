@@ -84,6 +84,7 @@ def publication(request, tmp_path, monkeypatch):
             review_recovery_policy=subject.llm_pipeline.REVIEW_RECOVERY_POLICY,
             large_print=False,
             print_policy={},
+            content_sha256="b" * 64,
         )
         monkeypatch.setattr(
             subject, "_model_snapshot", lambda _args: "fixture-snapshot"
@@ -92,11 +93,25 @@ def publication(request, tmp_path, monkeypatch):
             "Backend.Core.ollama_admission.require_local_ollama_capacity",
             lambda *_args: None,
         )
-        monkeypatch.setattr(subject, "HostedLLMClient", lambda **_kwargs: object())
+
+        class OfflineReview:
+            def generate_request(self, request):
+                assert "findings" in request.schema["properties"]
+                return {"findings": []}
+
         monkeypatch.setattr(
             subject,
-            "FrenchGenerationBudget",
-            lambda _client: SimpleNamespace(check=lambda: None, snapshot=lambda: {}),
+            "HostedLLMClient",
+            lambda **_kwargs: OfflineReview(),
+        )
+        monkeypatch.setattr(
+            subject.llm_pipeline,
+            "whole_paper_items",
+            lambda _: (
+                subject.ReviewItem(
+                    "1/1", "Expliquez le résultat.", "Un raisonnement cohérent."
+                ),
+            ),
         )
         monkeypatch.setattr(
             subject,

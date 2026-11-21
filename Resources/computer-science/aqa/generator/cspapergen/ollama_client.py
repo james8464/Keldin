@@ -58,6 +58,11 @@ from Backend.Core.subjects.sql_contracts import (
     sql_source_intent_sha256,
     validate_sql_response,
 )
+from Backend.Core.whole_paper_review import (
+    PaperFinding,
+    multipart_review_owner,
+    repair_evidence,
+)
 from cspapergen.models import (
     PaperBlueprint,
     Question,
@@ -74,6 +79,8 @@ def improve_questions_with_ollama(
     syllabus: Syllabus,
     progress: Callable[[str], None] | None = None,
     checkpoint_store: AssessmentCheckpointStore | None = None,
+    *,
+    repair_feedback: str = "",
 ) -> PaperBlueprint:
     emit = progress or (lambda _message: None)
     total = len(blueprint.questions)
@@ -159,7 +166,7 @@ def improve_questions_with_ollama(
             note_context_for_topic(topic.id, topic.title),
             blueprint,
         )
-        failure = ""
+        failure = repair_feedback
         for attempt in range(1, 4):
             retry_prompt = (
                 base_prompt
@@ -296,6 +303,41 @@ def improve_questions_with_ollama(
         for index, question, deferred in jobs:
             accept(index, _improve(index, question, deferred))
         return blueprint.model_copy(update={"questions": improved})
+
+
+def repair_aqa_cs_question(
+    original: PaperBlueprint,
+    assessment: PaperBlueprint,
+    syllabus: Syllabus,
+    _paper: str,
+    client: JSONGenerationClient,
+    progress: Callable[[str], None] | None,
+    item_id: str,
+    findings: tuple[PaperFinding, ...],
+) -> PaperBlueprint:
+    match = re.fullmatch(r"questions\.(\d+)", multipart_review_owner(item_id))
+    if match is None or int(match[1]) >= len(original.questions):
+        raise ValueError(
+            f"whole-paper review could not locate the AQA question at {item_id}"
+        )
+    index = int(match[1])
+    question = original.questions[index]
+    if _uses_review_only_generation(question):
+        raise ValueError(
+            f"whole-paper review cannot rewrite the fixed AQA question at {item_id}"
+        )
+    selected = original.model_copy(update={"questions": [question]})
+    selected = improve_questions_with_ollama(
+        client,
+        selected,
+        syllabus,
+        progress=progress,
+        repair_feedback=repair_evidence(findings),
+    )
+    checked = review_blueprint_difficulty(client, selected, syllabus, progress)
+    questions = list(assessment.questions)
+    questions[index] = checked.questions[0]
+    return assessment.model_copy(update={"questions": questions})
 
 
 def review_blueprint_difficulty(

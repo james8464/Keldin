@@ -24,6 +24,7 @@ from pastpapergen.generator import build_paper_blueprint
 from pastpapergen.ollama_client import (
     OllamaClient,
     generate_questions_with_ollama,
+    repair_edexcel_question,
     review_blueprint_difficulty,
 )
 from pastpapergen.paper_configs import load_builtin_paper_config
@@ -101,6 +102,7 @@ ADAPTER = FamilyAdapter(
         blueprint, config, syllabus
     ),
     improve=_improve,
+    repair_whole_paper_item=repair_edexcel_question,
     calibrate_difficulty=lambda blueprint, syllabus, _paper, client, progress: (
         review_blueprint_difficulty(client, blueprint, syllabus, progress)
     ),

@@ -1896,13 +1896,7 @@ def _paper_one_section_b_pages(
 
 def _company_statement_case(option: GeneratedOption) -> Table:
     case = IncomeStatementCase.from_chart_values(option.title, option.chart_values)
-    rows = [
-        ["Administration expenses", f"{case.administration_expenses:,}"],
-        ["Cost of sales", f"{case.cost_of_sales:,}"],
-        ["Marketing expenses", f"{case.marketing_expenses:,}"],
-        ["Revenue", f"{case.revenue:,}"],
-        ["Warehouse expenses", f"{case.warehouse_expenses:,}"],
-    ]
+    rows = [[label, f"{value:,}"] for label, value in case.candidate_figures()]
     figures = Table(
         [["", "£"], *rows],
         colWidths=[72 * mm, 30 * mm],
@@ -1917,37 +1911,8 @@ def _company_statement_case(option: GeneratedOption) -> Table:
         ),
     )
     figures.hAlign = "CENTER"
-    adjustments = [
-        (
-            f"Closing inventory includes damaged items which cost £{case.damaged_inventory_cost:,}. "
-            f"They can be sold for £{case.damaged_inventory_sale_proceeds:,} after repairs "
-            f"costing £{case.damaged_inventory_repair_cost:,}. "
-            "The closing inventory figure has not been adjusted for this information."
-        ),
-        (
-            f"Warehouse expenses include a roof repair costing £{case.roof_repair:,}. "
-            f"The insurer has agreed to pay £{case.insurance_claim:,} of the claim. No entry "
-            "has been made for the insurance proceeds."
-        ),
-        (
-            f"A credit customer owing £{case.trade_receivable:,} was declared bankrupt before "
-            "the year end. The company expects to receive 10p for every £1 due. "
-            "Irrecoverable debts are charged to administration expenses."
-        ),
-        (
-            f"After the year end, an invoice for £{case.supplier_invoice:,} was received "
-            "for marketing services supplied during this accounting year. It was dated "
-            "before the reporting date but has not been entered in the accounting records."
-        ),
-    ]
-    additional = [
-        *case.debenture_terms(),
-        (
-            f"The current-year taxation charge is £{case.current_tax_charge:,}. "
-            "No entry has yet been made for this charge."
-        ),
-        "Round each monetary adjustment to the nearest whole pound.",
-    ]
+    adjustments = case.candidate_adjustments()
+    additional = case.candidate_additional_information()
     case = Table(
         [
             [
@@ -1999,27 +1964,7 @@ def _company_statement_case(option: GeneratedOption) -> Table:
 
 def _partnership_case(option: GeneratedOption) -> Table:
     case = PartnershipCase.from_chart_values(option.chart_values)
-    capital = case.opening_capital
-    old_ratio = case.old_profit_sharing_ratio
-    new_ratio = case.new_profit_sharing_ratio
-    target = case.target_capital
-    text = (
-        "Alex, Morgan and Riley have been in partnership for several years. Riley "
-        "retired on 31 August. The partners keep separate capital and current "
-        "accounts. Prepare the capital accounts up to the date of retirement. "
-        "There were no other changes to capital before that date.<br/><br/>"
-        f"Their capital balances on 1 January were Alex £{capital['Alex']:,}, "
-        f"Morgan £{capital['Morgan']:,} and Riley £{capital['Riley']:,}. Profits and "
-        f"losses had been shared {old_ratio['Alex']}:{old_ratio['Morgan']}:"
-        f"{old_ratio['Riley']}.<br/><br/>"
-        f"On retirement, goodwill was valued at £{case.goodwill:,}. Goodwill was "
-        "credited to all three partners in the old ratio and then written off "
-        f"against Alex and Morgan in their new {new_ratio['Alex']}:"
-        f"{new_ratio['Morgan']} ratio. It was not to remain in the books.<br/><br/>"
-        f"After the goodwill adjustments, Alex and Morgan withdrew enough cash to "
-        f"leave target capital balances of £{target['Alex']:,} and "
-        f"£{target['Morgan']:,}, respectively. Riley's balance was settled separately."
-    )
+    text = "<br/><br/>".join(case.candidate_retirement_paragraphs())
     case = Table(
         [[Paragraph(text, STYLES["small"])]],
         colWidths=[153 * mm],
@@ -2103,23 +2048,10 @@ def _partners_capital_table() -> Table:
 
 def _partnership_drawings_case(option: GeneratedOption) -> Table:
     case = PartnershipCase.from_chart_values(option.chart_values)
-    first_interest = case.first_period_drawings_interest or {}
-    second_interest = case.second_period_drawings_interest or {}
     drawings_interest = Table(
         [
             ["", "Alex\n£", "Morgan\n£", "Riley\n£"],
-            [
-                "1 Jan–31 Aug",
-                f"{first_interest['Alex']:,}",
-                f"{first_interest['Morgan']:,}",
-                f"{first_interest['Riley']:,}",
-            ],
-            [
-                "1 Sep–31 Dec",
-                f"{second_interest['Alex']:,}",
-                f"{second_interest['Morgan']:,}",
-                "—",
-            ],
+            *case.candidate_drawings_rows(),
         ],
         colWidths=[70 * mm, 27 * mm, 27 * mm, 27 * mm],
         style=TableStyle(
@@ -2135,15 +2067,7 @@ def _partnership_drawings_case(option: GeneratedOption) -> Table:
         [
             [
                 Paragraph(
-                    f"Profit for the year was £{case.profit_for_year:,} and accrued "
-                    f"evenly. The partnership agreement gives Morgan an annual salary "
-                    f"of £{case.partner_salary_per_year:,} and allows interest on capital "
-                    f"at {case.capital_interest_rate_percent}% per year. Remaining profit "
-                    f"is shared {case.old_profit_sharing_ratio['Alex']}:"
-                    f"{case.old_profit_sharing_ratio['Morgan']}:"
-                    f"{case.old_profit_sharing_ratio['Riley']} to 31 August and "
-                    f"{case.new_profit_sharing_ratio['Alex']}:"
-                    f"{case.new_profit_sharing_ratio['Morgan']} from 1 September.",
+                    case.candidate_drawings_intro(),
                     STYLES["body"],
                 )
             ],
@@ -2156,9 +2080,7 @@ def _partnership_drawings_case(option: GeneratedOption) -> Table:
             [drawings_interest],
             [
                 Paragraph(
-                    "Use the opening capital balances for the first period and the "
-                    "closing balances from 15.1 for the second period. Time-apportion "
-                    "profit, salary and interest on capital.",
+                    case.DRAWINGS_INSTRUCTION,
                     STYLES["small"],
                 )
             ],
@@ -2299,33 +2221,13 @@ def _non_current_asset_case(option: GeneratedOption) -> Table:
             Paragraph("<b>Non-current assets</b>", STYLES["small"]),
             Paragraph("<b>At the start of the year<br/>£</b>", STYLES["marks"]),
         ],
-        ["Plant and machinery — cost", f"{case.plant_cost_opening:,}"],
-        [
-            "Less: accumulated depreciation",
-            f"{case.plant_accumulated_depreciation_opening:,}",
-        ],
-        ["Motor vehicles — cost", f"{case.motor_cost_opening:,}"],
-        [
-            "Less: accumulated depreciation",
-            f"{case.motor_accumulated_depreciation_opening:,}",
-        ],
-    ]
-    information = [
-        f"1. A machine costing £{case.plant_purchase:,} was purchased on the first day of the year.",
-        "2. A motor vehicle was sold on the first day of the year. Its cost was "
-        f"£{case.motor_disposal_cost:,} and its accumulated depreciation was "
-        f"£{case.motor_disposal_accumulated_depreciation:,}.",
-        "3. Plant and machinery is depreciated at "
-        f"{case.plant_rate_percent}% a year using the straight-line method.",
-        "4. Motor vehicles are depreciated at "
-        f"{case.motor_rate_percent}% a year using the reducing-balance method.",
-        "5. A full year's depreciation is charged on purchases and no depreciation "
-        "is charged on disposals.",
+        *[[label, f"{value:,}"] for label, value in case.candidate_opening_balances()],
     ]
     case_rows.append(
         [
             Paragraph(
-                "<b>Additional information</b><br/><br/>" + "<br/>".join(information),
+                "<b>Additional information</b><br/><br/>"
+                + "<br/>".join(case.candidate_information()),
                 STYLES["small"],
             ),
             "",
@@ -2372,16 +2274,16 @@ def _sales_ledger_case(option: GeneratedOption) -> Table:
     )
     sales_table = Table(
         [
-            ["Date", "Detail", "£"],
-            ["Year end", "Total for year", f"{case_data.credit_sales:,}"],
+            case_data.JOURNAL_HEADER,
+            case_data.sales_journal_row(),
         ],
         colWidths=[38 * mm, 48 * mm, 26 * mm],
         style=journal_style,
     )
     returns_table = Table(
         [
-            ["Date", "Detail", "£"],
-            ["Year end", "Total for year", f"{case_data.sales_returns:,}"],
+            case_data.JOURNAL_HEADER,
+            case_data.returns_journal_row(),
         ],
         colWidths=[38 * mm, 48 * mm, 26 * mm],
         style=journal_style,
@@ -2395,17 +2297,13 @@ def _sales_ledger_case(option: GeneratedOption) -> Table:
                     STYLES["body"],
                 )
             ],
-            [Paragraph("<b>Sales journal</b>", STYLES["centre_bold"])],
+            [Paragraph(f"<b>{case_data.SALES_JOURNAL}</b>", STYLES["centre_bold"])],
             [sales_table],
-            [Paragraph("<b>Sales returns journal</b>", STYLES["centre_bold"])],
+            [Paragraph(f"<b>{case_data.RETURNS_JOURNAL}</b>", STYLES["centre_bold"])],
             [returns_table],
             [
                 Paragraph(
-                    f"Trade receivables at the start of the year were "
-                    f"£{case_data.opening_receivables:,}. During the year "
-                    f"{option.title} received £{case_data.cash_received:,} from credit "
-                    "customers after allowing cash discount of "
-                    f"£{case_data.discount_allowed:,}.",
+                    escape(case_data.balance_information()),
                     STYLES["small"],
                 )
             ],

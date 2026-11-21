@@ -32,6 +32,11 @@ from Backend.Core.ollama_admission import (
 from Backend.Core.providers import HostedLLMClient, normalized_provider_key
 from Backend.Core.render_transaction import render_pdf_atomically
 from Backend.Core.temporary_cleanup import remove_owned_staging
+from Backend.Core.whole_paper_review import (
+    PaperFinding,
+    ReviewItem,
+    review_and_repair_paper,
+)
 
 
 def _file_hash(path: Path) -> str:
@@ -195,6 +200,48 @@ def handle_generate_llm_assessment(args) -> int:
             raise ValueError(
                 "Le brouillon ne correspond pas au modèle et à la demande."
             )
+        emit_progress(
+            "Contrôle du sujet complet et de son corrigé",
+            stage="french_generation",
+            progress=0.82,
+        )
+
+        def owner(item_id: str) -> str:
+            return item_id.partition("/")[0]
+
+        def repair(
+            item: ReviewItem, findings: tuple[PaperFinding, ...]
+        ) -> tuple[ReviewItem, ...]:
+            nonlocal package, exercises
+            package = llm_pipeline.generate(
+                index_path=args.reference_index,
+                client=client,
+                seed=args.seed,
+                large_print=args.large_print,
+                authoring_schema_policy=llm_pipeline.PRINTED_SQL_KEYS_AUTHORING_POLICY,
+                repair_package=package,
+                repair_findings=findings,
+            )
+            exercises = llm_pipeline.validate_package(package)
+            return tuple(
+                view
+                for view in llm_pipeline.whole_paper_items(exercises)
+                if owner(view.id) == owner(item.id)
+            )
+
+        reviewed = review_and_repair_paper(
+            llm_pipeline.whole_paper_items(exercises),
+            client,
+            repair=repair,
+            owner=owner,
+            french_transport=True,
+        )
+        if reviewed.items != llm_pipeline.whole_paper_items(exercises):
+            raise ValueError(
+                "Le contrôle du sujet ne correspond pas au document révisé."
+            )
+        identity = package["identity"]
+        client.check()
         staging = Path(tempfile.mkdtemp(prefix=".nsi-llm-", dir=output))
         paths = {}
         for role, correction, filename in (
@@ -264,6 +311,10 @@ def handle_generate_llm_assessment(args) -> int:
             "warnings": package["warnings"],
             "operational_warnings": operational_warnings,
             "generation_limits": client.snapshot(),
+            "whole_paper_review": {
+                "status": "passed",
+                "content_sha256": identity["content_sha256"],
+            },
         }
         atomic_json(staging / "manifest.json", manifest)
         paths["package_manifest"] = staging / "manifest.json"
