@@ -310,6 +310,65 @@ def test_answer_frame_geometry_matches_reference_page():
     assert any(CROSS_BOX_TOKEN in line for line in SECTION_A_INSTRUCTION_LINES)
 
 
+@pytest.mark.parametrize("paper", ("paper_1", "paper_2", "paper_3"))
+def test_rendered_answer_rules_stay_inside_the_writing_frame(tmp_path, paper):
+    import pymupdf as fitz
+
+    syllabus = load_syllabus(Path("data/syllabus_seed.json"))
+    blueprint = build_paper_blueprint(
+        load_builtin_paper_config(paper), syllabus, seed=42
+    )
+    output = tmp_path / "paper.pdf"
+    render_question_paper(blueprint, output)
+
+    checked_sides = set()
+    with fitz.open(output) as document:
+        for page in document:
+            rules = [
+                span["bbox"]
+                for block in page.get_text("dict")["blocks"]
+                for line in block.get("lines", [])
+                for span in line.get("spans", [])
+                if len(span["text"]) > 20 and set(span["text"]) == {"."}
+            ]
+            if not rules:
+                continue
+            checked_sides.add(page.number % 2)
+            drawings = page.get_drawings()
+            (frame,) = (
+                item["rect"]
+                for item in drawings
+                if item["width"]
+                and item["rect"].height > 740
+                and item["rect"].width > 450
+            )
+            (rail,) = (
+                item["rect"]
+                for item in drawings
+                if item["fill"]
+                and item["rect"].height > 740
+                and 15 < item["rect"].width < 30
+            )
+            assert frame.x1 + 1 <= rail.x0 or rail.x1 + 1 <= frame.x0
+            assert all(
+                frame.x0 + 3 <= left < right <= frame.x1 - 3
+                for left, _, right, _ in rules
+            ), f"{paper} page {page.number + 1}: answer rules cross the frame inset"
+            registration_bars = [
+                item["rect"]
+                for item in drawings
+                if item["width"] == pytest.approx(2.4, abs=0.1)
+                and item["rect"].height < 1
+                and item["rect"].width > 10
+            ]
+            assert len(registration_bars) == 4
+            assert all(
+                bar.x1 <= frame.x0 - 2 or bar.x0 >= frame.x1 + 2
+                for bar in registration_bars
+            ), f"{paper} page {page.number + 1}: registration bars cross the frame"
+    assert checked_sides == {0, 1}
+
+
 def test_section_a_instruction_lines_fit_question_frame():
     assert (
         max(

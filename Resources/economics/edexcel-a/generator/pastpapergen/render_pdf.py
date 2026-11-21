@@ -114,7 +114,8 @@ BLANK_AXIS_WIDTH_PT = 420
 BLANK_AXIS_HEIGHT_PT = 300
 ANSWER_FRAME_X = 34
 ANSWER_FRAME_Y = 48
-ANSWER_FRAME_W = 500
+# Enclose the calibrated response rules without touching the right-hand rail.
+ANSWER_FRAME_W = 522
 ANSWER_FRAME_H = 760
 ANSWER_PAGE_START_Y = 803.3
 # The existing source-stem inset clears the 12pt font's ascent and frame stroke.
@@ -425,7 +426,7 @@ def _draw_front_section(
             y -= 14
 
 
-def _draw_crop_marks(pdf: canvas.Canvas) -> None:
+def _draw_crop_marks(pdf: canvas.Canvas, *, clear_answer_frame: bool = False) -> None:
     width, height = A4
     pdf.setStrokeColor(colors.black)
     pdf.setLineWidth(0.6)
@@ -439,10 +440,13 @@ def _draw_crop_marks(pdf: canvas.Canvas) -> None:
         pdf.line(x, y, x + dx, y + dy)
         pdf.line(x, y, x + vx, y + vy)
     pdf.setLineWidth(2.4)
-    pdf.line(0, height - 56, 50, height - 56)
-    pdf.line(0, 55, 50, 55)
-    pdf.line(width - 50, height - 56, width, height - 56)
-    pdf.line(width - 50, 55, width, 55)
+    left_end, right_start = 50, width - 50
+    if clear_answer_frame:
+        left_end = ANSWER_FRAME_X - 4
+        right_start = ANSWER_FRAME_X + ANSWER_FRAME_W + 4
+    for y in (height - 56, 55):
+        pdf.line(0, y, left_end, y)
+        pdf.line(right_start, y, width, y)
     pdf.setLineWidth(1)
 
 
@@ -1414,7 +1418,7 @@ def _prepare_answer_page(
     pdf: canvas.Canvas, blueprint: PaperBlueprint, page_number: int
 ) -> float:
     _width, _height = A4
-    _draw_crop_marks(pdf)
+    _draw_crop_marks(pdf, clear_answer_frame=True)
     _draw_watermark(pdf)
     _draw_answer_page_header(pdf, blueprint, page_number)
     _draw_do_not_write_rail(pdf, page_number)
