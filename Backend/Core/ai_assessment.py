@@ -640,10 +640,11 @@ def _generate_item_transaction(
 ) -> GeneratedQuestion:
     failure = ""
     last_error: Exception | None = None
-    candidate: GeneratedQuestion | None = None
-    review: ReviewResult | None = None
+    repair: tuple[GeneratedQuestion, ReviewResult] | None = None
     for attempt in range(1, policy.attempts + 1):
         last_error = None
+        # Findings belong to the rejected draft, not the output of its repair.
+        previous_repair, repair = repair, None
         try:
             prompt = (
                 _generation_prompt(
@@ -654,11 +655,10 @@ def _generate_item_transaction(
                     previous_failure=failure,
                     demand_profile=demand_profile,
                 )
-                if candidate is None or review is None
+                if previous_repair is None
                 else _repair_prompt(
                     task,
-                    candidate,
-                    review,
+                    *previous_repair,
                     subject=subject,
                     seed=seed,
                     attempt=attempt,
@@ -763,9 +763,12 @@ def _generate_item_transaction(
                             }
                         )
                     except ValueError as error:
-                        review = ReviewResult(
-                            approved=False,
-                            difficulty_issues=[str(error)],
+                        repair = (
+                            candidate,
+                            ReviewResult(
+                                approved=False,
+                                difficulty_issues=[str(error)],
+                            ),
                         )
                         raise
                 assert_distinct_items(
@@ -777,6 +780,7 @@ def _generate_item_transaction(
                     context="accepted AI items",
                 )
                 return candidate
+            repair = (candidate, review)
             failure = "; ".join(review.issues or ["not approved"])
         except (KeyError, TypeError, ValueError, ValidationError) as error:
             last_error = error

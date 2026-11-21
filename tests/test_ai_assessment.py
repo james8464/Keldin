@@ -50,6 +50,7 @@ from Backend.Core.subjects.selected_response import (
     selected_response_contract,
     solve_selected_response,
 )
+from tests.support.solver_responses import complete_solver_response
 
 
 def _demand_profile() -> ReferenceDemandProfile:
@@ -1808,6 +1809,101 @@ def test_repair_prompt_targets_the_rejected_item_and_issues() -> None:
     assert "The exchange-rate direction is reversed." in prompt
     assert '"id": "0/0/0"' in prompt
     assert "other paper items" not in prompt.casefold()
+
+
+@pytest.mark.parametrize("second_failure", ["invalid draft", "wrong key"])
+def test_retry_uses_current_failure_not_stale_review(second_failure) -> None:
+    question = GeneratedQuestion(
+        rule_id="bookkeeping",
+        number="1",
+        marks=1,
+        kind="multiple_choice",
+        command_word="select",
+        topic_id="accounting",
+        prompt="Which book of prime entry records credit purchases of inventory?",
+        mark_scheme=["Purchases journal"],
+        choices=["Purchases journal", "Sales journal", "Cash book", "General journal"],
+        correct_choice=0,
+        assessment_objectives={"AO1": 1},
+    )
+    task = _Task(
+        key=(0, 0, 0),
+        question=question,
+        option=GeneratedOption(
+            id="section-a", title="Accounting", questions=[question]
+        ),
+        topic=type("Topic", (), {"id": "accounting", "title": "Bookkeeping"})(),
+    )
+    choices = ["Cash book", "Returns journal", "Purchases journal", "Sales journal"]
+    authoring = []
+
+    class Client:
+        def generate_request(self, request):
+            if request.operation == "authoring":
+                authoring.append(request.prompt)
+                options, key = choices, 2
+                if len(authoring) == 2:
+                    assert "\nREPAIR_DATA=" in request.prompt
+                    assert "Clarify the purchase context." in request.prompt
+                    if second_failure == "invalid draft":
+                        options = []
+                    else:
+                        key = 0
+                if len(authoring) == 3:
+                    assert "\nREPAIR_DATA=" not in request.prompt
+                    assert "Clarify the purchase context." not in request.prompt
+                    rejection = (
+                        "four unique choices"
+                        if second_failure == "invalid draft"
+                        else "independent answer disagrees"
+                    )
+                    assert rejection in request.prompt
+                return {
+                    "questions": [
+                        {
+                            "id": task.id,
+                            "prompt": "A shop receives an invoice for stock bought on account. Where is it first entered?",
+                            "choices": options,
+                            "correct_choice": key,
+                            "mark_scheme": [
+                                {
+                                    "text": choices[key],
+                                    "marks": 1,
+                                    "credit_type": "answer",
+                                    "assessment_objective": "AO1",
+                                }
+                            ],
+                        }
+                    ]
+                }
+            if request.operation == "solver":
+                return complete_solver_response(
+                    {
+                        "answer": "Purchases journal",
+                        "steps": ["These are inventory purchases on credit."],
+                        "mark_points": ["Purchases journal"],
+                        "has_single_valid_choice": True,
+                    }
+                )
+            assert request.operation == "batch_review"
+            approved = len(authoring) == 3
+            review = ReviewResult(
+                approved=approved,
+                ambiguity_issues=[] if approved else ["Clarify the purchase context."],
+            )
+            return {"reviews": [{"id": task.id, **review.model_dump()}]}
+
+    candidate = _generate_item_transaction(
+        task,
+        client=Client(),
+        subject="Accounting",
+        seed=1,
+        policy=GenerationPolicy(attempts=3, require_independent_solution=True),
+        progress=None,
+        accepted_prompts=[],
+    )
+    assert len(authoring) == 3
+    assert candidate.correct_choice == 2
 
 
 def _question_response(item_id: str, prompt: str) -> dict[str, object]:
