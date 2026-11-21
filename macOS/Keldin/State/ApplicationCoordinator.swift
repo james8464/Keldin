@@ -43,6 +43,7 @@ final class ApplicationCoordinator: ObservableObject {
     @Published var progressEntries: [ProgressEntry] = []
     @Published var generatedFiles: [GeneratedFile] = []
     @Published var isRefreshingOllama = false
+    private var isBackgroundOllamaRefresh = false
     @Published private(set) var isImportingPreviousData = false
     private(set) var startupImportTask: Task<Void, Never>?
     @Published var appleIntelligenceAvailability = AppleIntelligenceAvailability.unchecked
@@ -233,6 +234,7 @@ final class ApplicationCoordinator: ObservableObject {
         }
         switch aiProvider {
         case .ollama:
+            if isBackgroundOllamaRefresh { return "Checking Ollama…" }
             if ollamaState.message == "Not checked" { return "Check Ollama before generating." }
             if !ollamaState.installed { return "Ollama is not installed." }
             if !ollamaState.running { return "Ollama is not running." }
@@ -500,27 +502,94 @@ final class ApplicationCoordinator: ObservableObject {
         localGuideRevision = UUID()
     }
 
-    func refreshOllama(presentation: SettingsActionPresentation? = nil) {
+    func refreshOllama(presentation: SettingsActionPresentation? = nil, background: Bool = false) {
         guard !isRunning, !benchmarkCoordinator.isRunning, !isRefreshingOllama, !isImportingPreviousData else { return }
+        isBackgroundOllamaRefresh = background
         isRefreshingOllama = true
+        if background {
+            // A preview or another provider can supersede this request.
+            // Do not carry old readiness across an unfinished check.
+            var state = ollamaState
+            if state.running { state.message = "Not checked" }
+            state.running = false
+            ollamaState = state
+            availableModels = []
+            hasLoadedOllamaModels = false
+        }
         status = "Checking Ollama"
         let revision = ollamaRefreshRevision
         let endpoint = ollamaURL
         Task {
-            defer { isRefreshingOllama = false }
+            defer {
+                isBackgroundOllamaRefresh = false
+                isRefreshingOllama = false
+            }
             guard ollamaRefreshRevision == revision else { return }
+            var backgroundStatus: BackendEvent?
             do {
                 let statusEvents = try await backend.collect(arguments: ["ollama-status", "--ollama-url", endpoint])
                 guard ollamaRefreshRevision == revision else { return }
-                statusEvents.forEach { apply($0, errorPresentation: presentation) }
+                if background {
+                    guard !statusEvents.contains(where: isOllamaRefreshError),
+                          let report = statusEvents.last(where: {
+                              if case .ollamaStatus = $0 { return true }
+                              return false
+                          }) else {
+                        recordBackgroundOllamaFailure()
+                        return
+                    }
+                    backgroundStatus = report
+                } else {
+                    statusEvents.forEach { apply($0, errorPresentation: presentation) }
+                }
                 let modelEvents = try await backend.collect(arguments: ["list-models", "--ollama-url", endpoint])
                 guard ollamaRefreshRevision == revision else { return }
-                modelEvents.forEach { apply($0, errorPresentation: presentation) }
+                if let backgroundStatus {
+                    guard !modelEvents.contains(where: isOllamaRefreshError),
+                          let models = modelEvents.last(where: {
+                              if case .models = $0 { return true }
+                              return false
+                          }) else {
+                        recordBackgroundOllamaFailure(observedStatus: backgroundStatus)
+                        return
+                    }
+                    apply(backgroundStatus)
+                    apply(models)
+                } else {
+                    modelEvents.forEach { apply($0, errorPresentation: presentation) }
+                }
             } catch {
                 guard ollamaRefreshRevision == revision else { return }
-                setError(error.localizedDescription, presentation: presentation)
+                if background {
+                    recordBackgroundOllamaFailure(observedStatus: backgroundStatus)
+                } else {
+                    setError(error.localizedDescription, presentation: presentation)
+                }
             }
         }
+    }
+
+    private static let backendProtocolVersion = 2
+
+    private func isOllamaRefreshError(_ event: BackendEvent) -> Bool {
+        switch event {
+        case .error: true
+        case let .hello(version, _, _): version != Self.backendProtocolVersion
+        default: false
+        }
+    }
+
+    private func recordBackgroundOllamaFailure(observedStatus: BackendEvent? = nil) {
+        var state = ollamaState
+        if case let .ollamaStatus(installed, _, command, message)? = observedStatus {
+            state.installed = installed
+            state.command = command
+            state.message = message ?? "Not checked"
+        }
+        state.running = false
+        if state.installed { state.message = "Ollama is installed but not responding." }
+        ollamaState = state
+        status = state.message == "Not checked" ? "Check Ollama before generating." : state.message
     }
 
     func importPreviousAppData(presentation: SettingsActionPresentation? = nil) {
@@ -1814,7 +1883,7 @@ final class ApplicationCoordinator: ObservableObject {
         }
         switch event {
         case let .hello(protocolVersion, _, _):
-            if protocolVersion != 2 {
+            if protocolVersion != Self.backendProtocolVersion {
                 setError("The generation service uses an unsupported protocol version.", presentation: activeRun?.errorPresentation ?? errorPresentation)
             }
         case let .progress(stage, message, progress):
