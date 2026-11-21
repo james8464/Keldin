@@ -3435,8 +3435,8 @@
     "semantic_hash": ""
   },
   "macOS/Keldin/State/ApplicationCoordinator.swift": {
-    "mtime": 1795270922.105493,
-    "ast_hash": "a6a021a1199ef2e1bddfe774bf09e830",
+    "mtime": 1795271154.4780872,
+    "ast_hash": "10449735ccc07cb492f1df918e64b9e8",
     "semantic_hash": ""
   },
   "macOS/Keldin/State/BenchmarkCoordinator.swift": {
@@ -3725,8 +3725,8 @@
     "semantic_hash": ""
   },
   "macOS/Tests/RunIsolationTests.swift": {
-    "mtime": 1795270773.5575755,
-    "ast_hash": "ecf2bfd92fba75d70deb0e66f8419fd4",
+    "mtime": 1795271090.3000705,
+    "ast_hash": "e7061e954772f1baf361415e0164ce02",
     "semantic_hash": ""
   },
   "docs/quality/native-run-isolation-review-2026-10-28.md": {

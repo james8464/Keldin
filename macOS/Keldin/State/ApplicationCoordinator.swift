@@ -506,6 +506,16 @@ final class ApplicationCoordinator: ObservableObject {
         guard !isRunning, !benchmarkCoordinator.isRunning, !isRefreshingOllama, !isImportingPreviousData else { return }
         isBackgroundOllamaRefresh = background
         isRefreshingOllama = true
+        if background {
+            // A preview or another provider can supersede this request.
+            // Do not carry old readiness across an unfinished check.
+            var state = ollamaState
+            if state.running { state.message = "Not checked" }
+            state.running = false
+            ollamaState = state
+            availableModels = []
+            hasLoadedOllamaModels = false
+        }
         status = "Checking Ollama"
         let revision = ollamaRefreshRevision
         let endpoint = ollamaURL
@@ -515,25 +525,43 @@ final class ApplicationCoordinator: ObservableObject {
                 isRefreshingOllama = false
             }
             guard ollamaRefreshRevision == revision else { return }
+            var backgroundStatus: BackendEvent?
             do {
                 let statusEvents = try await backend.collect(arguments: ["ollama-status", "--ollama-url", endpoint])
                 guard ollamaRefreshRevision == revision else { return }
-                if background, statusEvents.contains(where: isOllamaRefreshError) {
-                    recordBackgroundOllamaFailure()
-                    return
+                if background {
+                    guard !statusEvents.contains(where: isOllamaRefreshError),
+                          let report = statusEvents.last(where: {
+                              if case .ollamaStatus = $0 { return true }
+                              return false
+                          }) else {
+                        recordBackgroundOllamaFailure()
+                        return
+                    }
+                    backgroundStatus = report
+                } else {
+                    statusEvents.forEach { apply($0, errorPresentation: presentation) }
                 }
-                statusEvents.forEach { apply($0, errorPresentation: presentation) }
                 let modelEvents = try await backend.collect(arguments: ["list-models", "--ollama-url", endpoint])
                 guard ollamaRefreshRevision == revision else { return }
-                if background, modelEvents.contains(where: isOllamaRefreshError) {
-                    recordBackgroundOllamaFailure()
-                    return
+                if let backgroundStatus {
+                    guard !modelEvents.contains(where: isOllamaRefreshError),
+                          let models = modelEvents.last(where: {
+                              if case .models = $0 { return true }
+                              return false
+                          }) else {
+                        recordBackgroundOllamaFailure(observedStatus: backgroundStatus)
+                        return
+                    }
+                    apply(backgroundStatus)
+                    apply(models)
+                } else {
+                    modelEvents.forEach { apply($0, errorPresentation: presentation) }
                 }
-                modelEvents.forEach { apply($0, errorPresentation: presentation) }
             } catch {
                 guard ollamaRefreshRevision == revision else { return }
                 if background {
-                    recordBackgroundOllamaFailure()
+                    recordBackgroundOllamaFailure(observedStatus: backgroundStatus)
                 } else {
                     setError(error.localizedDescription, presentation: presentation)
                 }
@@ -551,13 +579,16 @@ final class ApplicationCoordinator: ObservableObject {
         }
     }
 
-    private func recordBackgroundOllamaFailure() {
+    private func recordBackgroundOllamaFailure(observedStatus: BackendEvent? = nil) {
         var state = ollamaState
+        if case let .ollamaStatus(installed, _, command, message)? = observedStatus {
+            state.installed = installed
+            state.command = command
+            state.message = message ?? "Not checked"
+        }
         state.running = false
         if state.installed { state.message = "Ollama is installed but not responding." }
         ollamaState = state
-        availableModels = []
-        hasLoadedOllamaModels = false
         status = state.message == "Not checked" ? "Check Ollama before generating." : state.message
     }
 
