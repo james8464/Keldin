@@ -34,15 +34,7 @@ class DeferredCheckpoints:
         return self.source.load_payload(key)
 
     def load_item(self, key: str) -> GeneratedQuestion | None:
-        raw = self.load_payload(key)
-        if raw is None:
-            return None
-        try:
-            return GeneratedQuestion.model_validate(raw)
-        except ValidationError as error:
-            raise CheckpointCorrupt(
-                f"checkpoint item {key} does not match the question schema"
-            ) from error
+        return _decode_question(key, self.load_payload(key))
 
     def save_item(self, key: str, question: GeneratedQuestion) -> None:
         self.save_payload(key, question.model_dump(mode="json"))
@@ -79,6 +71,24 @@ class CheckpointMismatch(ValueError):
 
 class CheckpointCorrupt(ValueError):
     pass
+
+
+def _require_exact_choice_key(key: str, raw: Mapping[str, Any]) -> None:
+    choice_key = raw.get("correct_choice")
+    if choice_key is not None and type(choice_key) is not int:
+        raise CheckpointCorrupt(f"checkpoint item {key} choice key must be an integer")
+
+
+def _decode_question(key: str, raw: dict[str, Any] | None) -> GeneratedQuestion | None:
+    if raw is None:
+        return None
+    _require_exact_choice_key(key, raw)
+    try:
+        return GeneratedQuestion.model_validate(raw)
+    except ValidationError as error:
+        raise CheckpointCorrupt(
+            f"checkpoint item {key} does not match the question schema"
+        ) from error
 
 
 class CheckpointBusy(RuntimeError):
@@ -212,15 +222,7 @@ class AssessmentCheckpointStore:
             yield
 
     def load_item(self, key: str) -> GeneratedQuestion | None:
-        raw = self.load_payload(key)
-        if raw is None:
-            return None
-        try:
-            return GeneratedQuestion.model_validate(raw)
-        except ValidationError as error:
-            raise CheckpointCorrupt(
-                f"checkpoint item {key} does not match the question schema"
-            ) from error
+        return _decode_question(key, self.load_payload(key))
 
     def save_item(self, key: str, question: GeneratedQuestion) -> None:
         self.save_payload(key, question.model_dump(mode="json"))
@@ -314,6 +316,11 @@ class AssessmentCheckpointStore:
             # Retain expensive accepted items across a blueprint revision. Every
             # caller revalidates each payload against the current immutable item
             # contract before it is allowed back into the paper.
+            # Refuse malformed shared fields before writing the new identity.
+            for key, payload in items.items():
+                if not isinstance(payload, dict):
+                    raise CheckpointCorrupt(f"checkpoint item {key} is not an object")
+                _require_exact_choice_key(key, payload)
             document["identity"] = self.identity.model_dump(mode="json")
             self._write_document(document)
         elif mismatches:

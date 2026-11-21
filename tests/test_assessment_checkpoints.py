@@ -12,6 +12,7 @@ from Backend.Core.assessment_checkpoints import (
     CheckpointCorrupt,
     CheckpointIdentity,
     CheckpointMismatch,
+    DeferredCheckpoints,
     identity_for_blueprint,
 )
 from Backend.Core.events import GenerationUpdate
@@ -112,6 +113,31 @@ def test_checkpoint_round_trips_an_accepted_question(tmp_path: Path) -> None:
     assert store.load_item("0/0/1") is None
 
 
+@pytest.mark.parametrize("key", [True, "1", 1.0])
+@pytest.mark.parametrize("deferred", [False, True])
+def test_checkpoint_rejects_coercible_choice_keys(
+    tmp_path: Path, key, deferred: bool
+) -> None:
+    path = tmp_path / "job.json"
+    store = AssessmentCheckpointStore(path, identity())
+    draft = question().model_copy(
+        update={
+            "kind": "multiple_choice",
+            "command_word": "select",
+            "choices": ["Loss", "Lower profit", "Debit", "Cash"],
+            "correct_choice": 1,
+        }
+    )
+    store.save_item("accepted", draft)
+    target = DeferredCheckpoints(store) if deferred else store
+    target.save_payload("bad", draft.model_dump(mode="json") | {"correct_choice": key})
+    previous = path.read_bytes()
+    with pytest.raises(CheckpointCorrupt, match="choice key must be an integer"):
+        target.load_item("bad")
+    assert path.read_bytes() == previous
+    assert target.load_item("accepted") == draft
+
+
 def test_checkpoint_can_discard_one_rejected_item(tmp_path: Path) -> None:
     store = AssessmentCheckpointStore(tmp_path / "job.json", identity())
     store.save_item("0/0/0", question())
@@ -142,6 +168,31 @@ def test_checkpoint_retains_items_across_blueprint_revision_for_revalidation(
 
     assert store.load_item("0/0/0") == question()
     assert json.loads(path.read_text())["identity"]["blueprint_sha256"] == "b" * 64
+
+
+@pytest.mark.parametrize("invalid_key", [True, "1", 1.0])
+def test_blueprint_revision_refuses_malformed_choice_keys_without_rewriting(
+    tmp_path: Path, invalid_key
+) -> None:
+    path = tmp_path / "job.json"
+    store = AssessmentCheckpointStore(path, identity())
+    store.save_item("accepted", question())
+    store.save_payload(
+        "bad",
+        question().model_dump(mode="json")
+        | {
+            "kind": "multiple_choice",
+            "choices": ["Loss", "Lower profit", "Debit", "Cash"],
+            "correct_choice": invalid_key,
+        },
+    )
+    previous = path.read_bytes()
+    revised = identity().model_copy(update={"blueprint_sha256": "b" * 64})
+
+    with pytest.raises(CheckpointCorrupt, match="choice key must be an integer"):
+        AssessmentCheckpointStore(path, revised)
+    assert path.read_bytes() == previous
+    assert store.load_item("accepted") == question()
 
 
 def test_checkpoint_write_is_atomic_and_valid_json(tmp_path: Path) -> None:

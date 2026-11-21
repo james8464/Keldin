@@ -10,8 +10,8 @@
     "semantic_hash": ""
   },
   "Backend/Core/assessment_checkpoints.py": {
-    "mtime": 1795279302.7367225,
-    "ast_hash": "8bb450d4adbfec45fd61f08d0b2f7d9d",
+    "mtime": 1795284698.1240194,
+    "ast_hash": "2a498bdd0f672621bec21ba8c4a3f2d4",
     "semantic_hash": ""
   },
   "Backend/Core/assessment_contracts.py": {
@@ -1340,8 +1340,8 @@
     "semantic_hash": ""
   },
   "tests/test_assessment_checkpoints.py": {
-    "mtime": 1793386672.0039325,
-    "ast_hash": "b8d3a39fb072f1192c56c85619f25a8f",
+    "mtime": 1795284681.6383882,
+    "ast_hash": "0f6fe711efcbeaf3af6d5fe8d3e18fb3",
     "semantic_hash": ""
   },
   "tests/test_assessment_contracts.py": {
@@ -1360,8 +1360,8 @@
     "semantic_hash": ""
   },
   "tests/test_assessment_source_projection.py": {
-    "mtime": 1795279857.3079894,
-    "ast_hash": "e130ca52a224588d0b595917f365985c",
+    "mtime": 1795284507.2930284,
+    "ast_hash": "f1ffd4566977139a208d7e2ceebf4a28",
     "semantic_hash": ""
   },
   "tests/test_calibration_store.py": {
@@ -3875,7 +3875,7 @@
     "semantic_hash": ""
   },
   "Resources/implementation-audit-coverage.json": {
-    "mtime": 1795282564.7286308,
+    "mtime": 1795284698.4797232,
     "ast_hash": "878f40dd93f390fbee289baec2e660ce",
     "semantic_hash": ""
   },
@@ -3990,8 +3990,8 @@
     "semantic_hash": ""
   },
   "Backend/Core/assessment_prompts.py": {
-    "mtime": 1795279857.307001,
-    "ast_hash": "569d265d3ca9804742fbe87cf572142f",
+    "mtime": 1795284507.0886939,
+    "ast_hash": "bdc6ae321fb716cb8edfbe79e6d4130a",
     "semantic_hash": ""
   },
   "Backend/Core/generation_requests.py": {

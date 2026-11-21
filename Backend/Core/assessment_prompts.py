@@ -451,6 +451,19 @@ def review_prompt(
     subject: str,
     canonical_solutions: dict[str, CanonicalSolution | None] | None = None,
 ) -> str:
+    locked_stems = {
+        task.id
+        for task in tasks
+        if task.question.authoring_context.get("preserve_prompt") is True
+    }
+    wording_rule = (
+        ". Only items without locked stem wording require materially new wording. "
+        "For an item with immutable_blueprint.stem_wording set to locked, "
+        "the visible stem is deliberately fixed by its public source contract; "
+        "review its visible content without requiring new wording. "
+        if locked_stems
+        else " while using materially new wording. "
+    )
     data = [
         {
             "id": task.id,
@@ -463,6 +476,7 @@ def review_prompt(
                 "intended_demand": task.question.intended_demand,
                 "scheme_mode": task.question.scheme_mode,
                 "protected_numeric_tokens": list(numeric_tokens(task.question.prompt)),
+                **({"stem_wording": "locked"} if task.id in locked_stems else {}),
             },
             "topic": {
                 "title": str(task.topic.title),
@@ -491,8 +505,8 @@ def review_prompt(
         "or appropriate subject content. Identify the exact conflicting input or "
         "step if disputing that working. "
         f"{objective_policy_for(subject).guidance()} Confirm that the candidate preserves "
-        "the exact artefact, subject matter, and scope of `semantic_task_contract` "
-        "while using materially new wording. Review adversarially: try to disprove "
+        f"the exact artefact, subject matter, and scope of `semantic_task_contract`{wording_rule}"
+        "Review adversarially: try to disprove "
         "the keyed answer; ensure it directly answers the grammatical subject and "
         "scope of the stem; ensure exactly one option is fully correct; and reject "
         "a distractor that is also correct, partly correct without qualification, "
