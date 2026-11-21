@@ -34,15 +34,7 @@ class DeferredCheckpoints:
         return self.source.load_payload(key)
 
     def load_item(self, key: str) -> GeneratedQuestion | None:
-        raw = self.load_payload(key)
-        if raw is None:
-            return None
-        try:
-            return GeneratedQuestion.model_validate(raw)
-        except ValidationError as error:
-            raise CheckpointCorrupt(
-                f"checkpoint item {key} does not match the question schema"
-            ) from error
+        return _decode_question(key, self.load_payload(key))
 
     def save_item(self, key: str, question: GeneratedQuestion) -> None:
         self.save_payload(key, question.model_dump(mode="json"))
@@ -79,6 +71,20 @@ class CheckpointMismatch(ValueError):
 
 class CheckpointCorrupt(ValueError):
     pass
+
+
+def _decode_question(key: str, raw: dict[str, Any] | None) -> GeneratedQuestion | None:
+    if raw is None:
+        return None
+    choice_key = raw.get("correct_choice")
+    if choice_key is not None and type(choice_key) is not int:
+        raise CheckpointCorrupt(f"checkpoint item {key} choice key must be an integer")
+    try:
+        return GeneratedQuestion.model_validate(raw)
+    except ValidationError as error:
+        raise CheckpointCorrupt(
+            f"checkpoint item {key} does not match the question schema"
+        ) from error
 
 
 class CheckpointBusy(RuntimeError):
@@ -212,15 +218,7 @@ class AssessmentCheckpointStore:
             yield
 
     def load_item(self, key: str) -> GeneratedQuestion | None:
-        raw = self.load_payload(key)
-        if raw is None:
-            return None
-        try:
-            return GeneratedQuestion.model_validate(raw)
-        except ValidationError as error:
-            raise CheckpointCorrupt(
-                f"checkpoint item {key} does not match the question schema"
-            ) from error
+        return _decode_question(key, self.load_payload(key))
 
     def save_item(self, key: str, question: GeneratedQuestion) -> None:
         self.save_payload(key, question.model_dump(mode="json"))

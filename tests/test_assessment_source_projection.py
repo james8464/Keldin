@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+from dataclasses import replace
 from importlib import import_module
 from pathlib import Path
 from types import SimpleNamespace
@@ -223,6 +224,24 @@ def test_standalone_editorial_review_does_not_label_unrelated_option_as_source()
     assert source["scope"] == "self_contained_question"
     assert "title" not in source
     assert "stimulus" not in source
+
+
+def test_editorial_review_respects_locked_wording_in_a_mixed_batch():
+    locked = task_with_source(context={"preserve_prompt": True})
+    flexible = replace(task_with_source(), key=(0, 0, 1))
+    prompt = _review_prompt(
+        [locked, flexible], [locked.question, flexible.question], subject="Accounting"
+    )
+    instructions, raw = prompt.split("REVIEW_DATA=", 1)
+    items = json.loads(raw)
+    assert items[0]["immutable_blueprint"]["stem_wording"] == "locked"
+    assert "stem_wording" not in items[1]["immutable_blueprint"]
+    assert (
+        "Only items without locked stem wording require materially new wording"
+        in instructions
+    )
+    assert "while using materially new wording" not in instructions
+    assert "ensure exactly one option is fully correct" in instructions
 
 
 def test_question_owned_inputs_do_not_inherit_an_unrelated_case_title():
