@@ -215,6 +215,46 @@ def test_self_contained_solver_excludes_contradictory_unrelated_option_data():
     assert "19%" not in json.dumps(payload)
 
 
+def test_standalone_editorial_review_does_not_label_unrelated_option_as_source():
+    task = task_with_source(
+        prompt="Assess whether profit alone establishes financial security."
+    )
+    _, source, _ = model_sources(task)
+    assert source["scope"] == "self_contained_question"
+    assert "title" not in source
+    assert "stimulus" not in source
+
+
+def test_question_owned_inputs_do_not_inherit_an_unrelated_case_title():
+    syllabus = load_syllabus(
+        Path("Resources/accounting/aqa/generator/data/syllabus.json")
+    )
+    paper = build_paper(RULES["paper_2"], syllabus, 26092840)
+    task = next(
+        task
+        for task in _tasks(paper, {topic.id: topic for topic in syllabus.topics})
+        if task.question.authoring_context.get("selected_response_contract", {}).get(
+            "operation"
+        )
+        == "contribution_per_unit"
+    )
+    _, source, _ = model_sources(task)
+    assert "title" not in source
+    assert (
+        source["question_context"]["source_data"]
+        == task.question.authoring_context["source_data"]
+    )
+
+
+def test_editorial_review_keeps_the_title_on_question_owned_source():
+    task = task_with_source(
+        context={"candidate_source": {"business": "Printed Company", "revenue": 250000}}
+    )
+    _, source, _ = model_sources(task)
+    assert source["title"] == "Printed Company"
+    assert "stimulus" not in source
+
+
 @pytest.mark.parametrize(
     "context",
     [{}, {"max_prompt_words": 30, "expected_answer_form": "extended_response"}],
@@ -225,6 +265,7 @@ def test_relevant_case_extract_survives_authoring_metadata_for_every_reviewer(co
     assert payload["sources"][0]["text"] == task.option.stimulus[0]
     for source in model_sources(task):
         assert "staff turnover is 19%" in json.dumps(source)
+        assert source["title"] == "Employer"
 
 
 @pytest.mark.parametrize(

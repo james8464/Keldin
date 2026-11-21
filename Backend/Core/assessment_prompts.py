@@ -468,7 +468,7 @@ def review_prompt(
                 "title": str(task.topic.title),
                 "points": [str(point) for point in getattr(task.topic, "points", [])],
             },
-            "source": task_source(task),
+            "source": task_source(task, include_option_title_without_source=False),
             "question": review_question_payload(candidate),
             "independent_solution": _editorial_solution_evidence(
                 (canonical_solutions or {}).get(task.id)
@@ -546,7 +546,9 @@ def review_question_payload(candidate: GeneratedQuestion) -> dict[str, object]:
     return payload
 
 
-def task_source(task: AssessmentPromptTask) -> dict[str, object]:
+def task_source(
+    task: AssessmentPromptTask, *, include_option_title_without_source: bool = True
+) -> dict[str, object]:
     context = task.question.authoring_context
     # These adapters publish question-owned source contracts instead of the
     # generic option extracts. Authoring metadata (word budgets, AO labels)
@@ -554,10 +556,12 @@ def task_source(task: AssessmentPromptTask) -> dict[str, object]:
     owns_source = owns_shared_source(task.question.model_dump(mode="json"))
     source_title = task.option.title
     owned_case = context.get("candidate_source")
+    has_owned_title = False
     if owns_source and isinstance(owned_case, dict):
         title = owned_case.get("business", owned_case.get("label"))
         if isinstance(title, str) and title.strip():
             source_title = title
+            has_owned_title = True
     if context:
         source: dict[str, object] = {
             "title": source_title,
@@ -585,7 +589,8 @@ def task_source(task: AssessmentPromptTask) -> dict[str, object]:
         ]
     )
     known = {record.id: record for record in evidence}
-    if not owns_source and question_uses_option_source(task):
+    uses_option_source = not owns_source and question_uses_option_source(task)
+    if uses_option_source:
         stimulus = []
         for index, text in enumerate(task.option.stimulus, start=1):
             identifier = (
@@ -642,6 +647,10 @@ def task_source(task: AssessmentPromptTask) -> dict[str, object]:
         )
     if evidence:
         source["evidence"] = [record.model_dump(mode="json") for record in evidence]
+    if not include_option_title_without_source and not (
+        has_owned_title or uses_option_source
+    ):
+        source.pop("title", None)
     return source
 
 
