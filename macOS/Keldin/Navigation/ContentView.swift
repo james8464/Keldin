@@ -125,7 +125,7 @@ struct ContentView: View {
         }
         .task {
             if application.selectedBoard.usesAI && application.aiProvider == .ollama {
-                application.refreshOllama()
+                application.refreshOllama(background: true)
             }
         }
         .environment(\.locale, interfaceLocale)

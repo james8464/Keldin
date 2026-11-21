@@ -2149,6 +2149,25 @@ final class RunIsolationTests: XCTestCase {
     }
 
     @MainActor
+    func testBackgroundOllamaModelListFailureDoesNotBlockDocuments() async {
+        let backend = DeferredRefreshBackend(defersModels: true)
+        let application = application(backend: backend)
+        application.refreshOllama(background: true)
+        await fulfillment(of: [backend.statusStarted], timeout: 2)
+        backend.resumeNext(.success([.ollamaStatus(installed: true, running: true, command: "ollama", message: "Available")]))
+        await fulfillment(of: [backend.modelsStarted], timeout: 2)
+        backend.resumeNext(.success([.error(message: "Raw list command failure", code: nil)]))
+        await waitForRefreshCompletion(application)
+
+        XCTAssertFalse(application.showError)
+        XCTAssertFalse(application.hasCommandBlockingPresentation)
+        XCTAssertTrue(application.ollamaState.installed)
+        XCTAssertFalse(application.ollamaState.running)
+        XCTAssertEqual(application.ollamaState.message, "Ollama is installed but not responding.")
+        XCTAssertTrue(application.availableModels.isEmpty)
+    }
+
+    @MainActor
     func testOllamaRefreshCapturesConfiguredEndpointForStatusAndModels() async {
         let backend = DeferredRefreshBackend(defersModels: true)
         let application = application(backend: backend)

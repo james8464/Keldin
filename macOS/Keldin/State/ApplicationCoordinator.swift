@@ -500,7 +500,7 @@ final class ApplicationCoordinator: ObservableObject {
         localGuideRevision = UUID()
     }
 
-    func refreshOllama(presentation: SettingsActionPresentation? = nil) {
+    func refreshOllama(presentation: SettingsActionPresentation? = nil, background: Bool = false) {
         guard !isRunning, !benchmarkCoordinator.isRunning, !isRefreshingOllama, !isImportingPreviousData else { return }
         isRefreshingOllama = true
         status = "Checking Ollama"
@@ -512,15 +512,42 @@ final class ApplicationCoordinator: ObservableObject {
             do {
                 let statusEvents = try await backend.collect(arguments: ["ollama-status", "--ollama-url", endpoint])
                 guard ollamaRefreshRevision == revision else { return }
+                if background, statusEvents.contains(where: isOllamaRefreshError) {
+                    recordBackgroundOllamaFailure()
+                    return
+                }
                 statusEvents.forEach { apply($0, errorPresentation: presentation) }
                 let modelEvents = try await backend.collect(arguments: ["list-models", "--ollama-url", endpoint])
                 guard ollamaRefreshRevision == revision else { return }
+                if background, modelEvents.contains(where: isOllamaRefreshError) {
+                    recordBackgroundOllamaFailure()
+                    return
+                }
                 modelEvents.forEach { apply($0, errorPresentation: presentation) }
             } catch {
                 guard ollamaRefreshRevision == revision else { return }
-                setError(error.localizedDescription, presentation: presentation)
+                if background {
+                    recordBackgroundOllamaFailure()
+                } else {
+                    setError(error.localizedDescription, presentation: presentation)
+                }
             }
         }
+    }
+
+    private func isOllamaRefreshError(_ event: BackendEvent) -> Bool {
+        if case .error = event { return true }
+        return false
+    }
+
+    private func recordBackgroundOllamaFailure() {
+        let message = ollamaState.installed
+            ? "Ollama is installed but not responding."
+            : "Check Ollama before generating."
+        ollamaState = OllamaState(installed: ollamaState.installed, running: false, command: ollamaState.command, message: message)
+        availableModels = []
+        hasLoadedOllamaModels = false
+        status = message
     }
 
     func importPreviousAppData(presentation: SettingsActionPresentation? = nil) {
