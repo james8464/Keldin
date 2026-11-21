@@ -170,6 +170,31 @@ def test_checkpoint_retains_items_across_blueprint_revision_for_revalidation(
     assert json.loads(path.read_text())["identity"]["blueprint_sha256"] == "b" * 64
 
 
+@pytest.mark.parametrize("invalid_key", [True, "1", 1.0])
+def test_blueprint_revision_refuses_malformed_choice_keys_without_rewriting(
+    tmp_path: Path, invalid_key
+) -> None:
+    path = tmp_path / "job.json"
+    store = AssessmentCheckpointStore(path, identity())
+    store.save_item("accepted", question())
+    store.save_payload(
+        "bad",
+        question().model_dump(mode="json")
+        | {
+            "kind": "multiple_choice",
+            "choices": ["Loss", "Lower profit", "Debit", "Cash"],
+            "correct_choice": invalid_key,
+        },
+    )
+    previous = path.read_bytes()
+    revised = identity().model_copy(update={"blueprint_sha256": "b" * 64})
+
+    with pytest.raises(CheckpointCorrupt, match="choice key must be an integer"):
+        AssessmentCheckpointStore(path, revised)
+    assert path.read_bytes() == previous
+    assert store.load_item("accepted") == question()
+
+
 def test_checkpoint_write_is_atomic_and_valid_json(tmp_path: Path) -> None:
     path = tmp_path / "job.json"
     store = AssessmentCheckpointStore(path, identity())
